@@ -73,6 +73,18 @@ body{
   border-radius:999px;
   cursor:pointer;
   transition:.15s;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.lang-btn img.flag-icon{
+  width:22px;
+  height:16px;
+  object-fit:cover;
+  border-radius:3px;
+  display:block;
+  box-shadow:0 0 0 1px rgba(0,0,0,.12);
 }
 
 .lang-btn:hover{
@@ -1243,19 +1255,19 @@ footer .contact-link [data-i18n="footerWaLabel"]{
           <button type="button"
                   class="lang-btn"
                   data-lang="fr">
-            FR
+            <img class="flag-icon" src="https://flagcdn.com/fr.svg" alt="FR">
           </button>
 
           <button type="button"
                   class="lang-btn"
                   data-lang="en">
-            EN
+            <img class="flag-icon" src="https://flagcdn.com/gb.svg" alt="EN">
           </button>
 
           <button type="button"
                   class="lang-btn"
                   data-lang="ar">
-            AR
+            <img class="flag-icon" src="https://flagcdn.com/tn.svg" alt="AR">
           </button>
 
         </div>
