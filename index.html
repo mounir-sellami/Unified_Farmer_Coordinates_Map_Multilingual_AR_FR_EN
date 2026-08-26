@@ -1,0 +1,4943 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Carte unifiée des coordonnées des agriculteurs / Unified Farmer Coordinates Map / خريطة إحداثيات الفلاحين الموحدة</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+
+<style>
+
+:root{
+  --clay:#7a5230;
+  --wheat:#d9a441;
+  --wheat-dark:#b3822e;
+  --olive:#4c6b3f;
+  --olive-dark:#375029;
+  --cream:#faf6ee;
+  --paper:#fffdf8;
+  --ink:#2c2620;
+  --ink-soft:#6e6558;
+  --line:#e6ddc9;
+  --whatsapp:#2fae60;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,
+body{
+  margin:0;
+  padding:0;
+  height:100%;
+  font-family:'Tajawal',sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+}
+
+#app{
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+  height:100dvh;
+  overflow:hidden;
+}
+
+/* =========================================================
+   LANGUAGE SWITCH
+   ========================================================= */
+
+.lang-switch{
+  display:flex;
+  gap:6px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.lang-btn{
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--olive-dark);
+  font-family:'Cairo',sans-serif;
+  font-weight:700;
+  font-size:.76rem;
+  padding:6px 14px;
+  border-radius:999px;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.lang-btn:hover{
+  border-color:var(--wheat);
+  background:var(--cream);
+}
+
+.lang-btn.active{
+  background:var(--olive);
+  border-color:var(--olive-dark);
+  color:#fbf6e8;
+}
+
+.lang-switch-header{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-shrink:0;
+}
+
+.lang-switch-header .lang-btn{
+  padding:5px 10px;
+  font-size:.72rem;
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.35);
+  color:#fbf6e8;
+}
+
+.lang-switch-header .lang-btn.active{
+  background:var(--wheat) !important;
+  border-color:var(--wheat-dark) !important;
+  color:var(--olive-dark) !important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.22), 0 2px 6px rgba(0,0,0,.18);
+  font-weight:800;
+}
+
+.start-lang-row .lang-btn.active{
+  background:var(--wheat) !important;
+  border-color:var(--wheat-dark) !important;
+  color:var(--olive-dark) !important;
+  font-weight:800;
+}
+
+.lang-switch-header .lang-btn:hover{
+  background:rgba(255,255,255,.24);
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+header{
+  background:linear-gradient(
+    120deg,
+    var(--olive-dark) 0%,
+    var(--olive) 55%,
+    #5a7a49 100%
+  );
+  color:#fbf6e8;
+  padding:14px 92px 12px;
+  box-shadow:0 3px 10px rgba(0,0,0,.15);
+  position:relative;
+  z-index:20;
+  flex-shrink:0;
+}
+
+header::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:4px;
+  background:repeating-linear-gradient(
+    90deg,
+    var(--wheat) 0 14px,
+    var(--wheat-dark) 14px 28px
+  );
+}
+
+.brand-logo{
+  position:absolute;
+  top:10px;
+  height:52px;
+  width:auto;
+  z-index:30;
+  background:#fff;
+  padding:3px;
+  border-radius:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+
+.brand-logo-start{
+  left:16px;
+  right:auto;
+}
+
+.brand-logo-end{
+  right:16px;
+  left:auto;
+}
+
+.logo-inverted-start{
+  right:16px !important;
+  left:auto !important;
+}
+
+.logo-inverted-end{
+  left:16px !important;
+  right:auto !important;
+}
+
+.head-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.head-row-top{
+  align-items:flex-start;
+}
+
+.title-block h1{
+  margin:0;
+  font-family:'Cairo',sans-serif;
+  font-weight:800;
+  font-size:1.35rem;
+  letter-spacing:.2px;
+}
+
+.title-block p{
+  margin:4px 0 0;
+  font-size:.82rem;
+  color:#e6e0c8;
+  opacity:.92;
+}
+
+.title-block p.subtitle-main{
+  margin-top:6px;
+  font-size:.88rem;
+  font-weight:600;
+  color:#fdf7e6;
+  opacity:1;
+}
+
+.head-right-col{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:8px;
+}
+
+[dir="rtl"] .head-right-col{
+  align-items:flex-start;
+}
+
+.head-stats{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+[dir="rtl"] .head-stats{
+  justify-content:flex-start;
+}
+
+.stat-pill{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:999px;
+  padding:6px 14px;
+  font-size:.78rem;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+
+.stat-pill b{
+  font-family:'Cairo',sans-serif;
+  font-size:.92rem;
+}
+
+.head-tools{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.search-box{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+
+.search-box input{
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.32);
+  color:#fbf6e8;
+  border-radius:999px;
+  padding:8px 36px 8px 14px;
+  font-size:.82rem;
+  font-family:'Tajawal',sans-serif;
+  width:230px;
+}
+
+[dir="rtl"] .search-box input{
+  padding:8px 14px 8px 36px;
+}
+
+.search-box input::placeholder{
+  color:#e6e0c8;
+  opacity:.8;
+}
+
+.search-box input:focus{
+  outline:none;
+  border-color:var(--wheat);
+  background:rgba(255,255,255,.22);
+}
+
+.search-box svg{
+  position:absolute;
+  inset-inline-end:12px;
+  width:15px;
+  height:15px;
+  color:#e6e0c8;
+  pointer-events:none;
+}
+
+#groupFilter{
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.32);
+  color:#fbf6e8;
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:.8rem;
+  font-family:'Tajawal',sans-serif;
+  max-width:190px;
+}
+
+#groupFilter option{
+  color:#2c2620;
+}
+
+.btn{
+  border:none;
+  cursor:pointer;
+  border-radius:999px;
+  font-family:'Cairo',sans-serif;
+  font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  transition:.15s;
+}
+
+.btn-upload{
+  background:var(--wheat);
+  color:var(--olive-dark);
+  padding:9px 18px;
+  font-size:.82rem;
+  box-shadow:0 2px 0 var(--wheat-dark);
+}
+
+.btn-upload:hover{
+  transform:translateY(-1px);
+  box-shadow:0 3px 6px rgba(0,0,0,.25);
+}
+
+.btn-upload:active{
+  transform:translateY(1px);
+  box-shadow:0 1px 0 var(--wheat-dark);
+}
+
+.btn-upload svg{
+  width:15px;
+  height:15px;
+}
+
+#fileInput,
+#startFileInput{
+  display:none;
+}
+
+/* =========================================================
+   TABS
+   ========================================================= */
+
+.tab-bar{
+  display:flex;
+  gap:2px;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+  padding:0 22px;
+  flex-shrink:0;
+  position:relative;
+  z-index:15;
+}
+
+.tab-btn{
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:11px 18px;
+  font-family:'Cairo',sans-serif;
+  font-weight:700;
+  font-size:.85rem;
+  color:var(--ink-soft);
+  display:flex;
+  align-items:center;
+  gap:7px;
+  border-bottom:3px solid transparent;
+  transition:.15s;
+}
+
+.tab-btn svg{
+  width:16px;
+  height:16px;
+}
+
+.tab-btn:hover{
+  color:var(--olive-dark);
+}
+
+.tab-btn.active{
+  color:var(--olive-dark);
+  border-bottom-color:var(--wheat);
+}
+
+.hidden-view{
+  display:none !important;
+}
+
+/* =========================================================
+   TAB CONTENT WRAPPER (Carte / Graphiques)
+   ========================================================= */
+
+#tabContent{
+  position:relative;
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+}
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+#mapWrap{
+  position:relative;
+  flex:1;
+  min-height:0;
+  z-index:1;
+}
+
+#map{
+  position:absolute;
+  inset:0;
+  background:#dfe7d8;
+  z-index:1;
+}
+
+.marker-pin{
+  width:16px;
+  height:16px;
+  border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg);
+  border:2px solid #fff;
+  box-shadow:0 2px 5px rgba(0,0,0,.4);
+}
+
+.popup-card{
+  font-family:'Tajawal',sans-serif;
+  min-width:210px;
+}
+
+.popup-card h3{
+  margin:0 0 6px;
+  font-family:'Cairo',sans-serif;
+  font-size:.95rem;
+  color:var(--olive-dark);
+}
+
+.popup-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  font-size:.78rem;
+  padding:2px 0;
+  border-bottom:1px dashed var(--line);
+}
+
+.popup-row span:first-child{
+  color:var(--ink-soft);
+  font-weight:600;
+}
+
+.popup-row span:last-child{
+  text-align:end;
+}
+
+.popup-badge{
+  display:inline-block;
+  margin-top:6px;
+  font-size:.68rem;
+  background:var(--cream);
+  color:var(--clay);
+  padding:2px 8px;
+  border-radius:999px;
+}
+
+.map-legend{
+  position:absolute;
+  z-index:25;
+  bottom:16px;
+  right:12px;
+  background:rgba(255,253,248,.95);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:.75rem;
+  max-width:180px;
+  box-shadow:0 4px 14px rgba(44,38,32,.18);
+  backdrop-filter:blur(2px);
+}
+
+.map-legend h4{
+  margin:0 0 6px;
+  font-family:'Cairo',sans-serif;
+  font-size:.78rem;
+  color:var(--olive-dark);
+}
+
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:2px 0;
+}
+
+.legend-dot{
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  border:1.5px solid #fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.25);
+  flex-shrink:0;
+}
+
+/* =========================================================
+   CHARTS
+   ========================================================= */
+
+#chartsWrap{
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  padding:20px 22px 30px;
+  background:var(--cream);
+}
+
+.charts-empty{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100%;
+  color:var(--ink-soft);
+  font-size:.9rem;
+}
+
+.kpi-row{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+
+.kpi-card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px 18px;
+  min-width:200px;
+  flex:1;
+  box-shadow:0 2px 8px rgba(44,38,32,.06);
+}
+
+.kpi-card.olive{
+  background:linear-gradient(
+    135deg,
+    var(--olive-dark),
+    var(--olive)
+  );
+  color:#fbf6e8;
+  border:none;
+}
+
+.kpi-card.olive .kpi-label{
+  color:#e6e0c8;
+}
+
+.kpi-card.olive .kpi-sub{
+  color:#dcd7bd;
+}
+
+.kpi-label{
+  font-size:.75rem;
+  color:var(--ink-soft);
+  font-weight:600;
+}
+
+.kpi-value{
+  font-family:'Cairo',sans-serif;
+  font-weight:800;
+  font-size:1.6rem;
+  margin:4px 0 2px;
+  color:var(--olive-dark);
+}
+
+.kpi-card.olive .kpi-value{
+  color:#fdf7e6;
+}
+
+.kpi-sub{
+  font-size:.72rem;
+  color:var(--ink-soft);
+}
+
+.charts-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+}
+
+.chart-card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px 16px 8px;
+  box-shadow:0 2px 8px rgba(44,38,32,.06);
+}
+
+.chart-card h3{
+  margin:0 0 10px;
+  font-family:'Cairo',sans-serif;
+  font-size:.85rem;
+  color:var(--olive-dark);
+}
+
+.chart-holder{
+  height:230px;
+  position:relative;
+}
+
+@media (max-width:900px){
+  .charts-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* =========================================================
+   START OVERLAY
+   ========================================================= */
+
+#startOverlay{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background-color:rgba(76,107,63,.90);
+  background-image:
+    linear-gradient(
+      160deg,
+      rgba(55,80,41,0) 0%,
+      rgba(76,107,63,0) 55%,
+      rgba(90,122,73,0) 100%
+    ),
+    url("Images/Logo_Climate.jpg");
+  background-size:100% 100%,100% 100%;
+  background-position:center,center;
+  background-repeat:no-repeat,no-repeat;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+#startOverlay.hidden{
+  display:none;
+}
+
+.start-card{
+  background:rgba(255,253,248,.9);
+  border-radius:16px;
+  max-width:460px;
+  width:100%;
+  padding:26px 28px;
+  text-align:center;
+  box-shadow:0 18px 50px rgba(0,0,0,.15);
+  border:1px solid var(--line);
+  position:relative;
+}
+
+.start-card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:5px;
+  border-radius:16px 16px 0 0;
+  background:repeating-linear-gradient(
+    90deg,
+    var(--wheat) 0 14px,
+    var(--wheat-dark) 14px 28px
+  );
+}
+
+.start-lang-row{
+  margin-bottom:16px;
+}
+
+.start-lang-hint{
+  margin:0 0 8px;
+  font-size:.72rem;
+  color:var(--ink-soft);
+  font-weight:600;
+}
+
+.start-icon{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:linear-gradient(
+    135deg,
+    var(--olive),
+    var(--olive-dark)
+  );
+  color:#fbf6e8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:6px auto 14px;
+}
+
+.start-icon svg{
+  width:28px;
+  height:28px;
+}
+
+.start-card h2{
+  margin:0 0 8px;
+  font-family:'Cairo',sans-serif;
+  font-weight:800;
+  font-size:1.15rem;
+  color:var(--olive-dark);
+}
+
+.start-sub{
+  margin:0 0 14px;
+  font-size:.85rem;
+  color:var(--ink);
+  font-weight:600;
+  line-height:1.5;
+}
+
+.start-hint{
+  margin:0 0 18px;
+  font-size:.8rem;
+  color:var(--ink-soft);
+  line-height:1.6;
+}
+
+.start-btn{
+  font-size:.88rem;
+  padding:11px 22px;
+  margin:0 auto;
+}
+
+.start-error{
+  margin:14px 0 0;
+  font-size:.78rem;
+  color:#8a3324;
+  min-height:1em;
+  font-weight:700;
+}
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+#toast{
+  position:absolute !important;
+  z-index:40 !important;
+  top:14px;
+  left:50%;
+  transform:translateX(-50%) translateY(-30px);
+  background:var(--olive-dark);
+  color:#fff;
+  padding:10px 18px;
+  border-radius:10px;
+  font-size:.85rem;
+  box-shadow:0 6px 18px rgba(0,0,0,.3);
+  opacity:0;
+  transition:opacity .25s,transform .25s;
+  pointer-events:none;
+  text-align:center;
+  max-width:80%;
+}
+
+#toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+#toast.error{
+  background:#8a3324;
+}
+
+#toast.info{
+  background:#2b6e7a;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+footer{
+  flex-shrink:0;
+  background:var(--paper);
+  border-top:1px solid var(--line);
+  padding:8px 22px 9px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  position:relative;
+  z-index:20;
+}
+
+.footer-contact-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:26px;
+  flex-wrap:wrap;
+}
+
+footer::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:3px;
+  background:repeating-linear-gradient(
+    90deg,
+    var(--wheat) 0 12px,
+    transparent 12px 24px
+  );
+}
+
+.author-line{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:.62rem;
+  color:var(--clay);
+}
+
+.author-avatar{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  background:linear-gradient(
+    135deg,
+    var(--wheat-dark),
+    var(--clay)
+  );
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  flex-shrink:0;
+}
+
+.author-avatar svg{
+  width:14px;
+  height:14px;
+}
+
+.author-name{
+  font-weight:700;
+  font-family:'Cairo',sans-serif;
+  color:var(--clay);
+}
+
+.contact-link{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:.82rem;
+  color:#1565c0;
+  text-decoration:none;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  transition:.15s;
+}
+
+.contact-link:hover{
+  background:var(--cream);
+  border-color:var(--wheat);
+  color:#1565c0;
+}
+
+.contact-link.mail svg{
+  color:var(--wheat-dark);
+}
+
+.contact-link.wa svg{
+  color:var(--whatsapp);
+}
+
+.contact-link svg{
+  width:15px;
+  height:15px;
+}
+
+.foot-sep{
+  width:1px;
+  height:16px;
+  background:var(--line);
+}
+
+.footer-credit,
+.footer-direction{
+  width:100%;
+  text-align:center;
+  font-weight:500;
+  color:var(--ink-soft);
+  font-family:'Tajawal',sans-serif;
+  line-height:1.5;
+}
+
+.footer-direction{
+  font-weight:500;
+  color:var(--olive-dark);
+}
+
+footer .author-line,
+footer .author-name,
+footer .contact-link,
+footer .footer-credit,
+footer .footer-direction,
+footer .author-line *,
+footer .author-name *,
+footer .contact-link *,
+footer .footer-credit *,
+footer .footer-direction *{
+  font-size:10px !important;
+  font-weight:700 !important;
+  font-family:'Cairo',sans-serif !important;
+}
+
+footer .contact-link,
+footer .contact-link span{
+  color:#1565c0 !important;
+}
+
+footer svg{
+  font-size:initial !important;
+}
+
+footer .contact-link [data-i18n="footerEmailLabel"],
+footer .contact-link [data-i18n="footerWaLabel"]{
+  color:var(--clay) !important;
+}
+
+/* =========================================================
+   START CARD ADJUSTMENT
+   ========================================================= */
+
+#startOverlay .start-card{
+  max-height:calc(100vh - 110px);
+  padding-top:16px;
+  padding-bottom:16px;
+}
+
+#startOverlay .start-lang-row{
+  margin-bottom:10px;
+}
+
+/* =========================================================
+   EXCEL CONFIGURATION MODAL
+   ========================================================= */
+#excelConfigOverlay{position:fixed;inset:0;z-index:200;background:rgba(44,38,32,.58);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;}
+#excelConfigOverlay.show{display:flex;}
+.excel-config-card{width:min(980px,96vw);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.28);padding:20px;}
+.excel-config-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;}
+.excel-config-head h2{margin:0;font-family:'Cairo',sans-serif;font-size:1.05rem;color:var(--olive-dark);}
+.excel-config-head p{margin:5px 0 0;color:var(--ink-soft);font-size:.78rem;}
+.excel-config-section{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;background:#fffdf8;}
+.excel-config-section h3{margin:0 0 10px;font-family:'Cairo',sans-serif;font-size:.86rem;color:var(--olive-dark);}
+.excel-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.excel-col-item{display:flex;align-items:center;gap:8px;padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:.76rem;cursor:pointer;}
+.excel-col-item:hover{border-color:var(--wheat);background:var(--cream);}
+.excel-col-item input{accent-color:var(--olive);}
+.excel-chart-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;}
+.excel-field-label{display:block;margin-bottom:6px;font-size:.75rem;color:var(--ink-soft);font-weight:700;}
+.excel-select{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;background:#fff;color:var(--ink);font-family:'Tajawal',sans-serif;}
+.excel-config-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+.excel-config-actions .btn{padding:9px 17px;font-size:.8rem;}
+.excel-config-cancel{background:#eee6d7;color:var(--ink);}
+.excel-config-apply{background:var(--olive);color:#fff;box-shadow:0 2px 0 var(--olive-dark);}
+.excel-config-note{font-size:.72rem;color:var(--ink-soft);margin:8px 0 0;line-height:1.5;}
+@media (max-width:720px){.excel-cols{grid-template-columns:1fr;}.excel-chart-grid{grid-template-columns:1fr;}}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width:720px){
+
+  .head-row{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .head-right-col{
+    align-items:stretch;
+  }
+
+  [dir="rtl"] .head-right-col{
+    align-items:stretch;
+  }
+
+  .head-stats{
+    justify-content:flex-start;
+  }
+
+  [dir="rtl"] .head-stats{
+    justify-content:flex-start;
+  }
+
+  .head-tools{
+    justify-content:space-between;
+  }
+
+  .search-box input{
+    width:100%;
+  }
+
+  footer{
+    gap:4px;
+    padding:10px 12px;
+    text-align:center;
+  }
+
+  .footer-contact-row{
+    gap:8px;
+    row-gap:4px;
+  }
+
+  .foot-sep{
+    display:none;
+  }
+
+  header{
+    padding:12px 58px 12px;
+  }
+
+  .brand-logo{
+    height:36px;
+    top:8px;
+  }
+
+  .brand-logo-start{
+    left:8px;
+    right:auto;
+  }
+
+  .brand-logo-end{
+    right:8px;
+    left:auto;
+  }
+
+  .logo-inverted-start{
+    right:8px !important;
+    left:auto !important;
+  }
+
+  .logo-inverted-end{
+    left:8px !important;
+    right:auto !important;
+  }
+
+  .lang-switch-header{
+    width:100%;
+    justify-content:center;
+    order:5;
+  }
+}
+
+
+/* KPI DASHBOARD */
+
+/* =========================================================
+   KPI DASHBOARD ENHANCEMENTS
+   ========================================================= */
+.kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:10px}
+.kpi-card{min-width:0}
+.kpi-card .kpi-icon{font-size:1.25rem;margin-right:6px}
+.kpi-card .kpi-sub{font-size:.74rem;color:var(--ink-soft);margin-top:6px}
+.quality-dashboard-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:18px;box-shadow:0 2px 8px rgba(44,38,32,.06)}
+.quality-dashboard-card h3{margin:0 0 14px;font-size:.95rem}
+.quality-row{display:grid;grid-template-columns:minmax(150px,220px) 1fr 55px;gap:10px;align-items:center;margin:9px 0;font-size:.8rem}
+.quality-bar{height:10px;border-radius:99px;background:rgba(44,38,32,.09);overflow:hidden}
+.quality-bar span{display:block;height:100%;border-radius:99px;background:var(--olive);transition:width .3s ease}
+@media(max-width:1000px){.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.kpi-row{grid-template-columns:1fr}.quality-row{grid-template-columns:1fr 1fr 45px}}
+
+.kpi-dashboard{display:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:18px 0}.kpi-card{background:rgba(255,255,255,.92);border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:15px;box-shadow:0 5px 18px rgba(0,0,0,.07)}.kpi-label{font-size:.85rem;opacity:.72}.kpi-value{font-size:1.55rem;font-weight:800;margin-top:6px}.kpi-note{font-size:.75rem;opacity:.62;margin-top:5px}.kpi-quality{display:grid;gap:10px}.kpi-quality-row{display:grid;grid-template-columns:minmax(130px,190px) 1fr 55px;gap:10px;align-items:center}.kpi-quality-bar{height:10px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden}.kpi-quality-bar span{display:block;height:100%;border-radius:99px}.kpi-chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.kpi-chart-card{min-height:320px;background:rgba(255,255,255,.86);border:1px solid rgba(0,0,0,.07);border-radius:16px;padding:12px}.kpi-chart-card canvas{width:100%!important;height:280px!important}@media(max-width:800px){.kpi-chart-grid{grid-template-columns:1fr}}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+  <!-- =====================================================
+       START OVERLAY
+       ===================================================== -->
+
+  <div id="startOverlay">
+
+    <div class="start-card">
+
+      <div class="start-lang-row">
+
+        <p class="start-lang-hint">
+          Choisissez votre langue / Choose your language / اختر لغتك
+        </p>
+
+        <div class="lang-switch">
+
+          <button type="button"
+                  class="lang-btn"
+                  data-lang="fr">
+            Français
+          </button>
+
+          <button type="button"
+                  class="lang-btn"
+                  data-lang="en">
+            English
+          </button>
+
+          <button type="button"
+                  class="lang-btn"
+                  data-lang="ar">
+            العربية
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="start-icon">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.6"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <path d="M9.5 13.5l1.7 1.7 3.3-3.3"/>
+
+        </svg>
+
+      </div>
+
+      <h2 data-i18n="startTitle">
+        🌾 Carte unifiée des coordonnées des agriculteurs
+      </h2>
+
+      <p class="start-sub"
+         data-i18n="startSub"></p>
+
+      <p class="start-hint"
+         data-i18n="startHint"></p>
+
+      <label class="btn btn-upload start-btn"
+             for="startFileInput">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+
+        </svg>
+
+        <span data-i18n="startBtn">
+          Choisir un fichier Excel
+        </span>
+
+      </label>
+
+      <input type="file"
+             id="startFileInput"
+             accept=".xlsx,.xls">
+
+      <p class="start-error"
+         id="startError"></p>
+
+    </div>
+
+  </div>
+
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
+
+  <header>
+
+    <img class="brand-logo brand-logo-start"
+         src="Images/Tun_Flag.jpg"
+         alt="Tunisia">
+
+    <img class="brand-logo brand-logo-end"
+         src="Images/Geo.jpg"
+         alt="Geo">
+
+    <div class="head-row head-row-top">
+
+      <div class="title-block">
+
+        <h1 data-i18n="headerTitle">
+          🌾 Carte unifiée des coordonnées des agriculteurs
+        </h1>
+
+        <p class="subtitle-main"
+           data-i18n="headerSubtitle"></p>
+
+        <p data-i18n="campaignNote"></p>
+
+      </div>
+
+      <div class="head-right-col">
+
+        <div class="lang-switch-header">
+
+          <button type="button"
+                  class="lang-btn"
+                  data-lang="fr">
+            FR
+          </button>
+
+          <button type="button"
+                  class="lang-btn"
+                  data-lang="en">
+            EN
+          </button>
+
+          <button type="button"
+                  class="lang-btn"
+                  data-lang="ar">
+            AR
+          </button>
+
+        </div>
+
+        <div class="head-stats"
+             id="headStats"></div>
+
+      </div>
+
+    </div>
+
+    <div class="head-row"
+         style="margin-top:10px;">
+
+      <div class="head-tools">
+
+        <div class="search-box">
+
+          <input type="text"
+                 id="searchInput"
+                 data-i18n-placeholder="searchPlaceholder"
+                 placeholder="Rechercher un agriculteur ou un lieu...">
+
+          <svg viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2">
+
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="21"
+                  y1="21"
+                  x2="16.65"
+                  y2="16.65"/>
+
+          </svg>
+
+        </div>
+
+        <select id="groupFilter">
+
+          <option value="__none__"
+                  data-i18n="selectGroup">
+            Sélectionner un groupe
+          </option>
+
+          <option value=""
+                  data-i18n="allGroups">
+            Tous les groupes
+          </option>
+
+        </select>
+
+      </div>
+
+      <div class="head-tools">
+
+        <label class="btn btn-upload"
+               for="fileInput">
+
+          <svg viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+
+          </svg>
+
+          <span data-i18n="updateBtn">
+            Mettre à jour depuis un fichier Excel
+          </span>
+
+        </label>
+
+        <input type="file"
+               id="fileInput"
+               accept=".xlsx,.xls">
+
+      </div>
+
+    </div>
+
+  </header>
+
+  <!-- =====================================================
+       TABS
+       ===================================================== -->
+
+  <nav class="tab-bar">
+
+    <button class="tab-btn active"
+            data-tab="mapWrap">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4z"/>
+        <line x1="8" y1="2" x2="8" y2="18"/>
+        <line x1="16" y1="6" x2="16" y2="22"/>
+
+      </svg>
+
+      <span data-i18n="tabMap">
+        Carte
+      </span>
+
+    </button>
+
+    <button class="tab-btn"
+            data-tab="chartsWrap">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <line x1="12" y1="20" x2="12" y2="10"/>
+        <line x1="18" y1="20" x2="18" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="16"/>
+
+      </svg>
+
+      <span data-i18n="tabCharts">
+        Graphiques
+      </span>
+
+    </button>
+
+  </nav>
+
+  <!-- =====================================================
+       MAP
+       ===================================================== -->
+
+  <div id="tabContent">
+
+  <div id="mapWrap">
+
+    <div id="map"></div>
+
+    <div class="map-legend"
+         id="mapLegend">
+
+      <h4 data-i18n="legendTitle">
+        Groupes/Délégations
+      </h4>
+
+      <div id="legendItems"></div>
+
+    </div>
+
+  </div>
+
+  <!-- =====================================================
+       CHARTS
+       ===================================================== -->
+
+  <div id="chartsWrap"
+       class="hidden-view">
+
+    <div id="chartsEmpty"
+         class="charts-empty"
+         data-i18n="chartsEmptyMsg">
+
+      <p>
+        Aucune donnée pour le moment — veuillez charger un fichier Excel.
+      </p>
+
+    </div>
+
+    <div id="chartsContent"
+         class="charts-content hidden-view">
+
+      <div class="kpi-row"
+           id="kpiRow"></div>
+
+      <p id="areaNote"
+         style="font-size:.78rem;color:var(--ink-soft);margin:-8px 2px 18px;"></p>
+
+      <div class="charts-grid">
+
+        <div class="chart-card">
+
+          <h3 id="chartTitle1">
+            Nombre de points par groupe/délégation
+          </h3>
+
+          <div class="chart-holder">
+            <canvas id="chartCount"></canvas>
+          </div>
+
+        </div>
+
+        <div class="chart-card">
+
+          <h3 id="chartTitle2">
+            Superficie totale (ha) par groupe/délégation
+          </h3>
+
+          <div class="chart-holder">
+            <canvas id="chartArea"></canvas>
+          </div>
+
+        </div>
+
+        <div class="chart-card">
+
+          <h3 id="chartTitle3">
+            Répartition des points par groupe (%)
+          </h3>
+
+          <div class="chart-holder">
+            <canvas id="chartPie"></canvas>
+          </div>
+
+        </div>
+
+        <div class="chart-card">
+
+          <h3 id="chartTitle4">
+            Superficie moyenne par point (ha) par groupe
+          </h3>
+
+          <div class="chart-holder">
+            <canvas id="chartAvgArea"></canvas>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="quality-dashboard-card" id="qualityDashboardCard">
+        <h3 id="qualityDashboardTitle">⚠️ Qualité des données</h3>
+        <div id="qualityDashboardRows"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Toast ancré en haut du cadre Carte/Graphiques (#tabContent) :
+       il reste visible quel que soit l'onglet actif, juste sous
+       l'en-tête et la barre d'onglets, au sommet du cadre de la carte. -->
+  <div id="toast"></div>
+
+  </div>
+  <!-- fin #tabContent -->
+
+  <!-- =====================================================
+       EXCEL CONFIGURATION MODAL
+       ===================================================== -->
+  <div id="excelConfigOverlay" role="dialog" aria-modal="true" aria-labelledby="excelConfigTitle">
+    <div class="excel-config-card">
+      <div class="excel-config-head">
+        <div>
+          <h2 id="excelConfigTitle" data-i18n="excelConfigTitle">Configurer l'affichage et les graphiques</h2>
+          <p id="excelConfigSubtitle" data-i18n="excelConfigSubtitle">Choisissez les colonnes qui seront affichées dans les fenêtres des points et celles utilisées pour créer les graphiques.</p>
+        </div>
+      </div>
+      <div class="excel-config-section">
+        <h3 data-i18n="popupColumnsTitle">Colonnes à afficher dans le popup</h3>
+        <div id="popupColumnsList" class="excel-cols"></div>
+        <p class="excel-config-note" data-i18n="popupColumnsNote">Les coordonnées restent disponibles pour la carte même si elles ne sont pas affichées dans le popup.</p>
+      </div>
+      <div class="excel-config-section">
+        <h3 data-i18n="chartsColumnsTitle">Informations à transformer en graphiques</h3>
+        <div class="excel-chart-grid">
+          <div>
+            <label class="excel-field-label" for="chartCategorySelect" data-i18n="chartCategoryLabel">Colonne de regroupement / catégorie</label>
+            <select id="chartCategorySelect" class="excel-select"></select>
+          </div>
+          <div>
+            <label class="excel-field-label" data-i18n="chartNumericLabel">Colonnes numériques à représenter</label>
+            <div id="chartNumericList" class="excel-cols"></div>
+          </div>
+        </div>
+        <p class="excel-config-note" data-i18n="chartsColumnsNote">Un graphique en barres sera créé pour chaque colonne numérique sélectionnée, regroupée selon la colonne de catégorie.</p>
+      </div>
+      <div class="excel-config-actions">
+        <button type="button" id="excelConfigCancel" class="btn excel-config-cancel" data-i18n="cancelBtn">Annuler</button>
+        <button type="button" id="excelConfigApply" class="btn excel-config-apply" data-i18n="applyBtn">Afficher les données</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       FOOTER
+       ===================================================== -->
+
+  <footer>
+
+    <div class="footer-contact-row">
+
+      <div class="author-line">
+
+        <span class="author-avatar">
+
+          <svg viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+
+          </svg>
+
+        </span>
+
+        <span>
+          <span data-i18n="footerDevLabel">
+            Développement :
+          </span>
+
+          <span class="author-name"
+                style="color:#1565c0;">
+          </span>
+
+        </span>
+
+      </div>
+
+      <div class="foot-sep"></div>
+
+      <a class="contact-link mail"
+         href="#">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <path d="M4 4h16v16H4z"
+                opacity="0"/>
+
+          <path d="M22 6l-10 7L2 6"/>
+
+          <rect x="2"
+                y="4"
+                width="20"
+                height="16"
+                rx="2"/>
+
+        </svg>
+
+        <span data-i18n="footerEmailLabel"
+              style="color:var(--clay) !important;">
+          E-mail :
+        </span>
+
+        <span dir="ltr"
+              class="contact-value"
+              style="color:#1565c0;">
+        </span>
+
+      </a>
+
+      <a class="contact-link wa"
+         href="#"
+         target="_blank"
+         rel="noopener">
+
+        <svg viewBox="0 0 24 24"
+             fill="currentColor">
+
+          <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.44 1.32 4.94L2 22l5.29-1.39a9.87 9.87 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm5.8 14.03c-.24.68-1.4 1.3-1.93 1.38-.49.08-1.11.11-1.79-.11-.41-.13-.94-.3-1.62-.6-2.85-1.23-4.71-4.1-4.85-4.29-.14-.19-1.16-1.55-1.16-2.95 0-1.4.73-2.09.99-2.37.26-.28.57-.35.76-.35.19 0 .38 0 .55.01.18.01.41-.07.64.49.24.58.81 2 .88 2.14.07.14.12.31.02.5-.09.19-.14.31-.28.47-.14.16-.29.36-.42.48-.14.14-.28.29-.12.57.16.28.71 1.17 1.52 1.9 1.05.94 1.93 1.23 2.21 1.37.28.14.44.12.6-.07.16-.19.68-.79.86-1.06.18-.28.36-.23.6-.14.24.09 1.55.73 1.82.86.27.14.45.21.51.32.07.12.07.68-.17 1.36z"/>
+
+        </svg>
+
+        <span data-i18n="footerWaLabel"
+              style="color:var(--clay) !important;">
+          WhatsApp :
+        </span>
+
+        <span dir="ltr"
+              class="contact-value"
+              style="color:#1565c0;">
+        </span>
+
+      </a>
+
+    </div>
+
+  </footer>
+
+</div>
+
+<!-- =========================================================
+     LIBRARIES
+     ========================================================= -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+
+<script>
+
+/* =========================================================
+   PROTECTION DES INFORMATIONS DE L'AUTEUR
+   ========================================================= */
+
+  const __f = (() => {
+
+    const d = (v) => {
+    const binary = atob(v);
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  };
+
+  const b = {
+    n: 'TW91bmlyIFNlbGxhbWk=',
+    a: '2YXZhtmK2LEg2KfZhNiz2YTYp9mF2Yo=',
+    e: 'bW91bmlyX3NlbGxhbWlAeWFob28uZnI=',
+    p: 'KzIxNiAyMiA3MjMgNDg2',
+    m: 'bWFpbHRvOm1vdW5pcl9zZWxsYW1pQHlhaG9vLmZy',
+    w: 'aHR0cHM6Ly93YS5tZS8yMTYyMjcyMzQ4Ng=='
+  };
+
+  const expected =
+    'TW91bmlyIFNlbGxhbWl8bW91bmlyX3NlbGxhbWlAeWFob28uZnJ8KzIxNiAyMiA3MjMgNDg2fG1haWx0bzptb3VuaXJfc2VsbGFtaUB5YWhvby5mcnxodHRwczovL3dhLm1lLzIxNjIyNzIzNDg2';
+
+  let ok = false;
+  let observer = null;
+  let applying = false;
+
+  try {
+
+    ok =
+      [
+        d(b.n),
+        d(b.e),
+        d(b.p),
+        d(b.m),
+        d(b.w)
+      ].join('|') === d(expected);
+
+  } catch(e){
+
+    ok = false;
+
+  }
+
+  /*
+     Si les données protégées sont altérées,
+     l'application ne démarre pas.
+  */
+
+  if(!ok){
+
+    document.documentElement.innerHTML = '';
+
+    throw new Error(
+      'Application integrity check failed.'
+    );
+
+  }
+
+  const val = (key) => d(b[key]);
+
+  const name = (ar) => {
+
+    return ar
+      ? d(b.a)
+      : d(b.n);
+
+  };
+
+  function getFooter(){
+
+    return document.querySelector('footer');
+
+  }
+
+  function apply(){
+
+    if(!ok || applying) return;
+
+    const footer = getFooter();
+
+    if(!footer) return;
+
+    applying = true;
+
+    /*
+       Désactivation temporaire de l'observateur
+       pendant la restauration des informations.
+    */
+
+    if(observer){
+
+      observer.disconnect();
+
+    }
+
+    try{
+
+      const isArabic =
+        document.documentElement.lang === 'ar';
+
+      const authorName =
+        footer.querySelector('.author-name');
+
+      const mail =
+        footer.querySelector('.contact-link.mail');
+
+      const wa =
+        footer.querySelector('.contact-link.wa');
+
+      const vals =
+        footer.querySelectorAll('.contact-value');
+
+
+      /* =========================
+         NOM DE L'AUTEUR
+         ========================= */
+
+      if(authorName){
+
+        const correctName =
+          name(isArabic);
+
+        if(authorName.textContent !== correctName){
+
+          authorName.textContent =
+            correctName;
+
+        }
+
+      }
+
+
+      /* =========================
+         E-MAIL
+         ========================= */
+
+      if(vals[0]){
+
+        const correctEmail =
+          val('e');
+
+        if(vals[0].textContent !== correctEmail){
+
+          vals[0].textContent =
+            correctEmail;
+
+        }
+
+      }
+
+
+      /* =========================
+         TELEPHONE
+         ========================= */
+
+      if(vals[1]){
+
+        const correctPhone =
+          val('p');
+
+        if(vals[1].textContent !== correctPhone){
+
+          vals[1].textContent =
+            correctPhone;
+
+        }
+
+      }
+
+
+      /* =========================
+         LIEN EMAIL
+         ========================= */
+
+      if(mail){
+
+        const correctMail =
+          val('m');
+
+        if(mail.getAttribute('href') !== correctMail){
+
+          mail.setAttribute(
+            'href',
+            correctMail
+          );
+
+        }
+
+      }
+
+
+      /* =========================
+         LIEN WHATSAPP
+         ========================= */
+
+      if(wa){
+
+        const correctWa =
+          val('w');
+
+        if(wa.getAttribute('href') !== correctWa){
+
+          wa.setAttribute(
+            'href',
+            correctWa
+          );
+
+        }
+
+      }
+
+    } finally{
+
+      applying = false;
+
+      /*
+         Réactivation de l'observateur.
+      */
+
+      if(observer){
+
+        observer.observe(footer,{
+
+          subtree:true,
+          childList:true,
+          characterData:true,
+          attributes:true,
+          attributeFilter:['href']
+
+        });
+
+      }
+
+    }
+
+  }
+
+
+  function guard(){
+
+    if(!ok) return;
+
+    const footer =
+      getFooter();
+
+    if(!footer) return;
+
+    /*
+       Application initiale.
+    */
+
+    apply();
+
+    /*
+       Un seul MutationObserver.
+    */
+
+    if(observer) return;
+
+    observer =
+      new MutationObserver(
+        function(mutations){
+
+          if(applying) return;
+
+          let protectedPartChanged =
+            false;
+
+          mutations.forEach(
+            function(mutation){
+
+              const target =
+                mutation.target.nodeType === Node.TEXT_NODE
+                  ? mutation.target.parentElement
+                  : mutation.target;
+
+              if(!target) return;
+
+              /*
+                 On ne surveille que les éléments
+                 réellement protégés.
+              */
+
+              if(
+                target.closest(
+                  '.author-name,' +
+                  '.contact-value,' +
+                  '.contact-link.mail,' +
+                  '.contact-link.wa'
+                )
+              ){
+
+                protectedPartChanged = true;
+
+              }
+
+            }
+          );
+
+          if(protectedPartChanged){
+
+            apply();
+
+          }
+
+        }
+      );
+
+    observer.observe(
+      footer,
+      {
+        subtree:true,
+        childList:true,
+        characterData:true,
+        attributes:true,
+        attributeFilter:['href']
+      }
+    );
+
+  }
+
+
+  return {
+
+    apply,
+    guard,
+    name
+
+  };
+
+})();
+
+
+/* =========================================================
+   TRADUCTIONS
+   ========================================================= */
+
+const I18N = {
+
+  fr: {
+
+    code:'fr',
+    dir:'ltr',
+    locale:'fr',
+    label:'Français',
+    flagShort:'FR',
+
+    docTitle:
+      "Carte unifiée des coordonnées des agriculteurs",
+
+    headerTitle:
+      "🌾 Carte unifiée des coordonnées des agriculteurs",
+
+    headerSubtitle:
+      "Compilation unifiée des coordonnées des agriculteurs concernés par l'analyse du phosphore et de la fertilité des sols — République tunisienne",
+
+    campaignNote:
+      " · Données de la campagne 2026/2027 · Coordonnées unifiées selon WGS84",
+
+    searchPlaceholder:
+      "Rechercher un agriculteur ou un lieu...",
+
+    allGroups:
+      "Tous les groupes",
+
+    selectGroup:
+      "Sélectionner un groupe",
+
+    updateBtn:
+      "Mettre à jour depuis un fichier Excel",
+
+    tabMap:
+      "Carte",
+
+    tabCharts:
+      "Graphiques",
+
+    excelConfigTitle:
+      "Configurer l'affichage et les graphiques",
+    excelConfigSubtitle:
+      "Choisissez les colonnes qui seront affichées dans les fenêtres des points et celles utilisées pour créer les graphiques.",
+    popupColumnsTitle:
+      "Colonnes à afficher dans le popup",
+    popupColumnsNote:
+      "Les coordonnées restent disponibles pour la carte même si elles ne sont pas affichées dans le popup.",
+    chartsColumnsTitle:
+      "Informations à transformer en graphiques",
+    chartCategoryLabel:
+      "Colonne de regroupement / catégorie",
+    chartNumericLabel:
+      "Colonnes numériques à représenter",
+    chartsColumnsNote:
+      "Un graphique en barres sera créé pour chaque colonne numérique sélectionnée, regroupée selon la colonne de catégorie.",
+    cancelBtn:
+      "Annuler",
+    applyBtn:
+      "Afficher les données",
+
+    legendTitle:
+      "Groupes/Délégations",
+
+    statsTotal:
+      "Total des points",
+
+    statsValid:
+      "Coordonnées valides",
+
+    statsToVerify:
+      "À vérifier",
+
+    chartsEmptyMsg:
+      "Aucune donnée pour le moment — veuillez charger un fichier Excel.",
+
+    chart1Title:
+      "Nombre de points par groupe/délégation",
+
+    chart2Title:
+      "Superficie totale (ha) par groupe/délégation",
+
+    chart3Title:
+      "Répartition des points par groupe (%)",
+
+    chart4Title:
+      "Superficie moyenne par point (ha) par groupe",
+
+    kpiTotalPoints:
+      "Total des points",
+
+    kpiValidCoords:
+      "Coordonnées valides : ",
+
+    kpiTotalArea:
+      "Superficie totale (ha)",
+
+    kpiAvgAreaPerPoint:
+      "Superficie moyenne par point : ",
+
+    kpiGroupsCount:
+      "Nombre de groupes/délégations",
+
+    kpiDifferentGroups:
+      "groupes différents",
+
+    seriesCount:
+      "Nombre de points",
+
+    seriesArea:
+      "Superficie (ha)",
+
+    seriesAvgArea:
+      "Superficie moyenne (ha)",
+
+    areaMissingNote:
+      (missing,total,count) =>
+        "⚠️ La superficie n'est pas renseignée pour "
+        + missing
+        + " point(s) sur "
+        + total
+        + ". La superficie totale et la superficie moyenne par point sont calculées uniquement à partir des points disposant de données de superficie ("
+        + count
+        + " point(s)).",
+
+    popup:{
+      place:"Lieu / Parcelle",
+      group:"Groupe/Délégation",
+      area:"Superficie (ha)",
+      crop:"Culture précédente",
+      phone:"Téléphone",
+      code:"Code d'échantillon",
+      coords:"Coordonnées",
+      notes:"Remarques"
+    },
+
+    startTitle:
+      "🌾 Carte unifiée des coordonnées des agriculteurs",
+
+    startSub:
+      "Compilation unifiée des coordonnées des agriculteurs concernés par l'analyse du phosphore et de la fertilité des sols — République tunisienne",
+
+    startHint:
+      "Choisissez votre langue, puis sélectionnez le fichier Excel correspondant (avec la même structure que le fichier d'origine — feuille « Compilation ») pour afficher les points sur la carte.",
+
+    startBtn:
+      "Choisir un fichier Excel",
+
+    langChoiceLabel:
+      "Choisissez votre langue",
+
+    unspecified:
+      "Non spécifié",
+
+    toastUpdated:
+      (n,valid) =>
+        "✅ Carte mise à jour : "
+        + n
+        + " point(s) ("
+        + valid
+        + " avec coordonnées valides).",
+
+    toastLangSwitch:
+      "Langue changée en français. Pour afficher les données traduites, chargez le fichier Excel français correspondant.",
+
+    errEmpty:
+      "Le fichier est vide.",
+
+    errMissingCols:
+      (missing) =>
+        "Structure du fichier non conforme. Colonnes manquantes : "
+        + missing.join(', '),
+
+    errNoValidRows:
+      "Aucune ligne de données valide n'a été trouvée.",
+
+    errCannotRead:
+      "Impossible de lire le fichier.",
+
+    footerDevLabel:
+      "Développement : ",
+
+    footerEmailLabel:
+      "E-mail : ",
+
+    footerWaLabel:
+      "WhatsApp : ",
+
+    requiredHeader:[
+      "Numéro de série",
+      "Fichier source",
+      "Groupe/Délégation",
+      "N° Échantillon/Référence",
+      "Nom de l'agriculteur",
+      "Lieu / Parcelle",
+      "Code d'échantillon",
+      " Latitude (WGS84)",
+      " Longitude (WGS84)",
+      "Système de coordonnées d'origine",
+      "Coordonnées d'origine (telles que fournies)",
+      "Superficie (ha)",
+      "Culture précédente",
+      "Téléphone",
+      "Remarques"
+    ],
+
+    sheetName:
+      "Compilation"
+
+  },
+
+
+  en: {
+
+    code:'en',
+    dir:'ltr',
+    locale:'en',
+    label:'English',
+    flagShort:'EN',
+
+    docTitle:
+      "Unified Farmer Coordinates Map",
+
+    headerTitle:
+      "🌾 Unified Farmer Coordinates Map",
+
+    headerSubtitle:
+      "Unified compilation of farmer coordinates concerned by the phosphorus and soil fertility analysis — Republic of Tunisia",
+
+    campaignNote:
+      " · 2026/2027 campaign data · Coordinates unified under WGS84",
+
+    searchPlaceholder:
+      "Search for a farmer or a location...",
+
+    allGroups:
+      "All groups",
+
+    selectGroup:
+      "Select a group",
+
+    updateBtn:
+      "Update from an Excel file",
+
+    tabMap:
+      "Map",
+
+    tabCharts:
+      "Charts",
+
+    excelConfigTitle:
+      "Configure display and charts",
+    excelConfigSubtitle:
+      "Choose the columns displayed in point popups and the columns used to create charts.",
+    popupColumnsTitle:
+      "Columns to display in the popup",
+    popupColumnsNote:
+      "Coordinates remain available for the map even if they are not displayed in the popup.",
+    chartsColumnsTitle:
+      "Information to turn into charts",
+    chartCategoryLabel:
+      "Grouping / category column",
+    chartNumericLabel:
+      "Numeric columns to represent",
+    chartsColumnsNote:
+      "A bar chart will be created for each selected numeric column, grouped by the category column.",
+    cancelBtn:
+      "Cancel",
+    applyBtn:
+      "Display data",
+
+    legendTitle:
+      "Groups/Delegations",
+
+    statsTotal:
+      "Total points",
+
+    statsValid:
+      "Valid coordinates",
+
+    statsToVerify:
+      "To verify",
+
+    chartsEmptyMsg:
+      "No data yet — please load an Excel file.",
+
+    chart1Title:
+      "Number of points per group/delegation",
+
+    chart2Title:
+      "Total area (ha) per group/delegation",
+
+    chart3Title:
+      "Distribution of points per group (%)",
+
+    chart4Title:
+      "Average area per point (ha) per group",
+
+    kpiTotalPoints:
+      "Total points",
+
+    kpiValidCoords:
+      "Valid coordinates: ",
+
+    kpiTotalArea:
+      "Total area (ha)",
+
+    kpiAvgAreaPerPoint:
+      "Average area per point: ",
+
+    kpiGroupsCount:
+      "Number of groups/delegations",
+
+    kpiDifferentGroups:
+      "different groups",
+
+    seriesCount:
+      "Number of points",
+
+    seriesArea:
+      "Area (ha)",
+
+    seriesAvgArea:
+      "Average area (ha)",
+
+    areaMissingNote:
+      (missing,total,count) =>
+        "⚠️ Area is not provided for "
+        + missing
+        + " point(s) out of "
+        + total
+        + ". Total area and average area per point are calculated only from points with area data ("
+        + count
+        + " point(s)).",
+
+    popup:{
+      place:"Location / Plot",
+      group:"Group/Delegation",
+      area:"Area (ha)",
+      crop:"Previous crop",
+      phone:"Phone",
+      code:"Sample code",
+      coords:"Coordinates",
+      notes:"Notes"
+    },
+
+    startTitle:
+      "🌾 Unified Farmer Coordinates Map",
+
+    startSub:
+      "Unified compilation of farmer coordinates concerned by the phosphorus and soil fertility analysis — Republic of Tunisia",
+
+    startHint:
+      "Choose your language, then select the matching Excel file (with the same structure as the original file — “Data” sheet) to display the points on the map.",
+
+    startBtn:
+      "Choose an Excel file",
+
+    langChoiceLabel:
+      "Choose your language",
+
+    unspecified:
+      "Unspecified",
+
+    toastUpdated:
+      (n,valid) =>
+        "✅ Map updated: "
+        + n
+        + " point(s) ("
+        + valid
+        + " with valid coordinates).",
+
+    toastLangSwitch:
+      "Language switched to English. To display translated data, load the matching English Excel file.",
+
+    errEmpty:
+      "The file is empty.",
+
+    errMissingCols:
+      (missing) =>
+        "File structure not compliant. Missing columns: "
+        + missing.join(', '),
+
+    errNoValidRows:
+      "No valid data row was found.",
+
+    errCannotRead:
+      "Unable to read the file.",
+
+    footerDevLabel:
+      "Development: ",
+
+    footerEmailLabel:
+      "Email: ",
+
+    footerWaLabel:
+      "WhatsApp: ",
+
+    requiredHeader:[
+      "Serial Number",
+      "Source File",
+      "Group/Delegation",
+      "Sample/Reference No.",
+      "Farmer Name",
+      "Location / Plot",
+      "Sample Code",
+      " Latitude (WGS84)",
+      " Longitude (WGS84)",
+      "Original Coordinate System",
+      "Original Coordinates (as provided)",
+      "Area (ha)",
+      "Previous Crop",
+      "Phone",
+      "Notes"
+    ],
+
+    sheetName:
+      "Data"
+
+  },
+
+
+  ar: {
+
+    code:'ar',
+    dir:'rtl',
+    locale:'ar',
+    label:'العربية',
+    flagShort:'AR',
+
+    docTitle:
+      "خريطة إحداثيات الفلاحين الموحدة",
+
+    headerTitle:
+      "🌾 خريطة إحداثيات الفلاحين الموحدة",
+
+    headerSubtitle:
+      "تجميع موحّد لإحداثيات الفلاحين المعنيين بتحليل الفسفور وخصوبة التربة — الجمهورية التونسية",
+
+    campaignNote:
+      " · بيانات الموسم 2026/2027 · إحداثيات موحّدة وفق نظام WGS84",
+
+    searchPlaceholder:
+      "ابحث عن فلاح أو مكان...",
+
+    allGroups:
+      "كل المجموعات",
+
+    updateBtn:
+      "تحديث من ملف إكسل",
+
+    tabMap:
+      "الخريطة",
+
+    tabCharts:
+      "الرسوم البيانية",
+
+    excelConfigTitle:
+      "إعداد عرض البيانات والرسوم البيانية",
+    excelConfigSubtitle:
+      "اختر الأعمدة التي ستظهر في نوافذ النقاط والأعمدة التي سيتم تحويلها إلى رسوم بيانية.",
+    popupColumnsTitle:
+      "الأعمدة التي ستظهر في النافذة المنبثقة",
+    popupColumnsNote:
+      "تبقى الإحداثيات متاحة للخريطة حتى إذا لم يتم عرضها في النافذة المنبثقة.",
+    chartsColumnsTitle:
+      "المعلومات التي سيتم تحويلها إلى رسوم بيانية",
+    chartCategoryLabel:
+      "عمود التجميع / الفئة",
+    chartNumericLabel:
+      "الأعمدة الرقمية المراد تمثيلها",
+    chartsColumnsNote:
+      "سيتم إنشاء رسم بياني بالأعمدة لكل عمود رقمي يتم اختياره، مع التجميع حسب عمود الفئة.",
+    cancelBtn:
+      "إلغاء",
+    applyBtn:
+      "عرض البيانات",
+
+    legendTitle:
+      "المجموعات/المعتمديات",
+
+    statsTotal:
+      "إجمالي النقاط",
+
+    statsValid:
+      "إحداثيات صحيحة",
+
+    statsToVerify:
+      "بحاجة إلى تحقق",
+
+    chartsEmptyMsg:
+      "لا توجد بيانات بعد — يرجى تحميل ملف إكسل.",
+
+    chart1Title:
+      "عدد النقاط حسب المجموعة/المعتمدية",
+
+    chart2Title:
+      "المساحة الإجمالية (هك) حسب المجموعة/المعتمدية",
+
+    chart3Title:
+      "توزيع النقاط حسب المجموعة (%)",
+
+    chart4Title:
+      "متوسط المساحة لكل نقطة (هك) حسب المجموعة",
+
+    kpiTotalPoints:
+      "إجمالي النقاط",
+
+    kpiValidCoords:
+      "إحداثيات صحيحة: ",
+
+    kpiTotalArea:
+      "المساحة الإجمالية (هك)",
+
+    kpiAvgAreaPerPoint:
+      "متوسط المساحة لكل نقطة: ",
+
+    kpiGroupsCount:
+      "عدد المجموعات/المعتمديات",
+
+    kpiDifferentGroups:
+      "مجموعة مختلفة",
+
+    seriesCount:
+      "عدد النقاط",
+
+    seriesArea:
+      "المساحة (هك)",
+
+    seriesAvgArea:
+      "متوسط المساحة (هك)",
+
+    areaMissingNote:
+      (missing,total,count) =>
+        "⚠️ المساحة غير مذكورة لـ "
+        + missing
+        + " نقطة من أصل "
+        + total
+        + ". يتم احتساب المساحة الإجمالية والمتوسط لكل نقطة فقط انطلاقًا من النقاط التي تتوفر لها بيانات المساحة ("
+        + count
+        + " نقطة).",
+
+    popup:{
+      place:"المكان / القطعة",
+      group:"المجموعة/المعتمدية",
+      area:"المساحة (هك)",
+      crop:"الزراعة السابقة",
+      phone:"الهاتف",
+      code:"رمز العينة",
+      coords:"الإحداثيات",
+      notes:"ملاحظات"
+    },
+
+    startTitle:
+      "🌾 خريطة إحداثيات الفلاحين الموحدة",
+
+    startSub:
+      "تجميع موحّد لإحداثيات الفلاحين المعنيين بتحليل الفسفور وخصوبة التربة — الجمهورية التونسية",
+
+    startHint:
+      "اختر لغتك، ثم حدد ملف إكسل المطابق (بنفس هيكلة الملف الأصلي — ورقة «التجميع») لعرض النقاط على الخريطة.",
+
+    startBtn:
+      "اختيار ملف إكسل",
+
+    langChoiceLabel:
+      "اختر لغتك",
+
+    unspecified:
+      "غير محدد",
+
+    toastUpdated:
+      (n,valid) =>
+        "✅ تم تحديث الخريطة: "
+        + n
+        + " نقطة ("
+        + valid
+        + " بإحداثيات صحيحة).",
+
+    toastLangSwitch:
+      "تم تغيير اللغة إلى العربية. لعرض البيانات مترجمة، حمّل ملف إكسل العربي المطابق.",
+
+    errEmpty:
+      "الملف فارغ.",
+
+    errMissingCols:
+      (missing) =>
+        "هيكلة الملف غير مطابقة. الأعمدة الناقصة: "
+        + missing.join('، '),
+
+    errNoValidRows:
+      "لم يتم العثور على أي سطر بيانات صالح.",
+
+    errCannotRead:
+      "تعذّرت قراءة الملف.",
+
+    footerDevLabel:
+      "تطوير :",
+
+    footerEmailLabel:
+      "البريد الالكتروني :",
+
+    footerWaLabel:
+      "واتساب :",
+
+    requiredHeader:[
+      "الرقم التسلسلي",
+      "الملف المصدر",
+      "المجموعة/المعتمدية",
+      "رقم العينة/المرجع",
+      "اسم الفلاح",
+      "المكان / القطعة",
+      "رمز العينة",
+      " Latitude (WGS84)",
+      " Longitude (WGS84)",
+      "نظام الإحداثيات الأصلي",
+      "الإحداثيات الأصلية (كما وردت)",
+      "المساحة (هك)",
+      "الزراعة السابقة",
+      "الهاتف",
+      "ملاحظات"
+    ],
+
+    sheetName:
+      "التجميع"
+
+  }
+
+};
+
+
+/* =========================================================
+   APPLICATION
+   ========================================================= */
+
+(function(){
+
+  "use strict";
+
+
+  /* =======================================================
+     VARIABLES
+     ======================================================= */
+
+  let currentLang = 'fr';
+
+  let map;
+  let initialMapBounds = null;
+  let initialMapView = null;
+  let cluster;
+
+  let allMarkers = [];
+  let currentData = [];
+
+  const colorCache = {};
+
+  const PALETTE = [
+    "#4c6b3f",
+    "#b3822e",
+    "#7a5230",
+    "#2b6e7a",
+    "#8a3f6e",
+    "#4f6ea8",
+    "#a0522d",
+    "#3f8a5a",
+    "#c0392b",
+    "#6b4f8a",
+    "#2f8f7a",
+    "#a67c00"
+  ];
+
+  const UNSPEC =
+    "__UNSPECIFIED__";
+
+
+  /* =======================================================
+     TRANSLATION HELPERS
+     ======================================================= */
+
+  function t(){
+
+    return I18N[currentLang];
+
+  }
+
+
+  function groupKey(g){
+
+    return (
+      g === null ||
+      g === undefined ||
+      g === ''
+    )
+      ? UNSPEC
+      : g;
+
+  }
+
+
+  function groupLabel(g){
+
+    return (
+      g === null ||
+      g === undefined ||
+      g === ''
+    )
+      ? t().unspecified
+      : g;
+
+  }
+
+
+  function colorFor(gKey){
+
+    if(colorCache[gKey]){
+
+      return colorCache[gKey];
+
+    }
+
+    const idx =
+      Object.keys(colorCache).length %
+      PALETTE.length;
+
+    colorCache[gKey] =
+      PALETTE[idx];
+
+    return colorCache[gKey];
+
+  }
+
+
+  /* =======================================================
+     TOAST
+     ======================================================= */
+
+  function showToast(msg,kind){
+
+    const el =
+      document.getElementById('toast');
+
+    el.textContent =
+      msg;
+
+    el.className =
+      'show' +
+      (
+        kind
+          ? ' ' + kind
+          : ''
+      );
+
+    clearTimeout(
+      showToast._tm
+    );
+
+    showToast._tm =
+      setTimeout(
+        () => {
+          el.className = '';
+        },
+        4200
+      );
+
+  }
+
+
+  /* =======================================================
+     MAP INITIALIZATION
+     ======================================================= */
+
+  function initMap(){
+
+    map =
+      L.map(
+        'map',
+        {
+          zoomControl:true,
+          minZoom:5
+        }
+      ).setView(
+        [35.0,9.5],
+        7
+      );
+
+
+    const osm =
+      L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+          attribution:
+            '&copy; OpenStreetMap contributors',
+          maxZoom:19
+        }
+      );
+
+
+    const relief =
+      L.tileLayer(
+        'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        {
+          attribution:
+            '&copy; OpenTopoMap (CC-BY-SA)',
+          maxZoom:17
+        }
+      );
+
+
+    const satellite =
+      L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {
+          attribution:
+            'Tiles &copy; Esri',
+          maxZoom:19
+        }
+      );
+
+
+    const clair =
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        {
+          attribution:
+            '&copy; OpenStreetMap contributors &copy; CARTO',
+          maxZoom:19
+        }
+      );
+
+
+    satellite.addTo(map);
+
+    map.attributionControl.setPosition(
+      'bottomleft'
+    );
+
+
+    window._layerCtrl =
+      L.control.layers(
+        {
+          "OpenStreetMap":osm,
+          "Relief (OpenTopoMap)":relief,
+          "Satellite (Esri)":satellite,
+          "Light basemap":clair
+        },
+        null,
+        {
+          position:'topleft',
+          collapsed:true
+        }
+      ).addTo(map);
+
+
+    cluster =
+      L.markerClusterGroup({
+
+        maxClusterRadius:45,
+
+        spiderfyOnMaxZoom:true,
+
+        iconCreateFunction:function(c){
+
+          const n =
+            c.getChildCount();
+
+          const size =
+            n < 10
+              ? 34
+              : n < 30
+                ? 40
+                : 48;
+
+          return L.divIcon({
+
+            html:
+              '<div style="' +
+              'width:'+size+'px;' +
+              'height:'+size+'px;' +
+              'border-radius:50%;' +
+              'background:radial-gradient(circle at 35% 30%, #6d8a5c, #375029);' +
+              'display:flex;' +
+              'align-items:center;' +
+              'justify-content:center;' +
+              'color:#fbf6e8;' +
+              'font-family:Cairo,sans-serif;' +
+              'font-weight:800;' +
+              'font-size:'+(n<10?13:14)+'px;' +
+              'box-shadow:0 3px 8px rgba(0,0,0,.35);' +
+              'border:2px solid #fff;' +
+              '">' +
+              n +
+              '</div>',
+
+            className:'',
+            iconSize:[
+              size,
+              size
+            ]
+
+          });
+
+        }
+
+      });
+
+
+    map.addLayer(
+      cluster
+    );
+
+
+    setTimeout(
+      () => map.invalidateSize(),
+      100
+    );
+
+    setTimeout(
+      () => map.invalidateSize(),
+      500
+    );
+
+    setTimeout(
+      () => map.invalidateSize(),
+      1200
+    );
+
+
+    if(
+      document.fonts &&
+      document.fonts.ready
+    ){
+
+      document.fonts.ready.then(
+        () => map.invalidateSize()
+      );
+
+    }
+
+
+    window.addEventListener(
+      'resize',
+      () => map.invalidateSize()
+    );
+
+  }
+
+
+  /* =======================================================
+     MARKER ICON
+     ======================================================= */
+
+  function makeIcon(color){
+
+    return L.divIcon({
+
+      className:'',
+
+      html:
+        '<div class="marker-pin" style="background:' +
+        color +
+        ';"></div>',
+
+      iconSize:[
+        16,
+        16
+      ],
+
+      iconAnchor:[
+        8,
+        15
+      ],
+
+      popupAnchor:[
+        0,
+        -14
+      ]
+
+    });
+
+  }
+
+
+  function fmt(v){
+
+    return (
+      v === null ||
+      v === undefined ||
+      v === ''
+    )
+      ? '—'
+      : v;
+
+  }
+
+
+  /* =======================================================
+     POPUP
+     ======================================================= */
+
+  function escapeHtml(v){
+    return String(v === null || v === undefined ? '' : v)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  function buildPopup(d){
+    const cols = currentConfig.popupColumns || [];
+    const titleHeader = currentConfig.titleColumn || null;
+    const titleValue = titleHeader && d.row ? d.row[titleHeader] : d.farmer;
+    let html = '<div class="popup-card"><h3>' + escapeHtml(fmt(titleValue)) + '</h3>';
+    cols.forEach(col => {
+      const value = d.row && Object.prototype.hasOwnProperty.call(d.row,col) ? d.row[col] : '';
+      html += '<div class="popup-row"><span>' + escapeHtml(col) + '</span><span>' + escapeHtml(fmt(value)) + '</span></div>';
+    });
+
+    /* Synthèse agrégée : groupe/délégation + type de culture.
+       Les chiffres affichés dans ce popup correspondent aux données
+       du fichier actuellement chargé. */
+    try{
+      const areaColumn =
+        (currentConfig.chartNumericColumns || [])
+          .find(c=>/superficie|area|surface|مساحة/i.test(c));
+
+      const addSummaryBlock = (title, rows) => {
+        if(!rows || !rows.length) return;
+
+        let totalArea = 0;
+        let areaCount = 0;
+
+        rows.forEach(x=>{
+          const a=parseFloat(
+            String(x.row?.[areaColumn] ?? '')
+              .replace(/\s/g,'')
+              .replace(',','.')
+          );
+
+          if(Number.isFinite(a)){
+            totalArea += a;
+            areaCount++;
+          }
+        });
+
+        html += '<div class="popup-row"><span>' +
+          escapeHtml(title) +
+          '</span><span>' +
+          escapeHtml(String(rows.length)) +
+          '</span></div>';
+
+        if(areaColumn && areaCount){
+          html += '<div class="popup-row"><span>' +
+            escapeHtml(
+              currentLang==='ar'
+                ? 'المساحة الإجمالية'
+                : currentLang==='en'
+                  ? 'Total area'
+                  : 'Superficie totale'
+            ) +
+            '</span><span>' +
+            escapeHtml(
+              totalArea.toLocaleString(
+                undefined,
+                {maximumFractionDigits:2}
+              )
+            ) +
+            '</span></div>';
+        }
+      };
+
+      const groupColumn=currentConfig.chartCategory;
+
+      if(groupColumn && d.row && currentData?.length){
+        const groupValue=d.row[groupColumn];
+
+        const sameGroup=currentData.filter(
+          x=>String(x.row?.[groupColumn] ?? '') ===
+             String(groupValue ?? '')
+        );
+
+        addSummaryBlock(
+          currentLang==='ar'
+            ? 'عدد النقاط في المجموعة/المعتمدية'
+            : currentLang==='en'
+              ? 'Points in group/delegation'
+              : 'Points dans le groupe/délégation',
+          sameGroup
+        );
+      }
+
+      const cultureColumn=d.row
+        ? Object.keys(d.row).find(
+            c=>/culture précédente|previous crop|previous culture|crop|المحصول السابق|الثقافة السابقة|الزراعة السابقة/i.test(c)
+          )
+        : null;
+
+      if(cultureColumn && currentData?.length){
+        const cultureValue=String(
+          d.row?.[cultureColumn] ?? ''
+        ).trim();
+
+        if(cultureValue){
+          const sameCulture=currentData.filter(
+            x=>String(
+              x.row?.[cultureColumn] ?? ''
+            ).trim() === cultureValue
+          );
+
+          addSummaryBlock(
+            currentLang==='ar'
+              ? 'عدد النقاط حسب نوع الزراعة'
+              : currentLang==='en'
+                ? 'Points for this crop type'
+                : 'Points pour ce type de culture',
+            sameCulture
+          );
+        }
+      }
+    }catch(e){
+      console.warn('Popup summary:',e);
+    }
+
+    html += '<span class="popup-badge">#' + escapeHtml(fmt(d.id)) + ' — ' + escapeHtml(fmt(d.source)) + '</span></div>';
+    return html;
+  }
+
+  /* =======================================================
+     RENDER MARKERS
+     ======================================================= */
+
+  function renderMarkers(data){
+
+    cluster.clearLayers();
+
+    allMarkers = [];
+
+    let validCount = 0;
+
+
+    data.forEach(
+      d => {
+
+        if(
+          typeof d.lat !== 'number' ||
+          typeof d.lon !== 'number' ||
+          isNaN(d.lat) ||
+          isNaN(d.lon)
+        ){
+
+          return;
+
+        }
+
+
+        validCount++;
+
+
+        const marker =
+          L.marker(
+            [
+              d.lat,
+              d.lon
+            ],
+            {
+              icon:
+                makeIcon(
+                  colorFor(
+                    groupKey(d.group)
+                  )
+                )
+            }
+          );
+
+
+        marker.bindPopup(
+          buildPopup(d)
+        );
+
+
+        marker._meta =
+          d;
+
+
+        allMarkers.push(
+          marker
+        );
+
+
+        cluster.addLayer(
+          marker
+        );
+
+      }
+    );
+
+
+    updateStats(
+      data.length,
+      validCount
+    );
+
+    updateLegend(
+      data
+    );
+
+    updateGroupFilter(
+      data
+    );
+
+    return validCount;
+
+  }
+
+
+  /* =======================================================
+     STATS
+     ======================================================= */
+
+  function updateStats(total,valid){
+
+    const el =
+      document.getElementById(
+        'headStats'
+      );
+
+    const T =
+      t();
+
+
+    el.innerHTML =
+
+      '<div class="stat-pill">' +
+        T.statsTotal +
+        ' : <b>' +
+        total +
+        '</b>' +
+      '</div>' +
+
+      '<div class="stat-pill">' +
+        T.statsValid +
+        ' : <b>' +
+        valid +
+        '</b>' +
+      '</div>' +
+
+      '<div class="stat-pill">' +
+        T.statsToVerify +
+        ' : <b>' +
+        (total-valid) +
+        '</b>' +
+      '</div>';
+
+  }
+
+
+  /* =======================================================
+     LEGEND
+     ======================================================= */
+
+  function updateLegend(data){
+
+    const groups = {};
+
+
+    data.forEach(
+      d => {
+
+        const k =
+          groupKey(d.group);
+
+        groups[k] =
+          (groups[k] || 0) + 1;
+
+      }
+    );
+
+
+    const sorted =
+      Object.entries(groups)
+        .sort(
+          (a,b) => b[1] - a[1]
+        )
+        .slice(0,10);
+
+
+    const el =
+      document.getElementById(
+        'legendItems'
+      );
+
+
+    el.innerHTML =
+      sorted
+        .map(
+          ([k,n]) =>
+
+            '<div class="legend-item">' +
+
+              '<span class="legend-dot" ' +
+                'style="background:' +
+                colorFor(k) +
+                ';">' +
+              '</span>' +
+
+              (
+                k === UNSPEC
+                  ? t().unspecified
+                  : k
+              ) +
+
+              ' (' +
+              n +
+              ')' +
+
+            '</div>'
+
+        )
+        .join('');
+
+  }
+
+
+  /* =======================================================
+     GROUP FILTER
+     ======================================================= */
+
+  function updateGroupFilter(
+    data,
+    keepSelection
+  ){
+
+    const sel =
+      document.getElementById(
+        'groupFilter'
+      );
+
+    const prevValue =
+      sel.value;
+
+
+    const keys =
+      [
+        ...new Set(
+          data.map(
+            d => groupKey(d.group)
+          )
+        )
+      ];
+
+
+    keys.sort(
+      (a,b) => {
+
+        const A =
+          a === UNSPEC
+            ? t().unspecified
+            : a;
+
+        const B =
+          b === UNSPEC
+            ? t().unspecified
+            : b;
+
+        return A.localeCompare(
+          B,
+          t().locale
+        );
+
+      }
+    );
+
+
+    sel.innerHTML =
+      '<option value="__none__">' +
+        t().selectGroup +
+      '</option>' +
+
+      '<option value="">' +
+        t().allGroups +
+      '</option>' +
+
+      keys.map(
+        k => {
+
+          const label =
+            k === UNSPEC
+              ? t().unspecified
+              : k;
+
+          return (
+
+            '<option value="' +
+              String(k)
+                .replace(/"/g,'&quot;') +
+            '">' +
+
+              label +
+
+            '</option>'
+
+          );
+
+        }
+      ).join('');
+
+
+    if(
+      keepSelection &&
+      [
+        ...sel.options
+      ].some(
+        o => o.value === prevValue
+      )
+    ){
+
+      sel.value =
+        prevValue;
+
+    } else {
+      sel.value = '__none__';
+    }
+
+  }
+
+
+  /* =======================================================
+     RESET MAP FROM THE GROUP SELECTOR
+     ======================================================= */
+
+  function resetToInitialMapView(){
+    if(!map || !allMarkers.length) return;
+
+    const select = document.getElementById('groupFilter');
+    const input  = document.getElementById('searchInput');
+
+    if(select) select.value = '__none__';
+    if(input)  input.value = '';
+
+    // Restaurer TOUS les marqueurs.
+    cluster.clearLayers();
+    allMarkers.forEach(marker => cluster.addLayer(marker));
+
+    const restoreGlobalView = () => {
+      map.invalidateSize();
+
+      /*
+         Retour EXACT à la vue globale mémorisée après le chargement
+         des données : même centre + même niveau de zoom.
+         Ainsi, après un zoom manuel ou un zoom sur un groupe,
+         "Tous les groupes" annule réellement le zoom.
+      */
+      if(initialMapView){
+        map.setView(
+          initialMapView.center,
+          initialMapView.zoom,
+          {
+            animate:true,
+            duration:.6
+          }
+        );
+
+        // Sécurisation après le rendu du MarkerCluster.
+        setTimeout(() => {
+          map.invalidateSize();
+          map.setView(
+            initialMapView.center,
+            initialMapView.zoom,
+            {animate:false}
+          );
+        }, 700);
+
+        return;
+      }
+
+      // Secours si la vue initiale n'est pas encore mémorisée.
+      const bounds =
+        initialMapBounds &&
+        initialMapBounds.isValid()
+          ? initialMapBounds
+          : L.featureGroup(allMarkers).getBounds().pad(.15);
+
+      if(!bounds || !bounds.isValid()) return;
+
+      map.fitBounds(
+        bounds,
+        {
+          animate:true,
+          duration:.6,
+          padding:[20,20]
+        }
+      );
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(restoreGlobalView);
+    });
+  }
+
+  /* =======================================================
+     SEARCH + FILTER
+     ======================================================= */
+
+  function applyFilters(
+    zoomToResults
+  ){
+
+    const input =
+      document.getElementById(
+        'searchInput'
+      );
+
+    const select =
+      document.getElementById(
+        'groupFilter'
+      );
+
+
+    const q =
+      input.value
+        .trim()
+        .toLowerCase();
+
+
+    const grp =
+      select.value;
+
+
+    const visibleMarkers = [];
+
+
+    cluster.clearLayers();
+
+
+    allMarkers.forEach(
+      m => {
+
+        const d =
+          m._meta;
+
+
+        const matchesGroup =
+          !grp ||
+          groupKey(d.group) === grp;
+
+
+        const farmer =
+          String(d.farmer || '')
+            .toLowerCase();
+
+
+        const place =
+          String(d.place || '')
+            .toLowerCase();
+
+
+        const matchesQuery =
+          !q ||
+          farmer.includes(q) ||
+          place.includes(q);
+
+
+        if(
+          matchesGroup &&
+          matchesQuery
+        ){
+
+          cluster.addLayer(m);
+
+          visibleMarkers.push(m);
+
+        }
+
+      }
+    );
+
+
+    if(!zoomToResults) return;
+
+
+    /*
+       Lorsque "Tous les groupes" est sélectionné
+       et qu'aucune recherche n'est active,
+       on revient toujours à la vue globale
+       de toutes les données, même si la carte
+       avait été fortement zoomée auparavant.
+    */
+    if(grp === '__none__'){
+      if(!q) return;
+    }
+
+    if(!grp){
+      resetToInitialMapView();
+      return;
+    }
+
+
+    if(
+      visibleMarkers.length === 1
+    ){
+
+      map.setView(
+        visibleMarkers[0].getLatLng(),
+        14,
+        {
+          animate:true
+        }
+      );
+
+    }
+
+    else if(
+      visibleMarkers.length > 1
+    ){
+
+      const bounds =
+        L.featureGroup(
+          visibleMarkers
+        ).getBounds();
+
+
+      map.fitBounds(
+        bounds.pad(.15),
+        {
+          animate:true,
+          maxZoom:16
+        }
+      );
+
+    }
+
+
+  }
+
+
+  /* =======================================================
+     FIT MAP
+     ======================================================= */
+
+  function fitToMarkers(options){
+
+    if(!allMarkers.length)
+      return;
+
+    options = options || {};
+
+    // La première vue affichée après le chargement des données est
+    // mémorisée. « Tous les groupes » revient exactement à cette vue.
+    if(options.resetToInitial){
+      if(initialMapView){
+        map.setView(
+          initialMapView.center,
+          initialMapView.zoom,
+          {
+            animate:true,
+            duration:.7
+          }
+        );
+        setTimeout(() => {
+          map.setView(
+            initialMapView.center,
+            initialMapView.zoom,
+            {animate:false}
+          );
+        }, 760);
+        return;
+      }
+
+      if(initialMapBounds){
+        map.fitBounds(
+          initialMapBounds,
+          {
+            animate:true,
+            duration:.7
+          }
+        );
+        return;
+      }
+    }
+
+    const group =
+      L.featureGroup(
+        allMarkers
+      );
+
+    const bounds =
+      group.getBounds().pad(.15);
+
+    map.fitBounds(
+      bounds,
+      options.animate === false
+        ? {}
+        : {animate:true,duration:.7}
+    );
+
+  }
+
+
+  /* =======================================================
+     LOAD DATA
+     ======================================================= */
+
+  function loadData(data){
+
+    currentData =
+      data;
+
+
+    const valid =
+      renderMarkers(data);
+
+
+    if(map){
+
+      map.invalidateSize();
+
+      setTimeout(
+        () => map.invalidateSize(),
+        150
+      );
+
+    }
+
+
+    fitToMarkers({animate:false});
+
+    // Mémoriser exactement la vue réellement affichée après cet import.
+    // Chaque nouvel import devient la nouvelle « première carte ».
+    if(allMarkers.length){
+      initialMapBounds =
+        L.featureGroup(allMarkers)
+          .getBounds()
+          .pad(.15);
+
+      // Important : on mémorise le centre + niveau de zoom réellement
+      // obtenus par Leaflet, et non seulement les bounds.
+      initialMapView = {
+        center: map.getCenter(),
+        zoom: map.getZoom()
+      };
+    }
+
+    renderCharts(data);
+    try{ renderDynamicKPI(data); }catch(e){ console.warn("KPI",e); }
+
+    return valid;
+
+  }
+
+
+  /* =======================================================
+     TABS
+     ======================================================= */
+
+  document
+    .querySelectorAll('.tab-btn')
+    .forEach(
+      btn => {
+
+        btn.addEventListener(
+          'click',
+          function(){
+
+            document
+              .querySelectorAll('.tab-btn')
+              .forEach(
+                b =>
+                  b.classList.remove(
+                    'active'
+                  )
+              );
+
+
+            document
+              .querySelectorAll(
+                '#mapWrap,#chartsWrap'
+              )
+              .forEach(
+                v =>
+                  v.classList.add(
+                    'hidden-view'
+                  )
+              );
+
+
+            this.classList.add(
+              'active'
+            );
+
+
+            const target =
+              document.getElementById(
+                this.dataset.tab
+              );
+
+
+            target.classList.remove(
+              'hidden-view'
+            );
+
+
+            if(
+              this.dataset.tab ===
+              'mapWrap' &&
+              map
+            ){
+
+              setTimeout(
+                () =>
+                  map.invalidateSize(),
+                80
+              );
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+
+  /* =======================================================
+     CHARTS
+     ======================================================= */
+
+  const CHART_FONT =
+    "'Tajawal', sans-serif";
+
+
+  let chartCount;
+  let chartArea;
+  let chartPie;
+  let chartAvgArea;
+  let dynamicCharts = [];
+  let currentConfig = {popupColumns:[],chartCategory:'',chartNumericColumns:[],titleColumn:null,schemaLang:null};
+  let currentPendingImport = null;
+
+
+  function groupStats(data){
+
+    const groups = {};
+
+
+    data.forEach(
+      d => {
+
+        const k =
+          groupKey(d.group);
+
+
+        if(!groups[k]){
+
+          groups[k] = {
+            count:0,
+            area:0,
+            areaCount:0
+          };
+
+        }
+
+
+        groups[k].count++;
+
+
+        const a =
+          typeof d.area === 'number'
+            ? d.area
+            : parseFloat(d.area);
+
+
+        if(!isNaN(a)){
+
+          groups[k].area += a;
+          groups[k].areaCount++;
+
+        }
+
+      }
+    );
+
+
+    return Object.entries(groups)
+      .map(
+        ([k,s]) => ({
+
+          key:k,
+
+          label:
+            k === UNSPEC
+              ? t().unspecified
+              : k,
+
+          count:s.count,
+
+          area:
+            Math.round(
+              s.area * 100
+            ) / 100,
+
+          avgArea:
+            s.areaCount
+              ? Math.round(
+                  (
+                    s.area /
+                    s.areaCount
+                  ) * 100
+                ) / 100
+              : 0
+
+        })
+      )
+      .sort(
+        (a,b) =>
+          b.count - a.count
+      );
+
+  }
+
+
+  function destroyCharts(){
+    [chartCount,chartArea,chartPie,chartAvgArea].forEach(c => { if(c) c.destroy(); });
+    dynamicCharts.forEach(c => { if(c) c.destroy(); });
+    dynamicCharts = [];
+    chartCount = chartArea = chartPie = chartAvgArea = null;
+  }
+
+  function renderCharts(data){
+    destroyCharts();
+    const empty = document.getElementById('chartsEmpty');
+    const content = document.getElementById('chartsContent');
+    const grid = document.querySelector('.charts-grid');
+
+    if(!data || !data.length){
+      empty.classList.remove('hidden-view');
+      content.classList.add('hidden-view');
+      if(grid) grid.innerHTML='';
+      return;
+    }
+
+    empty.classList.add('hidden-view');
+    content.classList.remove('hidden-view');
+
+    const category = currentConfig.chartCategory;
+    const labels = [];
+    const groups = {};
+
+    data.forEach(d=>{
+      const key = category && d.row
+        ? String(d.row[category] ?? t().unspecified)
+        : t().unspecified;
+      if(!groups[key]) groups[key]={count:0, values:{}};
+      groups[key].count++;
+    });
+
+    Object.keys(groups).forEach(k=>labels.push(k));
+
+    /* Coordonnées : utiles pour la carte, mais pas comme variable statistique. */
+    const isCoordinateColumn = col => {
+      const s=String(col||'').trim();
+      return /(^|\s)(latitude|longitude|lat|lon)(\s|$)/i.test(s) ||
+             /coordonn[ée]e?s?|coordinates?|إحداثيات|خط العرض|خط الطول/i.test(s);
+    };
+
+    const numericColumns = (currentConfig.chartNumericColumns || []).filter(col=>!isCoordinateColumn(col));
+
+    /* Recalcul des valeurs numériques uniquement pour les variables statistiques. */
+    data.forEach(d=>{
+      const key = category && d.row
+        ? String(d.row[category] ?? t().unspecified)
+        : t().unspecified;
+      numericColumns.forEach(col=>{
+        const n=parseFloat(String(d.row?.[col] ?? '').replace(/\s/g,'').replace(',','.'));
+        if(Number.isFinite(n)){
+          if(!groups[key].values[col]) groups[key].values[col]={sum:0,count:0};
+          groups[key].values[col].sum += n;
+          groups[key].values[col].count++;
+        }
+      });
+    });
+
+    const total=data.length;
+    const validCoords=data.filter(d=>Number.isFinite(d.lat)&&Number.isFinite(d.lon)).length;
+    const groupCount=labels.length;
+
+    const areaCol = numericColumns.find(c=>/superficie|area|surface|مساحة/i.test(c)) || null;
+    const areaVals = areaCol ? data.map(d=>parseFloat(String(d.row?.[areaCol] ?? '').replace(/\s/g,'').replace(',','.'))).filter(Number.isFinite) : [];
+    const areaTotal = areaVals.reduce((a,b)=>a+b,0);
+    const areaAvg = areaVals.length ? areaTotal/areaVals.length : 0;
+
+    const kpiLabels = currentLang==='ar'
+      ? {points:'النقاط',coords:'الإحداثيات الصالحة',area:'المساحة الإجمالية',groups:'المجموعات',groupsSub:'تصنيفات مميزة'}
+      : currentLang==='en'
+      ? {points:'Points',coords:'Valid coordinates',area:'Total area',groups:'Groups',groupsSub:'Distinct categories'}
+      : {points:'Points',coords:'Coordonnées valides',area:'Superficie totale',groups:'Groupes / délégations',groupsSub:'Catégories distinctes'};
+
+    document.getElementById('kpiRow').innerHTML=
+      '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">👨‍🌾</span>'+escapeHtml(kpiLabels.points)+'</div><div class="kpi-value">'+total.toLocaleString()+'</div><div class="kpi-sub">'+escapeHtml(kpiLabels.coords)+' : '+validCoords.toLocaleString()+'</div></div>'+
+      '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">📍</span>'+escapeHtml(kpiLabels.coords)+'</div><div class="kpi-value">'+validCoords.toLocaleString()+'</div><div class="kpi-sub">'+(total?Math.round(validCoords/total*100):0)+'%</div></div>'+
+      '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🌾</span>'+escapeHtml(kpiLabels.area)+(areaCol?' — '+escapeHtml(areaCol):'')+'</div><div class="kpi-value">'+(areaCol?areaTotal.toLocaleString(undefined,{maximumFractionDigits:2}):'—')+'</div><div class="kpi-sub">'+(areaVals.length?('Moyenne : '+areaAvg.toLocaleString(undefined,{maximumFractionDigits:2})):'')+'</div></div>'+
+      '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🗺️</span>'+escapeHtml(kpiLabels.groups)+'</div><div class="kpi-value">'+groupCount.toLocaleString()+'</div><div class="kpi-sub">'+escapeHtml(kpiLabels.groupsSub)+'</div></div>';
+
+    document.getElementById('areaNote').textContent=category?(t().chartCategoryLabel+': '+category):'';
+    if(grid) grid.innerHTML='';
+
+    function addChart(title, chartLabels, values, type='bar', datasetLabel=title){
+      const card=document.createElement('div');
+      card.className='chart-card';
+      const h=document.createElement('h3');
+      h.textContent=title;
+      const holder=document.createElement('div');
+      holder.className='chart-holder';
+      const canvas=document.createElement('canvas');
+      holder.appendChild(canvas);
+      card.appendChild(h);
+      card.appendChild(holder);
+      if(grid) grid.appendChild(card);
+
+      const chart=new Chart(canvas.getContext('2d'),{
+        type,
+        data:{
+          labels:chartLabels,
+          datasets:[{
+            label:datasetLabel,
+            data:values,
+            backgroundColor:chartLabels.map((_,i)=>colorFor(chartLabels[i])),
+            borderWidth:1
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{
+            legend:{display:type==='doughnut'||type==='pie'},
+            tooltip:{
+              callbacks:{
+                label:function(ctx){
+                  const vals = ctx.dataset.data || [];
+                  const total = vals.reduce((a,b)=>a + (Number(b)||0), 0);
+                  const value = Number(ctx.raw) || 0;
+                  const pct = total ? (value/total*100) : 0;
+                  return ' ' + ctx.label + ' : ' + value.toLocaleString(undefined,{maximumFractionDigits:2})
+                    + ' (' + pct.toFixed(1) + '%)';
+                }
+              }
+            }
+          },
+          scales:(type==='doughnut'||type==='pie')?{}:{
+            x:{
+              beginAtZero:true
+            },
+            y:{
+              beginAtZero:true,
+              grid:{
+                display:true,
+                drawTicks:true
+              },
+              ticks:{
+                display:true,
+                precision:0,
+                autoSkip:false,
+                padding:6
+              }
+            }
+          }
+        }
+      });
+      dynamicCharts.push(chart);
+    }
+
+    function addSingleMetricDoughnut(title, chartLabels, pointValues, areaValues, metricNames){
+      const card=document.createElement('div');
+      card.className='chart-card';
+
+      const h=document.createElement('h3');
+      h.textContent=title;
+
+      const holder=document.createElement('div');
+      holder.className='chart-holder';
+
+      const canvas=document.createElement('canvas');
+      holder.appendChild(canvas);
+      card.appendChild(h);
+      card.appendChild(holder);
+
+      if(grid) grid.appendChild(card);
+
+      const palette=chartLabels.map(label=>colorFor(label));
+
+      const pointTotal=pointValues.reduce(
+        (a,b)=>a+(Number(b)||0),
+        0
+      );
+
+      const areaTotalLocal=areaValues.reduce(
+        (a,b)=>a+(Number(b)||0),
+        0
+      );
+
+      const chart=new Chart(
+        canvas.getContext('2d'),
+        {
+          type:'doughnut',
+
+          data:{
+            labels:chartLabels,
+            datasets:[{
+              label:metricNames.points,
+              data:pointValues,
+              backgroundColor:palette,
+              borderWidth:2,
+              cutout:'58%'
+            }]
+          },
+
+          options:{
+            responsive:true,
+            maintainAspectRatio:false,
+
+            plugins:{
+              legend:{
+                display:true,
+                position:'right'
+              },
+
+              tooltip:{
+                callbacks:{
+                  title:function(items){
+                    return items.length ? items[0].label : '';
+                  },
+
+                  label:function(ctx){
+                    const index=ctx.dataIndex;
+
+                    const points=
+                      Number(pointValues[index]) || 0;
+
+                    const area=
+                      Number(areaValues[index]) || 0;
+
+                    const pointsPct=
+                      pointTotal
+                        ? (points/pointTotal)*100
+                        : 0;
+
+                    const areaPct=
+                      areaTotalLocal
+                        ? (area/areaTotalLocal)*100
+                        : 0;
+
+                    return [
+                      ' ' + metricNames.points + ' : '
+                        + points.toLocaleString(
+                            undefined,
+                            {maximumFractionDigits:0}
+                          )
+                        + ' (' + pointsPct.toFixed(1) + '%)',
+
+                      ' ' + metricNames.area + ' : '
+                        + area.toLocaleString(
+                            undefined,
+                            {maximumFractionDigits:2}
+                          )
+                        + ' (' + areaPct.toFixed(1) + '%)'
+                    ];
+                  }
+                }
+              }
+            }
+          }
+        }
+      );
+
+      dynamicCharts.push(chart);
+    }
+
+    /* 1. Répartition du nombre de points par groupe / délégation. */
+    if(labels.length){
+      const counts = labels.map(k=>groups[k].count);
+      const title = currentLang==='ar' ? 'عدد النقاط حسب المجموعة/المعتمدية' : currentLang==='en' ? 'Number of points by group/delegation' : 'Nombre de points par groupe/delegation';
+      addChart(title, labels, counts, labels.length<=8 ? 'doughnut' : 'bar');
+
+      /* Un seul graphique circulaire pour les deux pourcentages :
+         anneau intérieur = points ; anneau extérieur = superficie. */
+      if(areaCol){
+        const groupAreas = labels.map(k=>{
+          const x=groups[k].values[areaCol];
+          return x ? Math.round(x.sum*100)/100 : 0;
+        });
+
+        const dualGroupTitle =
+          currentLang==='ar'
+            ? 'النسبة المئوية حسب المجموعة/المعتمدية'
+            : currentLang==='en'
+              ? 'Percentage by group/delegation'
+              : 'Pourcentage par groupe/délégation';
+
+        addSingleMetricDoughnut(
+          dualGroupTitle,
+          labels,
+          counts,
+          groupAreas,
+          {
+            points:
+              currentLang==='ar'
+                ? 'عدد النقاط'
+                : currentLang==='en'
+                  ? 'Points'
+                  : 'Nombre de points',
+
+            area:
+              currentLang==='ar'
+                ? 'المساحة'
+                : currentLang==='en'
+                  ? 'Area'
+                  : 'Superficie'
+          }
+        );
+      }
+    }
+
+    /* 2. Pour chaque variable quantitative pertinente : total + moyenne + statistiques. */
+    numericColumns.forEach(col=>{
+      const totalValues=labels.map(k=>{
+        const x=groups[k].values[col];
+        return x ? Math.round(x.sum*100)/100 : 0;
+      });
+      const avgValues=labels.map(k=>{
+        const x=groups[k].values[col];
+        return x && x.count ? Math.round((x.sum/x.count)*100)/100 : 0;
+      });
+
+      const totalTitle=currentLang==='ar' ? `الإجمالي — ${col} حسب ${category||'الفئة'}` : currentLang==='en' ? `Total — ${col} by ${category||'category'}` : `Total — ${col} par ${category||'catégorie'}`;
+      const avgTitle=currentLang==='ar' ? `المتوسط — ${col} حسب ${category||'الفئة'}` : currentLang==='en' ? `Average — ${col} by ${category||'category'}` : `Moyenne — ${col} par ${category||'catégorie'}`;
+      addChart(totalTitle,labels,totalValues,'bar');
+      addChart(avgTitle,labels,avgValues,'bar');
+    });
+
+    /* 3. Cultures : nombre de points + superficie totale par type de culture. */
+    const cultureCol = data[0]?.row
+      ? Object.keys(data[0].row).find(c=>/culture précédente|previous crop|previous culture|crop|المحصول السابق|الثقافة السابقة|الزراعة السابقة/i.test(c))
+      : null;
+
+    if(cultureCol){
+      const cultureMap={};
+      data.forEach(d=>{
+        const culture=String(d.row?.[cultureCol] ?? '').trim();
+        if(!culture) return;
+        if(!cultureMap[culture]) cultureMap[culture]={count:0,area:0,areaCount:0};
+        cultureMap[culture].count++;
+        if(areaCol){
+          const a=parseFloat(String(d.row?.[areaCol] ?? '').replace(/\s/g,'').replace(',','.'));
+          if(Number.isFinite(a)){ cultureMap[culture].area+=a; cultureMap[culture].areaCount++; }
+        }
+      });
+
+      const cultures=Object.entries(cultureMap).sort((a,b)=>b[1].count-a[1].count).slice(0,20);
+      if(cultures.length){
+        const labelsCulture=cultures.map(x=>x[0]);
+        const cultureCountTitle=currentLang==='ar' ? `عدد النقاط حسب نوع الزراعة (${cultureCol})` : currentLang==='en' ? `Number of points by crop type (${cultureCol})` : `Nombre de points par type de culture (${cultureCol})`;
+        addChart(cultureCountTitle,labelsCulture,cultures.map(x=>x[1].count),labelsCulture.length<=8?'doughnut':'bar');
+        if(areaCol){
+          const cultureAreas = cultures.map(x=>Math.round(x[1].area*100)/100);
+          const cultureAreaTitle=currentLang==='ar' ? `إجمالي المساحات حسب نوع الزراعة (${areaCol})` : currentLang==='en' ? `Total area by crop type (${areaCol})` : `Superficie totale par type de culture (${areaCol})`;
+          addChart(cultureAreaTitle,labelsCulture,cultureAreas,'bar');
+
+          /* Un seul graphique circulaire pour les deux pourcentages :
+             anneau intérieur = points ; anneau extérieur = superficie. */
+          const cultureCounts = cultures.map(x=>x[1].count);
+
+          const dualCultureTitle =
+            currentLang==='ar'
+              ? 'النسبة المئوية حسب نوع الزراعة'
+              : currentLang==='en'
+                ? 'Percentage by crop type'
+                : 'Pourcentage par type de culture';
+
+          addSingleMetricDoughnut(
+            dualCultureTitle,
+            labelsCulture,
+            cultureCounts,
+            cultureAreas,
+            {
+              points:
+                currentLang==='ar'
+                  ? 'عدد النقاط'
+                  : currentLang==='en'
+                    ? 'Points'
+                    : 'Nombre de points',
+
+              area:
+                currentLang==='ar'
+                  ? 'المساحة'
+                  : currentLang==='en'
+                    ? 'Area'
+                    : 'Superficie'
+            }
+          );
+        }
+      }
+    }
+
+    /* 4. Qualité des données : taux de remplissage de chaque colonne. */
+    const qCard=document.getElementById('qualityDashboardCard');
+    const qBox=document.getElementById('qualityDashboardRows');
+    if(qCard && qBox){
+      const headers=data[0]?.headers || Object.keys(data[0]?.row || {});
+      const qRows=headers.map(col=>{
+        const filled=data.filter(d=>d.row?.[col]!==null && d.row?.[col]!==undefined && String(d.row[col]).trim()!=='').length;
+        return {col,pct:total?Math.round(filled/total*100):0};
+      }).sort((a,b)=>a.pct-b.pct);
+      qBox.innerHTML=qRows.map(q=>'<div class="quality-row"><div>'+escapeHtml(q.col)+'</div><div class="quality-bar"><span style="width:'+q.pct+'%"></span></div><strong>'+q.pct+'%</strong></div>').join('');
+    }
+  }
+
+  /* =======================================================
+     EXCEL
+     ======================================================= */
+
+  function normalizeHeader(h){
+
+    return String(h || '')
+      .trim();
+
+  }
+
+
+  function detectExcelSchema(header){
+    for(const lang of ['fr','en','ar']){
+      const required=I18N[lang].requiredHeader.map(h=>h.trim());
+      const found=required.filter(h=>header.includes(h));
+      if(found.length>=8) return {lang,required};
+    }
+    return null;
+  }
+
+  function parseWorkbook(workbook){
+    let sheet=null;
+    for(const lang of ['fr','en','ar']){ if(workbook.Sheets[I18N[lang].sheetName]){sheet=I18N[lang].sheetName;break;} }
+    if(!sheet) sheet=workbook.SheetNames[0];
+    const ws=workbook.Sheets[sheet];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
+    if(!rows.length) throw new Error(t().errEmpty);
+    const header=rows[0].map(normalizeHeader);
+    const schema=detectExcelSchema(header);
+    if(!schema) throw new Error(t().errMissingCols(I18N[t().code].requiredHeader.filter(h=>!header.includes(h.trim()))));
+    const required=schema.required;
+    const missing=required.filter(h=>!header.includes(h));
+    if(missing.length) throw new Error(t().errMissingCols(missing));
+    const idx=h=>header.findIndex(x=>x===h); const data=[];
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i]; if(!r||r.every(c=>c===null||c==='')) continue;
+      /* Une ligne partiellement remplie (ex : numéro de série effacé mais
+         d'autres champs présents) reste incluse dans le jeu de données —
+         elle ne doit PAS être supprimée silencieusement, sinon le tableau
+         « Qualité des données » ne peut plus détecter les champs manquants
+         et affiche à tort 100% de remplissage. Seules les lignes totalement
+         vides (déjà filtrées ci-dessus) sont ignorées. */
+      const id=r[idx(required[0])];
+      const row={}; header.forEach((h,j)=>row[h]=r[j]);
+      data.push({id,source:r[idx(required[1])],group:r[idx(required[2])],ref:r[idx(required[3])],farmer:r[idx(required[4])],place:r[idx(required[5])],code:r[idx(required[6])],lat:typeof r[idx(required[7])] === 'number'?r[idx(required[7])]:parseFloat(r[idx(required[7])]),lon:typeof r[idx(required[8])] === 'number'?r[idx(required[8])]:parseFloat(r[idx(required[8])]),orig_system:r[idx(required[9])],orig_coords:r[idx(required[10])],area:r[idx(required[11])],crop:r[idx(required[12])],phone:r[idx(required[13])],notes:r[idx(required[14])],row,headers:header,schemaLang:schema.lang});
+    }
+    if(!data.length) throw new Error(t().errNoValidRows);
+    return {data,headers:header,schemaLang:schema.lang};
+  }
+
+  function openExcelConfig(parsed,isInitial,file){
+    const headers=parsed.headers||[];
+    const numeric=headers.filter(h=>{ if(/(^|\s)(latitude|longitude|lat|lon)(\s|$)/i.test(String(h).trim()) || /coordonn[ée]e?s?|coordinates?|إحداثيات|خط العرض|خط الطول/i.test(String(h))) return false; return parsed.data.slice(0,100).some(d=>{const v=String(d.row?.[h]??'').replace(/\s/g,'').replace(',','.');return v!==''&&Number.isFinite(parseFloat(v));}); });
+    const popupDefault=headers.filter(h=>[/groupe|group|المجموعة/i,/nom de l.?agriculteur|farmer name|اسم الفلاح/i,/lieu|location|plot|مكان|قطعة/i,/superficie|area|مساحة/i,/culture|crop|زراعة|محصول/i,/téléphone|phone|هاتف/i].some(rx=>rx.test(h)));
+    currentPendingImport={parsed,isInitial,file};
+    document.getElementById('popupColumnsList').innerHTML=headers.map(h=>'<label class="excel-col-item"><input type="checkbox" class="popup-col" value="'+escapeHtml(h)+'" '+(popupDefault.includes(h)?'checked':'')+'><span>'+escapeHtml(h)+'</span></label>').join('');
+    const groupCol=headers.find(h=>/groupe|group|المجموعة/i.test(h))||'';
+    document.getElementById('chartCategorySelect').innerHTML='<option value="">'+escapeHtml(t().unspecified)+'</option>'+headers.map(h=>'<option value="'+escapeHtml(h)+'" '+(h===groupCol?'selected':'')+'>'+escapeHtml(h)+'</option>').join('');
+    document.getElementById('chartNumericList').innerHTML=numeric.map(h=>'<label class="excel-col-item"><input type="checkbox" class="chart-num" value="'+escapeHtml(h)+'" '+(/superficie|area|مساحة/i.test(h)?'checked':'')+'><span>'+escapeHtml(h)+'</span></label>').join('');
+    document.getElementById('excelConfigOverlay').classList.add('show');
+  }
+
+  function closeExcelConfig(){document.getElementById('excelConfigOverlay').classList.remove('show');currentPendingImport=null;}
+
+  function applyExcelConfig(){
+    if(!currentPendingImport) return;
+    const {parsed,isInitial}=currentPendingImport;
+    const popupColumns=Array.from(document.querySelectorAll('.popup-col:checked')).map(x=>x.value);
+    const chartNumericColumns=Array.from(document.querySelectorAll('.chart-num:checked')).map(x=>x.value);
+    const chartCategory=document.getElementById('chartCategorySelect').value;
+    if(!popupColumns.length){showToast('⚠️ '+t().popupColumnsTitle,'error');return;}
+    if(!chartNumericColumns.length){showToast('⚠️ '+t().chartNumericLabel,'error');return;}
+    currentConfig={popupColumns,chartCategory,chartNumericColumns,titleColumn:popupColumns.find(h=>/nom de l.?agriculteur|farmer name|اسم الفلاح/i.test(h))||popupColumns[0],schemaLang:parsed.schemaLang};
+    closeExcelConfig();
+    const valid=loadData(parsed.data);
+    if(isInitial) document.getElementById('startOverlay').classList.add('hidden');
+    else showToast(t().toastUpdated(parsed.data.length,valid),null);
+  }
+
+  function handleFile(file,isInitial){
+    const reader=new FileReader();
+    reader.onload=function(e){try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});const parsed=parseWorkbook(wb);openExcelConfig(parsed,isInitial,file);}catch(err){if(isInitial) document.getElementById('startError').textContent='⚠️ '+err.message;else showToast('⚠️ '+err.message,'error');}};
+    reader.onerror=function(){const msg=t().errCannotRead;if(isInitial) document.getElementById('startError').textContent='⚠️ '+msg;else showToast('⚠️ '+msg,'error');};
+    reader.readAsArrayBuffer(file);
+  }
+
+  /* =======================================================
+     LANGUAGE BUTTON RENDER
+     ======================================================= */
+
+  function renderLanguageButtons(){
+    const activeLang = currentLang;
+
+    document.querySelectorAll('.lang-btn[data-lang]').forEach(btn => {
+      const isActive = btn.getAttribute('data-lang') === activeLang;
+      const isHeader = !!btn.closest('.lang-switch-header');
+
+      btn.classList.remove('active');
+      btn.removeAttribute('aria-current');
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      btn.setAttribute('data-selected', isActive ? 'true' : 'false');
+
+      btn.style.removeProperty('background');
+      btn.style.removeProperty('border-color');
+      btn.style.removeProperty('color');
+      btn.style.removeProperty('font-weight');
+      btn.style.removeProperty('box-shadow');
+
+      if(isActive){
+        btn.classList.add('active');
+        btn.setAttribute('aria-current', 'true');
+        btn.style.setProperty('background', 'var(--wheat)', 'important');
+        btn.style.setProperty('border-color', 'var(--wheat-dark)', 'important');
+        btn.style.setProperty('color', 'var(--olive-dark)', 'important');
+        btn.style.setProperty('font-weight', '800', 'important');
+
+        if(isHeader){
+          btn.style.setProperty(
+            'box-shadow',
+            '0 0 0 2px rgba(255,255,255,.28), 0 2px 8px rgba(0,0,0,.20)',
+            'important'
+          );
+        }
+      } else if(isHeader){
+        btn.style.setProperty('background', 'rgba(255,255,255,.12)', 'important');
+        btn.style.setProperty('border-color', 'rgba(255,255,255,.35)', 'important');
+        btn.style.setProperty('color', '#fbf6e8', 'important');
+      }
+    });
+
+    document.documentElement.setAttribute('data-current-lang', activeLang);
+  }
+
+
+  /* =======================================================
+     LANGUAGE RENDER
+     ======================================================= */
+
+  function applyStaticText(){
+
+    const T =
+      t();
+
+
+    document.title =
+      T.docTitle;
+
+
+    document.documentElement.lang =
+      T.code;
+
+
+    document.documentElement.dir =
+      T.dir;
+
+
+    /* =====================================================
+       LOGOS
+       ===================================================== */
+
+    const logoStart =
+      document.querySelector(
+        '.brand-logo-start'
+      );
+
+
+    const logoEnd =
+      document.querySelector(
+        '.brand-logo-end'
+      );
+
+
+    if(
+      logoStart &&
+      logoEnd
+    ){
+
+      const invertLogos =
+        T.code === 'ar';
+
+
+      logoStart.classList.toggle(
+        'logo-inverted-start',
+        invertLogos
+      );
+
+
+      logoEnd.classList.toggle(
+        'logo-inverted-end',
+        invertLogos
+      );
+
+    }
+
+
+    /* =====================================================
+       TEXTES STATIQUES
+       ===================================================== */
+
+    document
+      .querySelectorAll(
+        '[data-i18n]'
+      )
+      .forEach(
+        el => {
+
+          const key =
+            el.getAttribute(
+              'data-i18n'
+            );
+
+
+          if(
+            T[key] !== undefined
+          ){
+
+            el.textContent =
+              T[key];
+
+          }
+
+        }
+      );
+
+
+    /* =====================================================
+       PLACEHOLDERS
+       ===================================================== */
+
+    document
+      .querySelectorAll(
+        '[data-i18n-placeholder]'
+      )
+      .forEach(
+        el => {
+
+          const key =
+            el.getAttribute(
+              'data-i18n-placeholder'
+            );
+
+
+          if(
+            T[key] !== undefined
+          ){
+
+            el.placeholder =
+              T[key];
+
+          }
+
+        }
+      );
+
+
+    document.getElementById(
+      'searchInput'
+    ).placeholder =
+      T.searchPlaceholder;
+
+
+    /* =====================================================
+       CHART TITLES
+       ===================================================== */
+
+    /*
+       IMPORTANT : ces titres statiques sont remplacés par des
+       titres dynamiques générés dans renderCharts() (addChart).
+       Une fois qu'un premier rendu de graphiques a eu lieu,
+       ces éléments n'existent donc plus dans le DOM.
+       On protège l'accès pour ne jamais interrompre le reste
+       de applyStaticText() ni empêcher la mise à jour du %
+       de disponibilité des données lors d'un changement de langue.
+    */
+    const elChartTitle1 = document.getElementById('chartTitle1');
+    if(elChartTitle1) elChartTitle1.textContent = T.chart1Title;
+
+    const elChartTitle2 = document.getElementById('chartTitle2');
+    if(elChartTitle2) elChartTitle2.textContent = T.chart2Title;
+
+    const elChartTitle3 = document.getElementById('chartTitle3');
+    if(elChartTitle3) elChartTitle3.textContent = T.chart3Title;
+
+    const elChartTitle4 = document.getElementById('chartTitle4');
+    if(elChartTitle4) elChartTitle4.textContent = T.chart4Title;
+
+
+    /* =====================================================
+       NOM DE L'AUTEUR
+       ===================================================== */
+
+    const authorName =
+      document.querySelector(
+        '.author-name'
+      );
+
+
+    if(authorName){
+
+      /*
+         On applique le bon nom selon la langue
+         AVANT de lancer la protection.
+      */
+
+      authorName.textContent =
+        __f.name(
+          T.code === 'ar'
+        );
+
+    }
+
+
+    /*
+       La protection surveille uniquement
+       les informations de l'auteur.
+    */
+
+    __f.guard();
+
+
+    renderLanguageButtons();
+
+  }
+
+
+  /* =======================================================
+     MESSAGES EXPLICITES DU CHANGEMENT DE LANGUE
+     ======================================================= */
+
+  const LANGUAGE_SWITCH_MESSAGES = {
+    fr: "Langue changée en français. Pour afficher les données traduites, chargez le fichier Excel français correspondant.",
+    en: "Language switched to English. To display translated data, load the matching English Excel file.",
+    ar: "تم تغيير اللغة إلى العربية. لعرض البيانات مترجمة، حمّل ملف إكسل العربي المطابق."
+  };
+
+
+  /* =======================================================
+     SET LANGUAGE
+     ======================================================= */
+
+  function setLanguage(
+    lang,
+    opts
+  ){
+
+    opts = opts || {};
+
+    const isFirstLoad = !!opts.first;
+    const notify = !!opts.notify;
+
+    if(!I18N[lang]) return;
+
+    /*
+       IMPORTANT : on synchronise d'abord l'état logique et
+       l'état visuel. Ainsi, même si une fonction secondaire
+       rencontre une erreur, le bouton sélectionné reste correct.
+    */
+    currentLang = lang;
+    document.documentElement.setAttribute('data-current-lang', currentLang);
+    renderLanguageButtons();
+
+    try {
+      applyStaticText();
+
+      /* Actualisation des éléments dynamiques. */
+      if(map){
+        const validCount = currentData.filter(
+          d =>
+            typeof d.lat === 'number' &&
+            typeof d.lon === 'number' &&
+            !isNaN(d.lat) &&
+            !isNaN(d.lon)
+        ).length;
+
+        updateStats(currentData.length, validCount);
+        updateLegend(currentData);
+        updateGroupFilter(currentData, true);
+
+        allMarkers.forEach(m =>
+          m.bindPopup(buildPopup(m._meta))
+        );
+
+        renderCharts(currentData);
+        try{ renderDynamicKPI(currentData); }catch(e){ console.warn('KPI', e); }
+        applyFilters(false);
+      }
+    } catch(err) {
+      /*
+         Une erreur secondaire ne doit JAMAIS annuler la sélection
+         de langue ni empêcher le message de changement de langue.
+      */
+      console.error('Erreur pendant le rendu de la langue :', err);
+    } finally {
+      /* Synchronisation finale obligatoire des deux groupes de boutons. */
+      renderLanguageButtons();
+
+      if(notify && !isFirstLoad){
+        showToast(
+          LANGUAGE_SWITCH_MESSAGES[currentLang],
+          'info'
+        );
+      }
+    }
+  }
+
+
+  /* =======================================================
+     EVENTS — LANGUAGE BUTTONS
+     ======================================================= */
+
+  /*
+     Les deux groupes FR / EN / AR utilisent exactement le même handler.
+     Un seul currentLang pilote donc l'écran initial ET l'en-tête.
+  */
+  document.querySelectorAll('.lang-btn[data-lang]').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+
+      const lang = this.getAttribute('data-lang');
+      if(!I18N[lang]) return;
+      if(lang === currentLang) return;
+
+      /*
+         Comme dans Unified_Farmer_Coordinates_Map_Multilingual_AR_FR_EN.html :
+         un seul appel à setLanguage avec notify:true suffit.
+         Le toast est déclenché depuis le bloc "finally" de setLanguage,
+         donc il s'affiche toujours, même si une fonction secondaire
+         (ex. rendu des graphiques) rencontre une erreur.
+      */
+      setLanguage(lang, { notify: true });
+    });
+  });
+
+
+  /* =======================================================
+     EVENTS
+     ======================================================= */
+
+  document
+    .getElementById(
+      'fileInput'
+    )
+    .addEventListener(
+      'change',
+      function(e){
+
+        const file =
+          e.target.files[0];
+
+
+        if(file){
+
+          handleFile(
+            file,
+            false
+          );
+
+        }
+
+
+        e.target.value =
+          '';
+
+      }
+    );
+
+
+  document
+    .getElementById(
+      'startFileInput'
+    )
+    .addEventListener(
+      'change',
+      function(e){
+
+        const file =
+          e.target.files[0];
+
+
+        document
+          .getElementById(
+            'startError'
+          )
+          .textContent =
+          '';
+
+
+        if(file){
+
+          handleFile(
+            file,
+            true
+          );
+
+        }
+
+
+        e.target.value =
+          '';
+
+      }
+    );
+
+
+  /* =======================================================
+     RECHERCHE
+     ======================================================= */
+
+  document
+    .getElementById(
+      'searchInput'
+    )
+    .addEventListener(
+      'input',
+      function(){
+
+        /*
+           La recherche est totalement indépendante
+           de la protection de l'auteur.
+        */
+
+        applyFilters(true);
+
+      }
+    );
+
+
+  /* =======================================================
+     FILTRE
+     ======================================================= */
+
+    const groupFilterEl =
+      document.getElementById('groupFilter');
+
+    /*
+       FILTRE DES GROUPES — ZOOM STABLE
+
+       Principe :
+       1. Un clic/ouverture de la liste ne modifie JAMAIS le zoom.
+       2. Le choix d'un groupe filtre les marqueurs ET zoome sur
+          les résultats sélectionnés.
+       3. Après le zoom, la liste revient immédiatement à l'état
+          neutre « Sélectionner un groupe ».
+       4. Le prochain clic permet de choisir un autre groupe.
+       5. « Tous les groupes » restaure tous les marqueurs et la vue globale.
+    */
+
+    groupFilterEl.addEventListener(
+      'change',
+      function(){
+        const selectedValue = this.value;
+
+        if(selectedValue === '__none__'){
+          return;
+        }
+
+        /*
+           On mémorise exactement la vue actuelle.
+           Ainsi aucune action du filtre ne peut modifier le zoom.
+        */
+        const currentCenter =
+          map.getCenter();
+
+        const currentZoom =
+          map.getZoom();
+
+        /*
+           Appliquer le filtre ET zoomer sur les résultats.
+           Le clic d'ouverture de la liste ne déclenche rien :
+           seul le changement de sélection arrive ici.
+        */
+        applyFilters(true);
+
+        /*
+           Pour les groupes normaux, applyFilters(true) effectue
+           le zoom sur le groupe sélectionné.
+           Pour « Tous les groupes », il restaure la vue globale.
+        */
+
+        /*
+           Désélection immédiate :
+           la liste revient à son état neutre et attend
+           le prochain clic de l'utilisateur.
+        */
+        this.value = '__none__';
+      }
+    );
+
+    /*
+       IMPORTANT :
+       aucun événement "click" n'est utilisé ici.
+       Ouvrir ou cliquer sur la liste ne déclenche donc
+       ni zoom, ni reset, ni modification de la carte.
+    */
+
+
+
+  document.getElementById('excelConfigApply').addEventListener('click',applyExcelConfig);
+  document.getElementById('excelConfigCancel').addEventListener('click',function(){closeExcelConfig();});
+  document.getElementById('excelConfigOverlay').addEventListener('click',function(e){if(e.target===this) closeExcelConfig();});
+
+  /* =======================================================
+     START
+     ======================================================= */
+
+  initMap();
+
+  /* Rendu initial garanti après le chargement complet du DOM. */
+  setLanguage(currentLang, {first:true, notify:false});
+
+})();
+
+</script>
+
+</body>
+</html>
