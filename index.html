@@ -708,6 +708,38 @@ header::after{
   );
 }
 
+.start-card.dragging{
+  cursor:grabbing;
+  box-shadow:0 24px 60px rgba(0,0,0,.28);
+  transition:none;
+  user-select:none;
+}
+
+.start-drag-handle{
+  position:relative;
+  margin:-10px -10px 10px;
+  padding:6px 0 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:grab;
+  border-radius:16px 16px 0 0;
+  touch-action:none;
+}
+
+.start-drag-handle:active{
+  cursor:grabbing;
+}
+
+.start-drag-dots{
+  font-size:1.05rem;
+  line-height:1;
+  color:var(--ink-soft);
+  opacity:.5;
+  letter-spacing:2px;
+  pointer-events:none;
+}
+
 .start-lang-row{
   margin-bottom:16px;
 }
@@ -1128,6 +1160,10 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   <div id="startOverlay">
 
     <div class="start-card">
+
+      <div class="start-drag-handle" title="Déplacer la fenêtre / Move window / نقل النافذة">
+        <span class="start-drag-dots">⠿</span>
+      </div>
 
       <div class="start-lang-row">
 
@@ -4950,6 +4986,81 @@ const I18N = {
 
   /* Rendu initial garanti après le chargement complet du DOM. */
   setLanguage(currentLang, {first:true, notify:false});
+
+  /* =======================================================
+     FENÊTRE DE DÉMARRAGE DÉPLAÇABLE (draggable start window)
+     ======================================================= */
+  (function enableStartCardDrag(){
+
+    const card   = document.querySelector('#startOverlay .start-card');
+    const handle = card ? card.querySelector('.start-drag-handle') : null;
+    if(!card || !handle) return;
+
+    let dragging = false;
+    let offsetX  = 0;
+    let offsetY  = 0;
+
+    function clamp(value, min, max){
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function getPoint(e){
+      return (e.touches && e.touches.length) ? e.touches[0] : e;
+    }
+
+    function startDrag(e){
+      const point = getPoint(e);
+      const rect  = card.getBoundingClientRect();
+
+      /* Passage d'un positionnement centré (flex) à un
+         positionnement libre, sans saut visuel. */
+      card.style.position = 'fixed';
+      card.style.margin   = '0';
+      card.style.left     = rect.left + 'px';
+      card.style.top      = rect.top + 'px';
+      card.style.width    = rect.width + 'px';
+
+      offsetX = point.clientX - rect.left;
+      offsetY = point.clientY - rect.top;
+
+      dragging = true;
+      card.classList.add('dragging');
+
+      if(e.type === 'mousedown') e.preventDefault();
+    }
+
+    function moveDrag(e){
+      if(!dragging) return;
+
+      const point = getPoint(e);
+      const rect  = card.getBoundingClientRect();
+
+      const maxLeft = window.innerWidth  - rect.width;
+      const maxTop  = window.innerHeight - rect.height;
+
+      const newLeft = clamp(point.clientX - offsetX, 0, Math.max(0, maxLeft));
+      const newTop  = clamp(point.clientY - offsetY, 0, Math.max(0, maxTop));
+
+      card.style.left = newLeft + 'px';
+      card.style.top  = newTop + 'px';
+
+      if(e.type === 'touchmove') e.preventDefault();
+    }
+
+    function endDrag(){
+      dragging = false;
+      card.classList.remove('dragging');
+    }
+
+    handle.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', moveDrag);
+    window.addEventListener('mouseup', endDrag);
+
+    handle.addEventListener('touchstart', startDrag, {passive:false});
+    window.addEventListener('touchmove', moveDrag, {passive:false});
+    window.addEventListener('touchend', endDrag);
+
+  })();
 
 })();
 
