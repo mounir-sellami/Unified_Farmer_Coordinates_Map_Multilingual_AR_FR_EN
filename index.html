@@ -5004,77 +5004,108 @@ const I18N = {
 
      Ce site est une page statique sans serveur propre : pour un
      compteur partagé entre tous les visiteurs, on s'appuie sur le
-     service gratuit CountAPI (aucune clé requise).
+     service gratuit Abacus (abacus.jasoncameron.dev), qui remplace
+     l'ancien CountAPI.xyz (définitivement hors service depuis 2026).
 
-     - "Visites totales"  : incrémenté une fois par chargement de
-                             page, jamais décrémenté (compteur cumulatif).
-     - "En ligne"          : incrémenté à l'arrivée, décrémenté au
-                             départ (fermeture d'onglet / navigation),
-                             puis rafraîchi périodiquement pour
-                             refléter les autres visiteurs connectés.
+     Principe (sans authentification, donc uniquement des "hit",
+     c'est-à-dire des +1 — aucune décrémentation directe n'est
+     possible sans clé admin) :
 
-     En cas d'échec réseau (service indisponible, hors-ligne, etc.),
-     les pastilles affichent simplement "—" sans jamais bloquer le
-     reste de l'application.
+     - KEY_JOIN  : +1 à chaque arrivée sur la page.
+                   -> Sert directement de compteur "Visites totales"
+                      (cumulatif, ne diminue jamais).
+     - KEY_LEAVE : +1 au départ de chaque visiteur (fermeture
+                   d'onglet, navigation ailleurs...).
+     - "En ligne" = JOIN - LEAVE (jamais en dessous de 1, puisque
+                    le visiteur actuel est forcément présent).
+
+     Rafraîchi toutes les 15s pour refléter les autres visiteurs.
+     En cas d'échec réseau, les pastilles affichent "—" sans jamais
+     bloquer le reste de l'application.
   */
 
   (function initVisitorCounters(){
 
-    const CA_BASE   = 'https://api.countapi.xyz';
-    const CA_NS     = 'unified-farmer-map-2026';
-    const KEY_TOTAL = 'total-visits';
-    const KEY_ONLINE= 'online-now';
+    const AB_BASE   = 'https://abacus.jasoncameron.dev';
+    const AB_NS     = 'unified-farmer-coords-map-tn';
+    const KEY_JOIN  = 'total-visits';
+    const KEY_LEAVE = 'total-leaves';
 
     const elOnline = document.getElementById('statOnlineValue');
     const elTotal  = document.getElementById('statTotalVisitsValue');
 
-    let onlineDecremented = false;
+    let joinCount   = null;
+    let leaveCount  = 0;
+    let leftAlready = false;
 
-    function setOnline(v){
-      if(elOnline) elOnline.textContent = (v === null || isNaN(v)) ? '—' : Math.max(1, v);
+    function renderOnline(){
+      if(!elOnline) return;
+      if(joinCount === null){
+        elOnline.textContent = '—';
+        return;
+      }
+      elOnline.textContent = Math.max(1, joinCount - leaveCount);
     }
 
     function setTotal(v){
-      if(elTotal) elTotal.textContent = (v === null || isNaN(v)) ? '—' : v;
+      if(elTotal){
+        elTotal.textContent =
+          (typeof v === 'number' && !isNaN(v)) ? v : '—';
+      }
     }
 
-    /* Visite totale : +1 définitif à chaque chargement de page. */
-    fetch(CA_BASE + '/hit/' + CA_NS + '/' + KEY_TOTAL)
+    /* Arrivée : +1 définitif (sert aussi de "visites totales"). */
+    fetch(AB_BASE + '/hit/' + AB_NS + '/' + KEY_JOIN)
       .then(r => r.json())
-      .then(d => setTotal(d && d.value))
-      .catch(() => setTotal(null));
+      .then(d => {
+        joinCount = (d && typeof d.value === 'number') ? d.value : null;
+        setTotal(joinCount);
+        renderOnline();
+      })
+      .catch(() => { setTotal(null); renderOnline(); });
 
-    /* Présence en ligne : +1 à l'arrivée. */
-    fetch(CA_BASE + '/hit/' + CA_NS + '/' + KEY_ONLINE)
-      .then(r => r.json())
-      .then(d => setOnline(d && d.value))
-      .catch(() => setOnline(null));
-
-    /* Rafraîchissement périodique du nombre de connectés. */
-    const pollTimer = setInterval(function(){
-      fetch(CA_BASE + '/get/' + CA_NS + '/' + KEY_ONLINE)
+    function refreshLeaves(){
+      fetch(AB_BASE + '/get/' + AB_NS + '/' + KEY_LEAVE)
         .then(r => r.json())
-        .then(d => setOnline(d && d.value))
+        .then(d => {
+          leaveCount = (d && typeof d.value === 'number') ? d.value : 0;
+          renderOnline();
+        })
         .catch(() => {});
-    }, 20000);
+    }
+    refreshLeaves();
 
-    /* Décrément à la fermeture / au départ de la page (une seule fois). */
+    /* Rafraîchissement périodique (arrivées + départs des autres visiteurs). */
+    const pollTimer = setInterval(function(){
+      fetch(AB_BASE + '/get/' + AB_NS + '/' + KEY_JOIN)
+        .then(r => r.json())
+        .then(d => {
+          if(d && typeof d.value === 'number'){
+            joinCount = d.value;
+            setTotal(joinCount);
+            renderOnline();
+          }
+        })
+        .catch(() => {});
+      refreshLeaves();
+    }, 15000);
+
+    /* Départ : +1 sur le compteur de départs (une seule fois par session). */
     function leaveNow(){
-      if(onlineDecremented) return;
-      onlineDecremented = true;
+      if(leftAlready) return;
+      leftAlready = true;
       clearInterval(pollTimer);
 
-      const url = CA_BASE + '/update/' + CA_NS + '/' + KEY_ONLINE + '?amount=-1';
-
+      /*
+         Une requête "image" est utilisée car elle reste fiable même
+         pendant la fermeture de la page (contrairement à un simple
+         fetch, qui peut être annulé par le navigateur à ce moment-là).
+      */
       try{
-        if(navigator.sendBeacon){
-          navigator.sendBeacon(url);
-        } else {
-          fetch(url, { method:'GET', keepalive:true }).catch(()=>{});
-        }
-      }catch(e){
-        try{ (new Image()).src = url; }catch(e2){}
-      }
+        const beacon = new Image();
+        beacon.src =
+          AB_BASE + '/hit/' + AB_NS + '/' + KEY_LEAVE + '?_=' + Date.now();
+      }catch(e){}
     }
 
     window.addEventListener('pagehide', leaveNow);
