@@ -5057,15 +5057,47 @@ const I18N = {
     const KEY_JOIN  = 'total-visits';
     const KEY_LEAVE = 'total-leaves';
 
+    /* Clés de secours locales : utilisées uniquement si le service
+       distant est injoignable (bloqué par le réseau, un bloqueur de
+       pub/tracking, hors-ligne...), pour ne jamais laisser les
+       pastilles bloquées sur "—". */
+    const LS_TOTAL     = 'ufcm_local_total_visits';
+    const LS_HAS_TAKEN = 'ufcm_local_has_hit_this_session';
+
     const elOnline = document.getElementById('statOnlineValue');
     const elTotal  = document.getElementById('statTotalVisitsValue');
 
-    let joinCount   = null;
-    let leaveCount  = 0;
-    let leftAlready = false;
+    let joinCount     = null;   // dernier total connu (distant ou local)
+    let leaveCount    = 0;
+    let usingFallback = false;  // true si on est passé en mode secours local
 
+    /* Requête réseau avec délai d'expiration : sans ça, une requête
+       qui ne répond jamais (au lieu d'échouer franchement) laisse
+       les pastilles bloquées sur "—" indéfiniment. */
+    function fetchWithTimeout(url, ms){
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), ms || 6000);
+      return fetch(url, {signal: ctrl.signal})
+        .finally(() => clearTimeout(timer));
+    }
+
+    function readLocalTotal(){
+      const v = parseInt(localStorage.getItem(LS_TOTAL), 10);
+      return isNaN(v) ? 0 : v;
+    }
+
+    function writeLocalTotal(v){
+      try{ localStorage.setItem(LS_TOTAL, String(v)); }catch(e){}
+    }
+
+    /* En mode secours (pas de service partagé joignable), on affiche
+       au moins le visiteur actuel : "En ligne" = 1, jamais "—". */
     function renderOnline(){
       if(!elOnline) return;
+      if(usingFallback){
+        elOnline.textContent = '1';
+        return;
+      }
       if(joinCount === null){
         elOnline.textContent = '—';
         return;
@@ -5080,18 +5112,51 @@ const I18N = {
       }
     }
 
-    /* Arrivée : +1 définitif (sert aussi de "visites totales"). */
-    fetch(AB_BASE + '/hit/' + AB_NS + '/' + KEY_JOIN)
-      .then(r => r.json())
-      .then(d => {
-        joinCount = (d && typeof d.value === 'number') ? d.value : null;
-        setTotal(joinCount);
-        renderOnline();
-      })
-      .catch(() => { setTotal(null); renderOnline(); });
+    function activateFallback(){
+      usingFallback = true;
+      let total = readLocalTotal();
+      /* On ne compte qu'une seule fois par session pour ne pas
+         gonfler le total local à chaque re-rendu/rafraîchissement. */
+      if(!sessionStorage.getItem(LS_HAS_TAKEN)){
+        total += 1;
+        writeLocalTotal(total);
+        try{ sessionStorage.setItem(LS_HAS_TAKEN, '1'); }catch(e){}
+      }
+      joinCount = total;
+      setTotal(total);
+      renderOnline();
+    }
+
+    /* Arrivée : +1 définitif (sert aussi de "visites totales").
+       On retente plusieurs fois avant de basculer en mode secours,
+       pour absorber une simple lenteur ou un échec ponctuel. */
+    function hitJoinWithRetry(attemptsLeft, delayMs){
+      fetchWithTimeout(AB_BASE + '/hit/' + AB_NS + '/' + KEY_JOIN, 6000)
+        .then(r => r.json())
+        .then(d => {
+          if(d && typeof d.value === 'number'){
+            joinCount = d.value;
+            usingFallback = false;
+            writeLocalTotal(joinCount); // garde une trace locale à jour
+            setTotal(joinCount);
+            renderOnline();
+          }else{
+            throw new Error('bad payload');
+          }
+        })
+        .catch(() => {
+          if(attemptsLeft > 0){
+            setTimeout(() => hitJoinWithRetry(attemptsLeft - 1, delayMs * 2), delayMs);
+          }else{
+            activateFallback();
+          }
+        });
+    }
+    hitJoinWithRetry(2, 1500);
 
     function refreshLeaves(){
-      fetch(AB_BASE + '/get/' + AB_NS + '/' + KEY_LEAVE)
+      if(usingFallback) return; // pas de service partagé dispo
+      fetchWithTimeout(AB_BASE + '/get/' + AB_NS + '/' + KEY_LEAVE, 6000)
         .then(r => r.json())
         .then(d => {
           leaveCount = (d && typeof d.value === 'number') ? d.value : 0;
@@ -5101,13 +5166,22 @@ const I18N = {
     }
     refreshLeaves();
 
-    /* Rafraîchissement périodique (arrivées + départs des autres visiteurs). */
+    /* Rafraîchissement périodique (arrivées + départs des autres
+       visiteurs). Si on est en mode secours, on retente
+       périodiquement de revenir au service partagé. */
     const pollTimer = setInterval(function(){
-      fetch(AB_BASE + '/get/' + AB_NS + '/' + KEY_JOIN)
+      if(usingFallback){
+        fetchWithTimeout(AB_BASE + '/healthcheck', 4000)
+          .then(r => { if(r.ok){ usingFallback = false; hitJoinWithRetry(1, 1000); } })
+          .catch(() => {});
+        return;
+      }
+      fetchWithTimeout(AB_BASE + '/get/' + AB_NS + '/' + KEY_JOIN, 6000)
         .then(r => r.json())
         .then(d => {
           if(d && typeof d.value === 'number'){
             joinCount = d.value;
+            writeLocalTotal(joinCount);
             setTotal(joinCount);
             renderOnline();
           }
@@ -5116,9 +5190,11 @@ const I18N = {
       refreshLeaves();
     }, 15000);
 
-    /* Départ : +1 sur le compteur de départs (une seule fois par session). */
+    /* Départ : +1 sur le compteur de départs (une seule fois par
+       session). Sans effet en mode secours (pas de service partagé). */
+    let leftAlready = false;
     function leaveNow(){
-      if(leftAlready) return;
+      if(leftAlready || usingFallback) return;
       leftAlready = true;
       clearInterval(pollTimer);
 
