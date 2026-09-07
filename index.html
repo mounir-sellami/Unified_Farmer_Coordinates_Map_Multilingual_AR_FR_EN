@@ -758,6 +758,37 @@ header::after{
   box-shadow:0 18px 50px rgba(0,0,0,.15);
   border:1px solid var(--line);
   position:relative;
+  /* La carte est déplacée uniquement depuis la barre d'en-tête */
+  user-select:none;
+}
+
+.start-drag-bar{
+  height:32px;
+  margin:-16px -28px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:grab;
+  touch-action:none;
+  user-select:none;
+  border-radius:16px 16px 0 0;
+  background:rgba(76,107,63,.10);
+}
+
+.start-drag-bar:active{
+  cursor:grabbing;
+}
+
+.start-drag-bar::before{
+  content:"";
+  width:46px;
+  height:5px;
+  border-radius:999px;
+  background:rgba(76,107,63,.38);
+}
+
+.start-card.dragging{
+  transition:none !important;
 }
 
 .start-card::before{
@@ -1202,6 +1233,11 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   <div id="startOverlay">
 
     <div class="start-card">
+
+      <div class="start-drag-bar"
+           title="Déplacer la fenêtre / Move window / تحريك النافذة"
+           aria-label="Déplacer la fenêtre">
+      </div>
 
       <div class="start-lang-row">
 
@@ -4655,6 +4691,59 @@ const I18N = {
     if(isInitial) document.getElementById('startOverlay').classList.add('hidden');
     else showToast(t().toastUpdated(parsed.data.length,valid),null);
   }
+
+  /* =======================================================
+     DRAG DE LA FENÊTRE DE TÉLÉVERSEMENT
+     Seule la barre .start-drag-bar permet le déplacement.
+     ======================================================= */
+  (function(){
+    const card = document.querySelector('#startOverlay .start-card');
+    const bar = card && card.querySelector('.start-drag-bar');
+    if(!card || !bar) return;
+
+    let dragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    function startDrag(e){
+      const rect = card.getBoundingClientRect();
+      // Première mise en position absolue sans modifier la position visuelle
+      card.style.position = 'fixed';
+      card.style.left = rect.left + 'px';
+      card.style.top = rect.top + 'px';
+      card.style.margin = '0';
+      card.style.transform = 'none';
+
+      dragging = true;
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      card.classList.add('dragging');
+      bar.setPointerCapture?.(e.pointerId);
+      e.preventDefault();
+    }
+
+    function moveDrag(e){
+      if(!dragging) return;
+      const maxX = Math.max(0, window.innerWidth - card.offsetWidth);
+      const maxY = Math.max(0, window.innerHeight - card.offsetHeight);
+      const x = Math.min(maxX, Math.max(0, e.clientX - offsetX));
+      const y = Math.min(maxY, Math.max(0, e.clientY - offsetY));
+      card.style.left = x + 'px';
+      card.style.top = y + 'px';
+    }
+
+    function stopDrag(e){
+      if(!dragging) return;
+      dragging = false;
+      card.classList.remove('dragging');
+      try{ bar.releasePointerCapture?.(e.pointerId); }catch(_){}
+    }
+
+    bar.addEventListener('pointerdown', startDrag);
+    bar.addEventListener('pointermove', moveDrag);
+    bar.addEventListener('pointerup', stopDrag);
+    bar.addEventListener('pointercancel', stopDrag);
+  })();
 
   function handleFile(file,isInitial){
     const reader=new FileReader();
