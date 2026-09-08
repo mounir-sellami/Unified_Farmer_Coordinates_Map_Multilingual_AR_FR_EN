@@ -5274,31 +5274,20 @@ const I18N = {
      PROTECTION : VÉRIFICATION DE L'INTÉGRITÉ DU DÉPLOIEMENT
      ---------------------------------------------------------
      Juste après un téléversement (premier import OU mise à jour
-     depuis un fichier Excel), on vérifie que la page tourne bien
-     depuis son déploiement officiel :
+     depuis un fichier Excel), on vérifie que l'image
+     "Images/Logo_Climate.jpg" est bien accessible depuis la
+     page actuelle (chemin relatif).
 
-       1. Le protocole ne doit PAS être "file:" — si la page a
-          été enregistrée puis ouverte en local (double-clic sur
-          le .html), c'est refusé D'OFFICE, même si le dossier
-          "Images" a été copié à côté (donc même si l'image se
-          charge correctement).
-
-       2. L'image "Images/Logo_Climate.jpg" doit être accessible
-          depuis la page actuelle (chemin relatif). Si elle est
-          introuvable, cela indique une copie incomplète du
-          déploiement (mauvais chemin, hébergement partiel...).
-
-     Si l'une de ces deux conditions échoue, on recharge
-     automatiquement l'application depuis son lien officiel.
+     - Si elle est trouvée : l'application continue normalement,
+       que la page soit hébergée en ligne ou ouverte localement,
+       tant que le dossier "Images" est bien présent à côté du
+       fichier HTML.
+     - Si elle est introuvable (copie incomplète, mauvais chemin,
+       dossier "Images" manquant ou déplacé...), on recharge
+       automatiquement l'application depuis son lien officiel.
      ======================================================= */
   const OFFICIAL_APP_URL =
     'https://mounir-sellami.github.io/Unified_Farmer_Coordinates_Map_Multilingual_AR_FR_EN/';
-
-  function isRunningFromOfficialLocation(){
-    // "file:" = page enregistrée puis lancée en local
-    // (copie potentiellement piratée), même avec Images/ à côté.
-    return window.location.protocol !== 'file:';
-  }
 
   function checkLogoAssetAvailable(){
     return new Promise(resolve => {
@@ -5321,11 +5310,7 @@ const I18N = {
   }
 
   async function ensureDeploymentIntegrityOrReload(){
-    const locationOk = isRunningFromOfficialLocation();
-    // Si on est déjà en file://, inutile d'attendre le test d'image :
-    // c'est de toute façon refusé.
-    const imageOk = locationOk ? await checkLogoAssetAvailable() : false;
-    const ok = locationOk && imageOk;
+    const ok = await checkLogoAssetAvailable();
 
     if(!ok){
       // Durée d'affichage du toast avant redirection (ms).
