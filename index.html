@@ -3967,40 +3967,28 @@ const I18N = {
       map.invalidateSize();
 
       /*
-         Retour EXACT à la vue globale mémorisée après le chargement
-         des données : même centre + même niveau de zoom.
-         Ainsi, après un zoom manuel ou un zoom sur un groupe,
-         "Tous les groupes" annule réellement le zoom.
+         IMPORTANT : on ne rejoue plus un couple centre/zoom figé
+         (initialMapView). Ce couple est calculé une seule fois,
+         juste après le chargement des données, et peut ne plus
+         correspondre à la taille réelle du conteneur de la carte
+         si la mise en page bouge encore un peu après coup (rendu
+         des graphiques, police, redimensionnement de panneau...).
+         Le rejouer tel quel donnait alors une vue trop dézoomée
+         par rapport à ce que l'utilisateur avait vraiment vu au
+         premier affichage.
+
+         À la place, on recalcule fitBounds() EN DIRECT sur les
+         bornes de tous les marqueurs, avec le même padding utilisé
+         au premier chargement (.15). Leaflet calcule alors le
+         niveau de zoom optimal pour la taille RÉELLE et ACTUELLE
+         du conteneur, ce qui reproduit fidèlement le premier
+         affichage, quelle que soit l'évolution de la mise en page
+         entre-temps.
       */
-      if(initialMapView){
-        map.setView(
-          initialMapView.center,
-          initialMapView.zoom,
-          {
-            animate:true,
-            duration:.6
-          }
-        );
-
-        // Sécurisation après le rendu du MarkerCluster.
-        setTimeout(() => {
-          map.invalidateSize();
-          map.setView(
-            initialMapView.center,
-            initialMapView.zoom,
-            {animate:false}
-          );
-        }, 700);
-
-        return;
-      }
-
-      // Secours si la vue initiale n'est pas encore mémorisée.
       const bounds =
-        initialMapBounds &&
-        initialMapBounds.isValid()
-          ? initialMapBounds
-          : L.featureGroup(allMarkers).getBounds().pad(.15);
+        L.featureGroup(allMarkers)
+          .getBounds()
+          .pad(.15);
 
       if(!bounds || !bounds.isValid()) return;
 
@@ -4008,10 +3996,22 @@ const I18N = {
         bounds,
         {
           animate:true,
-          duration:.6,
-          padding:[20,20]
+          duration:.6
         }
       );
+
+      // Sécurisation après le rendu du MarkerCluster / redimensionnements
+      // tardifs : on relance le même calcul (idempotent) sans animation.
+      setTimeout(() => {
+        map.invalidateSize();
+        const b2 =
+          L.featureGroup(allMarkers)
+            .getBounds()
+            .pad(.15);
+        if(b2 && b2.isValid()){
+          map.fitBounds(b2, {animate:false});
+        }
+      }, 700);
     };
 
     requestAnimationFrame(() => {
@@ -4236,20 +4236,44 @@ const I18N = {
 
 
     if(map){
-
       map.invalidateSize();
-
-      setTimeout(
-        () => map.invalidateSize(),
-        150
-      );
-
     }
 
+    /*
+       Correction du bug de mémorisation du zoom initial :
+       juste après le rendu, le conteneur de la carte (panneau
+       redimensionnable / dragbar, graphiques encore en cours de
+       rendu, etc.) n'a pas toujours sa taille DÉFINITIVE. Si on
+       calcule fitBounds() et qu'on mémorise le zoom obtenu à ce
+       moment-là, Leaflet se base sur une taille de conteneur
+       provisoire : le zoom mémorisé ne correspond alors PAS à ce
+       que l'utilisateur voit réellement une fois la mise en page
+       stabilisée. Résultat : "Tous les groupes" rejoue plus tard
+       ce zoom erroné sur le conteneur à sa vraie taille, ce qui
+       donne une vue beaucoup plus large (dézoomée) que le premier
+       affichage réel.
+
+       On attend donc que la taille du conteneur soit stabilisée
+       (double requestAnimationFrame + petite marge) avant de
+       calculer fitBounds ET de mémoriser initialMapView.
+    */
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if(map) map.invalidateSize();
+          setTimeout(resolve, 150);
+        });
+      });
+    });
+
+    if(map){
+      map.invalidateSize();
+    }
 
     fitToMarkers({animate:false});
 
-    // Mémoriser exactement la vue réellement affichée après cet import.
+    // Mémoriser exactement la vue réellement affichée après cet import,
+    // UNE FOIS la taille du conteneur stabilisée.
     // Chaque nouvel import devient la nouvelle « première carte ».
     if(allMarkers.length){
       initialMapBounds =
