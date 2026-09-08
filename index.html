@@ -917,7 +917,12 @@ header::after{
 
 #toast{
   position:absolute !important;
-  z-index:40 !important;
+  /* Doit rester au-dessus de TOUS les écrans superposés
+     (startOverlay:100, excelConfigOverlay:200,
+     verifyCoordsOverlay:250...) pour qu'un message critique
+     (ex. redirection après une intégrité rompue) reste visible
+     même pendant le premier import, avant fermeture de l'overlay. */
+  z-index:500 !important;
   top:14px;
   left:50%;
   transform:translateX(-50%) translateY(-30px);
@@ -3231,7 +3236,7 @@ const I18N = {
      TOAST
      ======================================================= */
 
-  function showToast(msg,kind){
+  function showToast(msg,kind,duration){
 
     const el =
       document.getElementById('toast');
@@ -3256,7 +3261,10 @@ const I18N = {
         () => {
           el.className = '';
         },
-        4200
+        // Durée personnalisable par appel (utile ex. pour un message
+        // qu'on veut laisser plus longtemps avant une redirection).
+        // Par défaut : 4200 ms, comme avant.
+        duration || 4200
       );
 
   }
@@ -5262,6 +5270,64 @@ const I18N = {
 
   function closeExcelConfig(){document.getElementById('excelConfigOverlay').classList.remove('show');currentPendingImport=null;}
 
+  /* =======================================================
+     PROTECTION : VÉRIFICATION DE L'INTÉGRITÉ DU DÉPLOIEMENT
+     ---------------------------------------------------------
+     Juste après un téléversement, on vérifie que l'image
+     "Images/Logo_Climate.jpg" est bien accessible depuis la
+     page actuelle. Si elle est introuvable (ce qui indique que
+     la page ne tourne pas depuis son déploiement officiel avec
+     son dossier "Images" complet, par ex. copie isolée du HTML,
+     mauvais chemin, hébergement incomplet...), on recharge
+     automatiquement l'application depuis son lien officiel.
+     ======================================================= */
+  const OFFICIAL_APP_URL =
+    'https://mounir-sellami.github.io/Unified_Farmer_Coordinates_Map_Multilingual_AR_FR_EN/';
+
+  function checkLogoAssetAvailable(){
+    return new Promise(resolve => {
+      let settled = false;
+      const finish = ok => {
+        if(settled) return;
+        settled = true;
+        resolve(ok);
+      };
+
+      const img = new Image();
+      img.onload  = () => finish(true);
+      img.onerror = () => finish(false);
+      // Anti-cache pour ne pas se fier à un ancien résultat mis en cache.
+      img.src = 'Images/Logo_Climate.jpg?_check=' + Date.now();
+
+      // Filet de sécurité si la requête reste bloquée / sans réponse.
+      setTimeout(() => finish(false), 4000);
+    });
+  }
+
+  async function ensureDeploymentIntegrityOrReload(){
+    const ok = await checkLogoAssetAvailable();
+    if(!ok){
+      // Durée d'affichage du toast avant redirection (ms).
+      // Modifier cette valeur pour changer combien de temps
+      // le message reste visible avant le rechargement.
+      const REDIRECT_TOAST_DURATION = 6000;
+
+      try{
+        showToast(
+          '⚠️ Copie corrompue ou piratée — rechargement depuis le lien officiel...',
+          'error',
+          REDIRECT_TOAST_DURATION
+        );
+      }catch(_){}
+
+      // On laisse le temps au toast d'être lu avant de quitter la page.
+      setTimeout(() => {
+        window.location.href = OFFICIAL_APP_URL;
+      }, REDIRECT_TOAST_DURATION);
+    }
+    return ok;
+  }
+
   async function applyExcelConfig(){
     if(!currentPendingImport) return;
     const {parsed,isInitial}=currentPendingImport;
@@ -5273,6 +5339,13 @@ const I18N = {
     currentConfig={popupColumns,chartCategory,chartNumericColumns,titleColumn:popupColumns.find(h=>/nom de l.?agriculteur|farmer name|اسم الفلاح/i.test(h))||popupColumns[0],schemaLang:parsed.schemaLang};
     closeExcelConfig();
     const valid=await loadData(parsed.data);
+
+    // Protection : juste après le téléversement, on s'assure que le
+    // déploiement est complet (Images/Logo_Climate.jpg accessible).
+    // Sinon, on recharge directement le lien officiel de l'application.
+    const deploymentOk = await ensureDeploymentIntegrityOrReload();
+    if(!deploymentOk) return;
+
     if(isInitial) document.getElementById('startOverlay').classList.add('hidden');
     else showToast(t().toastUpdated(parsed.data.length,valid),null);
   }
