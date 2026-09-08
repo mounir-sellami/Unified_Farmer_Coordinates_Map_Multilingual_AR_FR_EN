@@ -5273,16 +5273,32 @@ const I18N = {
   /* =======================================================
      PROTECTION : VÉRIFICATION DE L'INTÉGRITÉ DU DÉPLOIEMENT
      ---------------------------------------------------------
-     Juste après un téléversement, on vérifie que l'image
-     "Images/Logo_Climate.jpg" est bien accessible depuis la
-     page actuelle. Si elle est introuvable (ce qui indique que
-     la page ne tourne pas depuis son déploiement officiel avec
-     son dossier "Images" complet, par ex. copie isolée du HTML,
-     mauvais chemin, hébergement incomplet...), on recharge
+     Juste après un téléversement (premier import OU mise à jour
+     depuis un fichier Excel), on vérifie que la page tourne bien
+     depuis son déploiement officiel :
+
+       1. Le protocole ne doit PAS être "file:" — si la page a
+          été enregistrée puis ouverte en local (double-clic sur
+          le .html), c'est refusé D'OFFICE, même si le dossier
+          "Images" a été copié à côté (donc même si l'image se
+          charge correctement).
+
+       2. L'image "Images/Logo_Climate.jpg" doit être accessible
+          depuis la page actuelle (chemin relatif). Si elle est
+          introuvable, cela indique une copie incomplète du
+          déploiement (mauvais chemin, hébergement partiel...).
+
+     Si l'une de ces deux conditions échoue, on recharge
      automatiquement l'application depuis son lien officiel.
      ======================================================= */
   const OFFICIAL_APP_URL =
     'https://mounir-sellami.github.io/Unified_Farmer_Coordinates_Map_Multilingual_AR_FR_EN/';
+
+  function isRunningFromOfficialLocation(){
+    // "file:" = page enregistrée puis lancée en local
+    // (copie potentiellement piratée), même avec Images/ à côté.
+    return window.location.protocol !== 'file:';
+  }
 
   function checkLogoAssetAvailable(){
     return new Promise(resolve => {
@@ -5305,7 +5321,12 @@ const I18N = {
   }
 
   async function ensureDeploymentIntegrityOrReload(){
-    const ok = await checkLogoAssetAvailable();
+    const locationOk = isRunningFromOfficialLocation();
+    // Si on est déjà en file://, inutile d'attendre le test d'image :
+    // c'est de toute façon refusé.
+    const imageOk = locationOk ? await checkLogoAssetAvailable() : false;
+    const ok = locationOk && imageOk;
+
     if(!ok){
       // Durée d'affichage du toast avant redirection (ms).
       // Modifier cette valeur pour changer combien de temps
