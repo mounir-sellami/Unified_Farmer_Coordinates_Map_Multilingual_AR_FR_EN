@@ -2989,6 +2989,7 @@ const I18N = {
   let initialMapBounds = null;
   let initialMapView = null;
   let cluster;
+  let gouvLayer;
 
   let allMarkers = [];
   let currentData = [];
@@ -3271,6 +3272,88 @@ const I18N = {
 
 
   /* =======================================================
+     GOVERNORATE BOUNDARIES (GeoJSON)
+     ======================================================= */
+
+  // Chemins essayés dans l'ordre (le fichier peut être placé
+  // directement à côté du HTML, ou dans un sous-dossier "Files").
+  const GOUV_GEOJSON_PATHS = [
+    'Files/Gouvs_Geo.geojson',
+    './Files/Gouvs_Geo.geojson',
+    'Gouvs_Geo.geojson',
+    './Gouvs_Geo.geojson'
+  ];
+
+  function loadGouvernoratsLayer(){
+
+    (async () => {
+
+      let data = null;
+
+      for(const path of GOUV_GEOJSON_PATHS){
+
+        try{
+
+          const res = await fetch(path);
+
+          if(res && res.ok){
+            data = await res.json();
+            break;
+          }
+
+        }catch(e){
+          // on essaie le chemin suivant
+        }
+
+      }
+
+      if(!data){
+        console.warn(
+          'Limites des gouvernorats : fichier Gouvs_Geo.geojson introuvable ' +
+          '(placez-le à côté du HTML ou dans un dossier "Files").'
+        );
+        return;
+      }
+
+      gouvLayer =
+        L.geoJSON(
+          data,
+          {
+            interactive:false,
+            style:function(){
+              return {
+                color:'#9a9a9a',
+                weight:1,
+                opacity:0.6,
+                fillColor:'#bdbdbd',
+                fillOpacity:0.08
+              };
+            }
+          }
+        );
+
+      gouvLayer.addTo(map);
+
+      // S'assure que les limites restent visuellement sous les
+      // points/marqueurs (qui sont sur le markerPane, au-dessus
+      // de l'overlayPane utilisé par les couches vectorielles).
+      if(gouvLayer.bringToBack){
+        gouvLayer.bringToBack();
+      }
+
+      if(window._layerCtrl && window._layerCtrl.addOverlay){
+        window._layerCtrl.addOverlay(
+          gouvLayer,
+          'Limites des gouvernorats'
+        );
+      }
+
+    })();
+
+  }
+
+
+  /* =======================================================
      MAP INITIALIZATION
      ======================================================= */
 
@@ -3338,6 +3421,9 @@ const I18N = {
     map.attributionControl.setPosition(
       'bottomleft'
     );
+
+
+    loadGouvernoratsLayer();
 
 
     window._layerCtrl =
