@@ -5580,7 +5580,7 @@ const I18N = {
       img.src = 'Images/Logo_Climate.jpg?_check=' + Date.now();
 
       // Filet de sécurité si la requête reste bloquée / sans réponse.
-      setTimeout(() => finish(false), 4000);
+      setTimeout(() => finish(false), 10000);
     });
   }
 
@@ -6367,7 +6367,7 @@ const I18N = {
        périodiquement de revenir au service partagé. */
     const pollTimer = setInterval(function(){
       if(usingFallback){
-        fetchWithTimeout(AB_BASE + '/healthcheck', 4000)
+        fetchWithTimeout(AB_BASE + '/healthcheck', 10000)
           .then(r => { if(r.ok){ usingFallback = false; hitJoinWithRetry(1, 1000); } })
           .catch(() => {});
         return;
