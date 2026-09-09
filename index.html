@@ -3290,19 +3290,47 @@ const I18N = {
 
       let data = null;
 
-      for(const path of GOUV_GEOJSON_PATHS){
+      /*
+         Priorité 1 : GeoJSON déjà intégré dans la page elle-même
+         (balise <script type="application/json" id="embedded-gouv-geojson">,
+         utilisée aussi pour la vérification des coordonnées).
+         C'est la méthode la plus fiable : elle fonctionne même en
+         ouvrant le fichier HTML en double-clic (protocole file://),
+         sans dépendre d'un serveur ni du réseau, contrairement à
+         fetch() qui est bloqué par les navigateurs sur les fichiers
+         locaux (restriction CORS).
+      */
+      try{
+        const embeddedEl = document.getElementById('embedded-gouv-geojson');
+        if(embeddedEl && embeddedEl.textContent && embeddedEl.textContent.trim()){
+          data = JSON.parse(embeddedEl.textContent);
+        }
+      }catch(eEmbedded){
+        console.warn('GeoJSON intégré illisible pour la couche des limites :', eEmbedded);
+      }
 
-        try{
+      /*
+         Priorité 2 (repli) : tentative via fetch(), utile
+         uniquement si la page est servie par un serveur web
+         (http:// ou https://) et que le bloc intégré est absent.
+      */
+      if(!data){
 
-          const res = await fetch(path);
+        for(const path of GOUV_GEOJSON_PATHS){
 
-          if(res && res.ok){
-            data = await res.json();
-            break;
+          try{
+
+            const res = await fetch(path);
+
+            if(res && res.ok){
+              data = await res.json();
+              break;
+            }
+
+          }catch(e){
+            // on essaie le chemin suivant
           }
 
-        }catch(e){
-          // on essaie le chemin suivant
         }
 
       }
@@ -3322,11 +3350,11 @@ const I18N = {
             interactive:false,
             style:function(){
               return {
-                color:'#9a9a9a',
-                weight:1,
-                opacity:0.6,
-                fillColor:'#bdbdbd',
-                fillOpacity:0.08
+                color:'#ffffff',
+                weight:1.5,
+                opacity:0.7,
+                fillColor:'#ffffff',
+                fillOpacity:0.05
               };
             }
           }
