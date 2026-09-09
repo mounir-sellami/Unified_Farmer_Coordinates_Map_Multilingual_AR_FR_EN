@@ -561,8 +561,32 @@ header::after{
   box-shadow:0 2px 5px rgba(0,0,0,.4);
 }
 .marker-pin.verify-marker{
-  border:3px solid #d83a2e !important;
-  box-shadow:0 0 0 3px rgba(216,58,46,.22),0 2px 7px rgba(120,0,0,.45);
+  border:4px solid #d83a2e !important;
+  box-shadow:0 0 0 3px rgba(216,58,46,.28),0 2px 7px rgba(120,0,0,.5);
+}
+
+/* Ensemble de points (même groupement d'affichage) partagé par plusieurs
+   lignes : liseré épais indiquant si TOUT l'ensemble est erroné (rouge
+   foncé) ou si SEULE UNE PARTIE de l'ensemble l'est (orangé foncé). */
+.marker-pin.group-all-bad{
+  border:4px solid #7a0d0d !important;
+  box-shadow:0 0 0 3px rgba(122,13,13,.28),0 2px 7px rgba(60,0,0,.5);
+}
+.marker-pin.group-partial-bad{
+  border:4px solid #b35c00 !important;
+  box-shadow:0 0 0 3px rgba(179,92,0,.28),0 2px 7px rgba(90,45,0,.5);
+}
+
+/* Priorité à l'indicateur individuel : si CE point précis a des
+   coordonnées erronées (verify-marker), son contour doit rester rouge vif
+   et bien visible même s'il appartient en plus à un ensemble « tout
+   erroné » ou « partiellement erroné » (qui, sinon, l'aurait recouvert
+   en orange/rouge foncé). Le contour de groupe ne doit signaler que les
+   AUTRES points du même ensemble, jamais masquer le point lui-même. */
+.marker-pin.verify-marker.group-all-bad,
+.marker-pin.verify-marker.group-partial-bad{
+  border:4px solid #d83a2e !important;
+  box-shadow:0 0 0 3px rgba(216,58,46,.35),0 2px 8px rgba(120,0,0,.55) !important;
 }
 
 .popup-card{
@@ -613,30 +637,71 @@ header::after{
   background:rgba(255,253,248,.95);
   border:1px solid var(--line);
   border-radius:10px;
-  padding:10px 12px;
-  font-size:.75rem;
-  max-width:180px;
+  padding:12px 14px;
+  font-size:.8rem;
+  max-width:260px;
+  min-width:200px;
   box-shadow:0 4px 14px rgba(44,38,32,.18);
   backdrop-filter:blur(2px);
+  touch-action:none;
+}
+
+.map-legend.dragging{
+  box-shadow:0 8px 22px rgba(44,38,32,.3);
+  opacity:.96;
+}
+
+#legendItems{
+  height:340px;
+  max-height:340px;
+  overflow-y:scroll;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:var(--olive-dark) rgba(255,253,248,.4);
+}
+
+#legendItems::-webkit-scrollbar{
+  width:7px;
+}
+#legendItems::-webkit-scrollbar-track{
+  background:rgba(0,0,0,.05);
+  border-radius:4px;
+}
+#legendItems::-webkit-scrollbar-thumb{
+  background:var(--olive-dark);
+  border-radius:4px;
 }
 
 .map-legend h4{
   margin:0 0 6px;
   font-family:'Cairo',sans-serif;
-  font-size:.78rem;
+  font-size:.85rem;
   color:var(--olive-dark);
+  cursor:move;
+  user-select:none;
+  -webkit-user-select:none;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.map-legend h4::before{
+  content:"⠿";
+  font-size:.85rem;
+  opacity:.55;
+  letter-spacing:-2px;
 }
 
 .legend-item{
   display:flex;
   align-items:center;
-  gap:6px;
-  padding:2px 0;
+  gap:7px;
+  padding:3px 2px;
 }
 
 .legend-dot{
-  width:11px;
-  height:11px;
+  width:12px;
+  height:12px;
   border-radius:50%;
   border:1.5px solid #fff;
   box-shadow:0 0 0 1px rgba(0,0,0,.25);
@@ -2330,6 +2395,10 @@ const I18N = {
 
     statsToVerify:
       "À vérifier",
+    legendGroupAllBad:
+      "Liseré rouge foncé : tout l'ensemble de points a des coordonnées erronées",
+    legendGroupPartialBad:
+      "Liseré orangé foncé : une partie de l'ensemble de points a des coordonnées erronées",
     verifyTitle:
       "⚠️ Points à vérifier",
     verifySubtitle:
@@ -2567,6 +2636,10 @@ const I18N = {
 
     statsToVerify:
       "To verify",
+    legendGroupAllBad:
+      "Dark red outline: the whole set of points has erroneous coordinates",
+    legendGroupPartialBad:
+      "Dark orange outline: part of the set of points has erroneous coordinates",
     verifyTitle:
       "⚠️ Points to verify",
     verifySubtitle:
@@ -2804,6 +2877,10 @@ const I18N = {
 
     statsToVerify:
       "بحاجة إلى تحقق",
+    legendGroupAllBad:
+      "إطار أحمر داكن: كامل مجموعة النقاط بها إحداثيات خاطئة",
+    legendGroupPartialBad:
+      "إطار برتقالي داكن: جزء من مجموعة النقاط به إحداثيات خاطئة",
     verifyTitle:
       "⚠️ نقاط تحتاج إلى التحقق",
     verifySubtitle:
@@ -3489,6 +3566,34 @@ const I18N = {
                 ? 40
                 : 48;
 
+          /* Vérifie si les points regroupés dans cette bulle de cluster
+             (regroupement spatial Leaflet) comportent des coordonnées
+             erronées : liseré rouge foncé si TOUS les points le sont,
+             orangé foncé si SEULEMENT UNE PARTIE l'est. */
+          const childMarkers =
+            c.getAllChildMarkers();
+
+          let badCount = 0;
+
+          childMarkers.forEach(m=>{
+            const d = m._meta;
+            if(d && (d.needsVerification || !isCoordinateValid(d))) badCount++;
+          });
+
+          const clusterBorder =
+            badCount === 0
+              ? '2px solid #fff'
+              : badCount === childMarkers.length
+                ? '4px solid #7a0d0d'
+                : '4px solid #b35c00';
+
+          const clusterGlow =
+            badCount === 0
+              ? ''
+              : badCount === childMarkers.length
+                ? 'box-shadow:0 0 0 3px rgba(122,13,13,.32),0 3px 8px rgba(60,0,0,.5);'
+                : 'box-shadow:0 0 0 3px rgba(179,92,0,.32),0 3px 8px rgba(90,45,0,.5);';
+
           return L.divIcon({
 
             html:
@@ -3504,8 +3609,8 @@ const I18N = {
               'font-family:Cairo,sans-serif;' +
               'font-weight:800;' +
               'font-size:'+(n<10?13:14)+'px;' +
-              'box-shadow:0 3px 8px rgba(0,0,0,.35);' +
-              'border:2px solid #fff;' +
+              (badCount === 0 ? 'box-shadow:0 3px 8px rgba(0,0,0,.35);' : clusterGlow) +
+              'border:'+clusterBorder+';' +
               '">' +
               n +
               '</div>',
@@ -3568,14 +3673,21 @@ const I18N = {
      MARKER ICON
      ======================================================= */
 
-  function makeIcon(color, needsVerification){
+  function makeIcon(color, needsVerification, groupStatus){
+
+    const groupClass =
+      groupStatus === 'all'
+        ? ' group-all-bad'
+        : groupStatus === 'partial'
+          ? ' group-partial-bad'
+          : '';
 
     return L.divIcon({
 
       className:'',
 
       html:
-        '<div class="marker-pin' + (needsVerification ? ' verify-marker' : '') + '" style="background:' +
+        '<div class="marker-pin' + (needsVerification ? ' verify-marker' : '') + groupClass + '" style="background:' +
         color +
         ';"></div>',
 
@@ -3757,6 +3869,40 @@ const I18N = {
      RENDER MARKERS
      ======================================================= */
 
+  /* Statut d'erreur par « ensemble de points » : les points sont regroupés
+     selon le même champ que celui utilisé pour l'affichage/la couleur des
+     groupes (groupKey(d.group)). Pour chaque ensemble comptant au moins 2
+     points, on détermine si TOUS les points sont erronés ('all') ou si
+     SEULS CERTAINS le sont ('partial'). Un ensemble d'un seul point n'est
+     pas concerné (le liseré individuel verify-marker suffit déjà). */
+  function computeGroupErrorStatus(data){
+
+    const stats = {};
+
+    (data||[]).forEach(d=>{
+      const k = groupKey(d.group);
+      if(!stats[k]) stats[k] = {total:0, bad:0};
+      stats[k].total++;
+      if(d.needsVerification || !isCoordinateValid(d)) stats[k].bad++;
+    });
+
+    const status = {};
+
+    Object.keys(stats).forEach(k=>{
+      const s = stats[k];
+      if(s.total < 2 || s.bad === 0){
+        status[k] = null;
+      }else if(s.bad === s.total){
+        status[k] = 'all';
+      }else{
+        status[k] = 'partial';
+      }
+    });
+
+    return status;
+
+  }
+
   function renderMarkers(data){
 
     cluster.clearLayers();
@@ -3764,6 +3910,9 @@ const I18N = {
     allMarkers = [];
 
     let validCount = 0;
+
+    const groupErrorStatus =
+      computeGroupErrorStatus(data);
 
 
     data.forEach(
@@ -3791,7 +3940,8 @@ const I18N = {
                   colorFor(
                     groupKey(d.group)
                   ),
-                  !!d.needsVerification
+                  !!d.needsVerification,
+                  groupErrorStatus[groupKey(d.group)]
                 )
             }
           );
@@ -3924,8 +4074,7 @@ const I18N = {
       Object.entries(groups)
         .sort(
           (a,b) => b[1] - a[1]
-        )
-        .slice(0,10);
+        );
 
 
     const el =
@@ -3933,6 +4082,12 @@ const I18N = {
         'legendItems'
       );
 
+
+    const groupErrorStatus =
+      computeGroupErrorStatus(data);
+
+    const hasAllBad =
+      Object.values(groupErrorStatus).includes('all');
 
     el.innerHTML =
       sorted
@@ -3960,7 +4115,13 @@ const I18N = {
             '</div>'
 
         )
-        .join('');
+        .join('') +
+
+      (
+        hasAllBad
+          ? '<div class="legend-item"><span class="legend-dot" style="background:#7a0d0d;border:2px solid #7a0d0d;"></span>' + escapeHtml(t().legendGroupAllBad) + '</div>'
+          : ''
+      );
 
   }
 
@@ -6250,6 +6411,78 @@ const I18N = {
     document.addEventListener('visibilitychange', function(){
       if(document.visibilityState === 'hidden') leaveNow();
     });
+
+  })();
+
+
+  /* =======================================================
+     LEGENDE DEPLACABLE (glisser-déposer via le titre)
+     ======================================================= */
+
+  (function setupLegendDrag(){
+
+    const legend = document.getElementById('mapLegend');
+    const handle = legend && legend.querySelector('h4');
+    const wrap = document.getElementById('mapWrap');
+    if(!legend || !handle || !wrap) return;
+
+    let dragging = false;
+    let startX = 0, startY = 0;
+    let startLeft = 0, startTop = 0;
+
+    function onPointerDown(e){
+      dragging = true;
+      legend.classList.add('dragging');
+
+      const legendRect = legend.getBoundingClientRect();
+      const wrapRect = wrap.getBoundingClientRect();
+
+      // Fige la position actuelle en left/top absolus et
+      // relâche bottom/right pour permettre le déplacement libre.
+      startLeft = legendRect.left - wrapRect.left;
+      startTop = legendRect.top - wrapRect.top;
+      legend.style.left = startLeft + 'px';
+      legend.style.top = startTop + 'px';
+      legend.style.right = 'auto';
+      legend.style.bottom = 'auto';
+
+      startX = e.clientX;
+      startY = e.clientY;
+
+      handle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    }
+
+    function onPointerMove(e){
+      if(!dragging) return;
+
+      const wrapRect = wrap.getBoundingClientRect();
+      const legendRect = legend.getBoundingClientRect();
+
+      let newLeft = startLeft + (e.clientX - startX);
+      let newTop = startTop + (e.clientY - startY);
+
+      const maxLeft = wrapRect.width - legendRect.width - 4;
+      const maxTop = wrapRect.height - legendRect.height - 4;
+
+      newLeft = Math.max(4, Math.min(newLeft, Math.max(4, maxLeft)));
+      newTop = Math.max(4, Math.min(newTop, Math.max(4, maxTop)));
+
+      legend.style.left = newLeft + 'px';
+      legend.style.top = newTop + 'px';
+    }
+
+    function onPointerUp(e){
+      if(!dragging) return;
+      dragging = false;
+      legend.classList.remove('dragging');
+      try{ handle.releasePointerCapture(e.pointerId); }catch(err){}
+    }
+
+    handle.addEventListener('pointerdown', onPointerDown);
+    handle.addEventListener('pointermove', onPointerMove);
+    handle.addEventListener('pointerup', onPointerUp);
+    handle.addEventListener('pointercancel', onPointerUp);
 
   })();
 
