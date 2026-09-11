@@ -5288,8 +5288,26 @@ const I18N = {
     return canonical;
   }
 
+  /* Noms exacts (tels qu'ils apparaissent dans le fichier Excel source) de la
+     colonne du gouvernorat déclaré par l'agriculteur. On les fait passer en
+     priorité absolue sur la détection générique ci-dessous, afin que le
+     contrôle qualité (gouvernorat réel calculé à partir de Latitude/Longitude
+     vs gouvernorat déclaré) s'appuie toujours, sans ambiguïté, sur la colonne
+     "الولاية المصرح بها" quand elle est présente — quelle que soit la langue
+     du modèle détectée (fr/en/ar) pour les autres colonnes requises. */
+  const DECLARED_GOVERNORATE_COLUMN_NAMES = [
+    'الولاية المصرح بها',
+    'Gouvernorat déclaré',
+    'Declared governorate'
+  ];
+
   function findGovernorateColumn(headers){
-    return (headers||[]).find(h=>/gouvernorat|governorate|wilaya|الولاية/i.test(String(h))) || null;
+    const list=headers||[];
+    const exact=list.find(h=>DECLARED_GOVERNORATE_COLUMN_NAMES.includes(String(h).trim()));
+    if(exact) return exact;
+    /* Repli générique pour les fichiers qui n'utiliseraient pas exactement
+       l'un des libellés ci-dessus. */
+    return list.find(h=>/gouvernorat|governorate|wilaya|الولاية/i.test(String(h))) || null;
   }
 
   function declaredGovernorate(d){
@@ -5534,7 +5552,7 @@ const I18N = {
   function openExcelConfig(parsed,isInitial,file){
     const headers=parsed.headers||[];
     const numeric=headers.filter(h=>{ if(/(^|\s)(latitude|longitude|lat|lon)(\s|$)/i.test(String(h).trim()) || /coordonn[ée]e?s?|coordinates?|إحداثيات|خط العرض|خط الطول/i.test(String(h))) return false; return parsed.data.slice(0,100).some(d=>{const v=String(d.row?.[h]??'').replace(/\s/g,'').replace(',','.');return v!==''&&Number.isFinite(parseFloat(v));}); });
-    const popupDefault=headers.filter(h=>[/groupe|group|المجموعة/i,/nom de l.?agriculteur|farmer name|اسم الفلاح/i,/lieu|location|plot|مكان|قطعة/i,/superficie|area|مساحة/i,/culture|crop|زراعة|محصول/i,/téléphone|phone|هاتف/i].some(rx=>rx.test(h)));
+    const popupDefault=headers.filter(h=>[/groupe|group|المجموعة/i,/nom de l.?agriculteur|farmer name|اسم الفلاح/i,/lieu|location|plot|مكان|قطعة/i,/superficie|area|مساحة/i,/culture|crop|زراعة|محصول/i,/téléphone|phone|هاتف/i,/gouvernorat|governorate|wilaya|الولاية/i].some(rx=>rx.test(h)));
     currentPendingImport={parsed,isInitial,file};
     document.getElementById('popupColumnsList').innerHTML=headers.map(h=>'<label class="excel-col-item"><input type="checkbox" class="popup-col" value="'+escapeHtml(h)+'" '+(popupDefault.includes(h)?'checked':'')+'><span>'+escapeHtml(h)+'</span></label>').join('');
     const groupCol=headers.find(h=>/groupe|group|المجموعة/i.test(h))||'';
