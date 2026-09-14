@@ -773,6 +773,17 @@ header::after{
 }
 [dir="rtl"] .p2o5-legend{ left:auto; right:10px; }
 
+.p2o5-legend-credit{
+  margin-top:5px;
+  padding-top:4px;
+  border-top:1px solid var(--line);
+  font-size:.62rem;
+  font-style:italic;
+  opacity:.75;
+  text-align:right;
+}
+[dir="rtl"] .p2o5-legend-credit{ text-align:left; }
+
 @media(max-width:900px){
   .p2o5-maps-row{ flex-direction:column; }
   .p2o5-map-frame{ min-height:220px; }
@@ -5868,6 +5879,13 @@ const I18N = {
     return {breaks,colors,colorFn};
   }
 
+  function appendP2O5LegendCredit(container){
+    const credit=document.createElement('div');
+    credit.className='p2o5-legend-credit';
+    credit.textContent='© Mounir SELLAMI';
+    container.appendChild(credit);
+  }
+
   function buildP2O5Legend(container){
     if(!container) return;
     container.innerHTML='';
@@ -5890,6 +5908,7 @@ const I18N = {
       row.appendChild(label);
       container.appendChild(row);
     }
+    appendP2O5LegendCredit(container);
   }
 
   function buildDoseLegend(container,classifier){
@@ -5914,6 +5933,7 @@ const I18N = {
       row.appendChild(label);
       container.appendChild(row);
     }
+    appendP2O5LegendCredit(container);
   }
 
   function populateP2O5GovSelect(){
