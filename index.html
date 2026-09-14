@@ -561,32 +561,8 @@ header::after{
   box-shadow:0 2px 5px rgba(0,0,0,.4);
 }
 .marker-pin.verify-marker{
-  border:4px solid #d83a2e !important;
-  box-shadow:0 0 0 3px rgba(216,58,46,.28),0 2px 7px rgba(120,0,0,.5);
-}
-
-/* Ensemble de points (même groupement d'affichage) partagé par plusieurs
-   lignes : liseré épais indiquant si TOUT l'ensemble est erroné (rouge
-   foncé) ou si SEULE UNE PARTIE de l'ensemble l'est (orangé foncé). */
-.marker-pin.group-all-bad{
-  border:4px solid #7a0d0d !important;
-  box-shadow:0 0 0 3px rgba(122,13,13,.28),0 2px 7px rgba(60,0,0,.5);
-}
-.marker-pin.group-partial-bad{
-  border:4px solid #b35c00 !important;
-  box-shadow:0 0 0 3px rgba(179,92,0,.28),0 2px 7px rgba(90,45,0,.5);
-}
-
-/* Priorité à l'indicateur individuel : si CE point précis a des
-   coordonnées erronées (verify-marker), son contour doit rester rouge vif
-   et bien visible même s'il appartient en plus à un ensemble « tout
-   erroné » ou « partiellement erroné » (qui, sinon, l'aurait recouvert
-   en orange/rouge foncé). Le contour de groupe ne doit signaler que les
-   AUTRES points du même ensemble, jamais masquer le point lui-même. */
-.marker-pin.verify-marker.group-all-bad,
-.marker-pin.verify-marker.group-partial-bad{
-  border:4px solid #d83a2e !important;
-  box-shadow:0 0 0 3px rgba(216,58,46,.35),0 2px 8px rgba(120,0,0,.55) !important;
+  border:3px solid #d83a2e !important;
+  box-shadow:0 0 0 3px rgba(216,58,46,.22),0 2px 7px rgba(120,0,0,.45);
 }
 
 .popup-card{
@@ -637,71 +613,174 @@ header::after{
   background:rgba(255,253,248,.95);
   border:1px solid var(--line);
   border-radius:10px;
-  padding:12px 14px;
-  font-size:.8rem;
-  max-width:260px;
-  min-width:200px;
+  padding:10px 12px;
+  font-size:.75rem;
+  max-width:180px;
   box-shadow:0 4px 14px rgba(44,38,32,.18);
   backdrop-filter:blur(2px);
-  touch-action:none;
-}
-
-.map-legend.dragging{
-  box-shadow:0 8px 22px rgba(44,38,32,.3);
-  opacity:.96;
-}
-
-#legendItems{
-  height:340px;
-  max-height:340px;
-  overflow-y:scroll;
-  overscroll-behavior:contain;
-  scrollbar-width:thin;
-  scrollbar-color:var(--olive-dark) rgba(255,253,248,.4);
-}
-
-#legendItems::-webkit-scrollbar{
-  width:7px;
-}
-#legendItems::-webkit-scrollbar-track{
-  background:rgba(0,0,0,.05);
-  border-radius:4px;
-}
-#legendItems::-webkit-scrollbar-thumb{
-  background:var(--olive-dark);
-  border-radius:4px;
 }
 
 .map-legend h4{
   margin:0 0 6px;
   font-family:'Cairo',sans-serif;
-  font-size:.85rem;
+  font-size:.78rem;
   color:var(--olive-dark);
-  cursor:move;
-  user-select:none;
-  -webkit-user-select:none;
-  display:flex;
-  align-items:center;
-  gap:5px;
-}
-
-.map-legend h4::before{
-  content:"⠿";
-  font-size:.85rem;
-  opacity:.55;
-  letter-spacing:-2px;
 }
 
 .legend-item{
   display:flex;
   align-items:center;
-  gap:7px;
-  padding:3px 2px;
+  gap:6px;
+  padding:2px 0;
+}
+
+/* =========================================================
+   CARTE P2O5 (IDW) + CARTE DES APPORTS NÉCESSAIRES
+   ========================================================= */
+
+.p2o5-wrap{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  padding:10px 12px;
+  gap:10px;
+  overflow:auto;
+  background:var(--cream);
+}
+
+.p2o5-controls{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:14px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 14px;
+}
+
+.p2o5-control-group{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:.8rem;
+}
+
+.p2o5-control-group label{
+  font-weight:700;
+  color:var(--olive-dark);
+  white-space:nowrap;
+}
+
+.p2o5-control-group select{
+  font-family:'Tajawal',sans-serif;
+  padding:5px 8px;
+  border-radius:6px;
+  border:1px solid var(--line);
+  background:#fff;
+  min-width:180px;
+}
+
+.p2o5-control-group-power input[type="range"]{
+  width:150px;
+}
+
+.p2o5-btn{
+  font-family:'Cairo',sans-serif;
+  font-weight:700;
+  font-size:.8rem;
+  padding:7px 16px;
+  border:none;
+  border-radius:8px;
+  background:var(--olive);
+  color:#fff;
+  cursor:pointer;
+  box-shadow:0 2px 0 var(--olive-dark);
+}
+.p2o5-btn:hover{ filter:brightness(1.05); }
+
+.p2o5-status{
+  font-size:.75rem;
+  color:var(--ink-soft);
+  font-style:italic;
+  margin-left:auto;
+}
+[dir="rtl"] .p2o5-status{ margin-left:0; margin-right:auto; }
+
+.p2o5-source-note{
+  font-size:.72rem;
+  color:var(--ink-soft);
+  font-style:italic;
+  padding:2px 4px 8px;
+  line-height:1.4;
+}
+.p2o5-source-note a{ color:var(--olive-dark); font-style:normal; }
+
+.p2o5-maps-row{
+  flex:1;
+  min-height:340px;
+  display:flex;
+  gap:12px;
+}
+
+.p2o5-map-box{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.p2o5-map-box h4{
+  margin:0;
+  padding:8px 12px;
+  font-family:'Cairo',sans-serif;
+  font-size:.82rem;
+  color:var(--olive-dark);
+  border-bottom:1px solid var(--line);
+  background:#fffaf1;
+}
+
+.p2o5-map-frame{
+  position:relative;
+  flex:1;
+  min-height:280px;
+}
+
+.p2o5-map{
+  position:absolute;
+  inset:0;
+  background:#dfe7d8;
+}
+
+.p2o5-legend{
+  position:absolute;
+  z-index:1000;
+  bottom:10px;
+  left:10px;
+  background:rgba(255,253,248,.95);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:.68rem;
+  max-width:190px;
+  box-shadow:0 3px 10px rgba(44,38,32,.18);
+  pointer-events:none;
+}
+[dir="rtl"] .p2o5-legend{ left:auto; right:10px; }
+
+@media(max-width:900px){
+  .p2o5-maps-row{ flex-direction:column; }
+  .p2o5-map-frame{ min-height:220px; }
 }
 
 .legend-dot{
-  width:12px;
-  height:12px;
+  width:11px;
+  height:11px;
   border-radius:50%;
   border:1.5px solid #fff;
   box-shadow:0 0 0 1px rgba(0,0,0,.25);
@@ -1617,6 +1696,26 @@ footer .contact-link [data-i18n="footerWaLabel"]{
     </button>
 
     <button class="tab-btn"
+            data-tab="p2o5Wrap">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M12 2c4 4 6 7.5 6 10.5A6 6 0 0 1 6 12.5C6 9.5 8 6 12 2z"/>
+
+      </svg>
+
+      <span id="p2o5TabLabel">
+        Carte P2O5
+      </span>
+
+    </button>
+
+    <button class="tab-btn"
             data-tab="chartsWrap">
 
       <svg viewBox="0 0 24 24"
@@ -1689,6 +1788,74 @@ footer .contact-link [data-i18n="footerWaLabel"]{
       <div class="map-legend-credit">
         <strong>Carte unifiée 2026/2027</strong><br>
         © Mounir SELLAMI
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- =====================================================
+       CARTE P2O5 (IDW) + CARTE DES APPORTS NÉCESSAIRES
+       ===================================================== -->
+
+  <div id="p2o5Wrap"
+       class="hidden-view p2o5-wrap">
+
+    <div class="p2o5-controls">
+
+      <div class="p2o5-control-group">
+        <label id="p2o5GovLabel" for="p2o5GovSelect">Gouvernorat :</label>
+        <select id="p2o5GovSelect"></select>
+      </div>
+
+      <div class="p2o5-control-group p2o5-control-group-power">
+        <label id="p2o5PowerLabelText" for="p2o5PowerSlider">Puissance IDW (p) :</label>
+        <input type="range" id="p2o5PowerSlider" min="0.5" max="6" step="0.5" value="4">
+        <span id="p2o5PowerValue">4.0</span>
+      </div>
+
+      <div class="p2o5-control-group p2o5-control-group-power">
+        <label id="p2o5OpacityLabelText" for="p2o5OpacitySlider">Transparence :</label>
+        <input type="range" id="p2o5OpacitySlider" min="0.1" max="1" step="0.05" value="0.85">
+        <span id="p2o5OpacityValue">85%</span>
+      </div>
+
+      <div class="p2o5-control-group">
+        <label id="p2o5BasemapLabelText" for="p2o5BasemapSelect">Fond de carte :</label>
+        <select id="p2o5BasemapSelect">
+          <option value="satellite">Satellite (Esri)</option>
+          <option value="clair" selected>Fond clair</option>
+          <option value="osm">OpenStreetMap</option>
+          <option value="relief">Relief (OpenTopoMap)</option>
+        </select>
+      </div>
+
+      <div class="p2o5-control-group">
+        <button id="p2o5RefreshBtn" type="button" class="p2o5-btn">Générer / Actualiser</button>
+      </div>
+
+      <div id="p2o5Status" class="p2o5-status"></div>
+
+    </div>
+
+    <div id="p2o5SourceNote" class="p2o5-source-note"></div>
+
+    <div class="p2o5-maps-row">
+
+      <div class="p2o5-map-box">
+        <h4 id="p2o5TitleA">P2O5 assimilable (ppm Olsen)</h4>
+        <div class="p2o5-map-frame">
+          <div id="p2o5MapA" class="p2o5-map"></div>
+          <div id="p2o5LegendA" class="p2o5-legend"></div>
+        </div>
+      </div>
+
+      <div class="p2o5-map-box">
+        <h4 id="p2o5TitleB">Apport nécessaire en P2O5 (kg/ha)</h4>
+        <div class="p2o5-map-frame">
+          <div id="p2o5MapB" class="p2o5-map"></div>
+          <div id="p2o5LegendB" class="p2o5-legend"></div>
+        </div>
       </div>
 
     </div>
@@ -2395,10 +2562,6 @@ const I18N = {
 
     statsToVerify:
       "À vérifier",
-    legendGroupAllBad:
-      "Liseré rouge foncé : tout l'ensemble de points a des coordonnées erronées",
-    legendGroupPartialBad:
-      "Liseré orangé foncé : une partie de l'ensemble de points a des coordonnées erronées",
     verifyTitle:
       "⚠️ Points à vérifier",
     verifySubtitle:
@@ -2636,10 +2799,6 @@ const I18N = {
 
     statsToVerify:
       "To verify",
-    legendGroupAllBad:
-      "Dark red outline: the whole set of points has erroneous coordinates",
-    legendGroupPartialBad:
-      "Dark orange outline: part of the set of points has erroneous coordinates",
     verifyTitle:
       "⚠️ Points to verify",
     verifySubtitle:
@@ -2877,10 +3036,6 @@ const I18N = {
 
     statsToVerify:
       "بحاجة إلى تحقق",
-    legendGroupAllBad:
-      "إطار أحمر داكن: كامل مجموعة النقاط بها إحداثيات خاطئة",
-    legendGroupPartialBad:
-      "إطار برتقالي داكن: جزء من مجموعة النقاط به إحداثيات خاطئة",
     verifyTitle:
       "⚠️ نقاط تحتاج إلى التحقق",
     verifySubtitle:
@@ -3512,11 +3667,11 @@ const I18N = {
 
     const clair =
       L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
         {
           attribution:
-            '&copy; OpenStreetMap contributors &copy; CARTO',
-          maxZoom:19
+            'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+          maxZoom:16
         }
       );
 
@@ -3566,34 +3721,6 @@ const I18N = {
                 ? 40
                 : 48;
 
-          /* Vérifie si les points regroupés dans cette bulle de cluster
-             (regroupement spatial Leaflet) comportent des coordonnées
-             erronées : liseré rouge foncé si TOUS les points le sont,
-             orangé foncé si SEULEMENT UNE PARTIE l'est. */
-          const childMarkers =
-            c.getAllChildMarkers();
-
-          let badCount = 0;
-
-          childMarkers.forEach(m=>{
-            const d = m._meta;
-            if(d && (d.needsVerification || !isCoordinateValid(d))) badCount++;
-          });
-
-          const clusterBorder =
-            badCount === 0
-              ? '2px solid #fff'
-              : badCount === childMarkers.length
-                ? '4px solid #7a0d0d'
-                : '4px solid #b35c00';
-
-          const clusterGlow =
-            badCount === 0
-              ? ''
-              : badCount === childMarkers.length
-                ? 'box-shadow:0 0 0 3px rgba(122,13,13,.32),0 3px 8px rgba(60,0,0,.5);'
-                : 'box-shadow:0 0 0 3px rgba(179,92,0,.32),0 3px 8px rgba(90,45,0,.5);';
-
           return L.divIcon({
 
             html:
@@ -3609,8 +3736,8 @@ const I18N = {
               'font-family:Cairo,sans-serif;' +
               'font-weight:800;' +
               'font-size:'+(n<10?13:14)+'px;' +
-              (badCount === 0 ? 'box-shadow:0 3px 8px rgba(0,0,0,.35);' : clusterGlow) +
-              'border:'+clusterBorder+';' +
+              'box-shadow:0 3px 8px rgba(0,0,0,.35);' +
+              'border:2px solid #fff;' +
               '">' +
               n +
               '</div>',
@@ -3673,21 +3800,14 @@ const I18N = {
      MARKER ICON
      ======================================================= */
 
-  function makeIcon(color, needsVerification, groupStatus){
-
-    const groupClass =
-      groupStatus === 'all'
-        ? ' group-all-bad'
-        : groupStatus === 'partial'
-          ? ' group-partial-bad'
-          : '';
+  function makeIcon(color, needsVerification){
 
     return L.divIcon({
 
       className:'',
 
       html:
-        '<div class="marker-pin' + (needsVerification ? ' verify-marker' : '') + groupClass + '" style="background:' +
+        '<div class="marker-pin' + (needsVerification ? ' verify-marker' : '') + '" style="background:' +
         color +
         ';"></div>',
 
@@ -3869,40 +3989,6 @@ const I18N = {
      RENDER MARKERS
      ======================================================= */
 
-  /* Statut d'erreur par « ensemble de points » : les points sont regroupés
-     selon le même champ que celui utilisé pour l'affichage/la couleur des
-     groupes (groupKey(d.group)). Pour chaque ensemble comptant au moins 2
-     points, on détermine si TOUS les points sont erronés ('all') ou si
-     SEULS CERTAINS le sont ('partial'). Un ensemble d'un seul point n'est
-     pas concerné (le liseré individuel verify-marker suffit déjà). */
-  function computeGroupErrorStatus(data){
-
-    const stats = {};
-
-    (data||[]).forEach(d=>{
-      const k = groupKey(d.group);
-      if(!stats[k]) stats[k] = {total:0, bad:0};
-      stats[k].total++;
-      if(d.needsVerification || !isCoordinateValid(d)) stats[k].bad++;
-    });
-
-    const status = {};
-
-    Object.keys(stats).forEach(k=>{
-      const s = stats[k];
-      if(s.total < 2 || s.bad === 0){
-        status[k] = null;
-      }else if(s.bad === s.total){
-        status[k] = 'all';
-      }else{
-        status[k] = 'partial';
-      }
-    });
-
-    return status;
-
-  }
-
   function renderMarkers(data){
 
     cluster.clearLayers();
@@ -3910,9 +3996,6 @@ const I18N = {
     allMarkers = [];
 
     let validCount = 0;
-
-    const groupErrorStatus =
-      computeGroupErrorStatus(data);
 
 
     data.forEach(
@@ -3940,8 +4023,7 @@ const I18N = {
                   colorFor(
                     groupKey(d.group)
                   ),
-                  !!d.needsVerification,
-                  groupErrorStatus[groupKey(d.group)]
+                  !!d.needsVerification
                 )
             }
           );
@@ -4074,7 +4156,8 @@ const I18N = {
       Object.entries(groups)
         .sort(
           (a,b) => b[1] - a[1]
-        );
+        )
+        .slice(0,10);
 
 
     const el =
@@ -4082,12 +4165,6 @@ const I18N = {
         'legendItems'
       );
 
-
-    const groupErrorStatus =
-      computeGroupErrorStatus(data);
-
-    const hasAllBad =
-      Object.values(groupErrorStatus).includes('all');
 
     el.innerHTML =
       sorted
@@ -4115,13 +4192,7 @@ const I18N = {
             '</div>'
 
         )
-        .join('') +
-
-      (
-        hasAllBad
-          ? '<div class="legend-item"><span class="legend-dot" style="background:#7a0d0d;border:2px solid #7a0d0d;"></span>' + escapeHtml(t().legendGroupAllBad) + '</div>'
-          : ''
-      );
+        .join('');
 
   }
 
@@ -4682,7 +4753,7 @@ const I18N = {
 
             document
               .querySelectorAll(
-                '#mapWrap,#chartsWrap,#excelGenWrap'
+                '#mapWrap,#chartsWrap,#excelGenWrap,#p2o5Wrap'
               )
               .forEach(
                 v =>
@@ -4719,6 +4790,15 @@ const I18N = {
                   map.invalidateSize(),
                 80
               );
+
+            }
+
+            if(
+              this.dataset.tab ===
+              'p2o5Wrap'
+            ){
+
+              initP2O5Tab();
 
             }
 
@@ -5288,26 +5368,40 @@ const I18N = {
     return canonical;
   }
 
-  /* Noms exacts (tels qu'ils apparaissent dans le fichier Excel source) de la
-     colonne du gouvernorat déclaré par l'agriculteur. On les fait passer en
-     priorité absolue sur la détection générique ci-dessous, afin que le
-     contrôle qualité (gouvernorat réel calculé à partir de Latitude/Longitude
-     vs gouvernorat déclaré) s'appuie toujours, sans ambiguïté, sur la colonne
-     "الولاية المصرح بها" quand elle est présente — quelle que soit la langue
-     du modèle détectée (fr/en/ar) pour les autres colonnes requises. */
-  const DECLARED_GOVERNORATE_COLUMN_NAMES = [
-    'الولاية المصرح بها',
-    'Gouvernorat déclaré',
-    'Declared governorate'
-  ];
-
   function findGovernorateColumn(headers){
+    return (headers||[]).find(h=>/gouvernorat|governorate|wilaya|الولاية/i.test(String(h))) || null;
+  }
+
+  /* Recherche souple de la colonne P2O5 : accepte des variantes de casse,
+     d'espacement, d'indices/exposants (P₂O₅), d'abréviations (P205) ou
+     d'unités/qualificatifs ajoutés (ex. "P2O5 (ppm)", "P2O5 assimilable",
+     "P2O5_Olsen"), plutôt que d'exiger un intitulé exactement égal à
+     "P2O5". */
+  function findP2O5Column(headers){
     const list=headers||[];
-    const exact=list.find(h=>DECLARED_GOVERNORATE_COLUMN_NAMES.includes(String(h).trim()));
-    if(exact) return exact;
-    /* Repli générique pour les fichiers qui n'utiliseraient pas exactement
-       l'un des libellés ci-dessus. */
-    return list.find(h=>/gouvernorat|governorate|wilaya|الولاية/i.test(String(h))) || null;
+    const norm=h=>String(h||'')
+      .toLowerCase()
+      .replace(/[₀-₉]/g,d=>'0123456789'['₀₁₂₃₄₅₆₇₈₉'.indexOf(d)])
+      .replace(/[^a-z0-9]/g,'');
+    /* Correspondance exacte (normalisée) en priorité, ex: "P2O5", "p2o5",
+       "P 2 O 5", "P₂O₅". */
+    let hit=list.find(h=>norm(h)==='p2o5' || norm(h)==='p205');
+    if(hit) return hit;
+    /* Sinon, colonne dont l'intitulé normalisé commence par p2o5/p205
+       (ex: "P2O5 (ppm)", "P2O5_Olsen", "P205 assimilable"). */
+    hit=list.find(h=>/^(p2o5|p205)/.test(norm(h)));
+    if(hit) return hit;
+    /* Sinon, tout intitulé contenant p2o5/p205 ou "phosphore"/"phosphorus". */
+    hit=list.find(h=>/p2o5|p205/.test(norm(h)) || /phosphor/i.test(String(h)));
+    return hit || null;
+  }
+
+  function getP2O5Value(d){
+    if(!d || !d.row) return NaN;
+    const headers=d.headers||Object.keys(d.row||{});
+    const col=findP2O5Column(headers);
+    if(!col) return NaN;
+    return parseFloat(d.row[col]);
   }
 
   function declaredGovernorate(d){
@@ -5375,6 +5469,664 @@ const I18N = {
   function fallbackTunisiaCheck(lat,lon){
     /* Secours uniquement si le GeoJSON des gouvernorats n'est pas accessible. */
     return lat>=30.15 && lat<=37.65 && lon>=7.40 && lon<=11.75;
+  }
+
+  /* =======================================================
+     CARTE P2O5 (IDW, slider de puissance) + CARTE DES APPORTS
+     NÉCESSAIRES EN P2O5 (kg/ha), avec légende normalisée pour
+     chaque carte. La colonne de données attendue s'appelle "P2O5".
+     ======================================================= */
+
+  const P2O5_I18N = {
+    fr: {
+      tabP2O5: 'Carte P2O5',
+      govLabel: 'Gouvernorat :',
+      powerLabel: 'Puissance IDW (p) :',
+      opacityLabel: 'Transparence :',
+      basemapLabel: 'Fond de carte :',
+      basemapSatellite: 'Satellite (Esri)',
+      basemapClair: 'Fond clair',
+      basemapOsm: 'OpenStreetMap',
+      basemapRelief: 'Relief (OpenTopoMap)',
+      generateBtn: 'Générer / Actualiser',
+      titleA: 'P2O5 assimilable (ppm Olsen)',
+      titleB: 'Apport nécessaire en P2O5 (kg/ha)',
+      noGov: "Aucun gouvernorat avec des valeurs P2O5 exploitables n'a été trouvé dans les données importées (colonne « P2O5 » requise).",
+      notEnoughPts: n => 'Pas assez de points P2O5 valides dans ce gouvernorat (' + n + ' point(s), 3 minimum requis).',
+      computing: "Calcul de l'interpolation en cours…",
+      pointsUsed: n => n + ' point(s) utilisé(s) pour l\'interpolation.',
+      classTresFaible: 'Très faible',
+      classFaible: 'Faible',
+      classMoyen: 'Moyen (Optimal)',
+      classEleve: 'Élevé',
+      classTresEleve: 'Très élevé',
+      doseUnit: 'kg P2O5/ha',
+      selectGovPlaceholder: '— Aucune donnée P2O5 —',
+      sourceNoteHtml: 'ℹ️ Seuils de classification (15/30/60/90 ppm Olsen) et courbe d\'apport <strong>indicatifs</strong> : ils ne proviennent pas d\'une publication officielle tunisienne spécifique (INRAT/CRDA/laboratoire), mais des classes usuelles du P2O5 assimilable (Olsen) et d\'un raisonnement de type COMIFER/ARVALIS. À confirmer et ajuster selon la culture et les recommandations officielles applicables à votre région. <a href="https://www.arvalis.fr/infos-techniques/connaitre-les-teneurs-seuils-dans-sa-region-selon-son-sol" target="_blank" rel="noopener">Exemple de méthode documentée (COMIFER / ARVALIS)</a>.'
+    },
+    en: {
+      tabP2O5: 'P2O5 Map',
+      govLabel: 'Governorate:',
+      powerLabel: 'IDW power (p):',
+      opacityLabel: 'Opacity:',
+      basemapLabel: 'Basemap:',
+      basemapSatellite: 'Satellite (Esri)',
+      basemapClair: 'Light basemap',
+      basemapOsm: 'OpenStreetMap',
+      basemapRelief: 'Relief (OpenTopoMap)',
+      generateBtn: 'Generate / Refresh',
+      titleA: 'Available P2O5 (Olsen, ppm)',
+      titleB: 'Required P2O5 input (kg/ha)',
+      noGov: 'No governorate with usable P2O5 values was found in the imported data (a "P2O5" column is required).',
+      notEnoughPts: n => 'Not enough valid P2O5 points in this governorate (' + n + ' point(s), 3 minimum required).',
+      computing: 'Computing interpolation…',
+      pointsUsed: n => n + ' point(s) used for interpolation.',
+      classTresFaible: 'Very low',
+      classFaible: 'Low',
+      classMoyen: 'Medium (Optimal)',
+      classEleve: 'High',
+      classTresEleve: 'Very high',
+      doseUnit: 'kg P2O5/ha',
+      selectGovPlaceholder: '— No P2O5 data —',
+      sourceNoteHtml: 'ℹ️ Classification thresholds (15/30/60/90 ppm Olsen) and the dose curve are <strong>indicative</strong>: they are not taken from a specific official Tunisian publication (INRAT/CRDA/lab), but from common Olsen-P agronomic classes and a COMIFER/ARVALIS-style approach. Confirm and adjust per crop and the official recommendations that apply in your region. <a href="https://www.arvalis.fr/infos-techniques/connaitre-les-teneurs-seuils-dans-sa-region-selon-son-sol" target="_blank" rel="noopener">Example of a documented method (COMIFER / ARVALIS)</a>.'
+    },
+    ar: {
+      tabP2O5: 'خريطة الفسفور',
+      govLabel: 'الولاية:',
+      powerLabel: 'قوة IDW (p):',
+      opacityLabel: 'الشفافية:',
+      basemapLabel: 'الخريطة الأساسية:',
+      basemapSatellite: 'قمر صناعي (Esri)',
+      basemapClair: 'خريطة فاتحة',
+      basemapOsm: 'OpenStreetMap',
+      basemapRelief: 'تضاريس (OpenTopoMap)',
+      generateBtn: 'إنشاء / تحديث',
+      titleA: 'الفسفور المتاح (Olsen, ppm)',
+      titleB: 'الكمية اللازمة من الفسفور (كغ/هك)',
+      noGov: 'لم يتم العثور على ولاية تحتوي على قيم فسفور صالحة في البيانات المستوردة (عمود "P2O5" مطلوب).',
+      notEnoughPts: n => 'عدد النقاط غير كافٍ في هذه الولاية (' + n + ' نقطة، الحد الأدنى 3 نقاط).',
+      computing: 'جارٍ حساب الاستيفاء…',
+      pointsUsed: n => n + ' نقطة تم استخدامها للاستيفاء.',
+      classTresFaible: 'منخفض جدا',
+      classFaible: 'منخفض',
+      classMoyen: 'متوسط (مثالي)',
+      classEleve: 'مرتفع',
+      classTresEleve: 'مرتفع جدا',
+      doseUnit: 'كغ فسفور/هك',
+      selectGovPlaceholder: '— لا توجد بيانات فسفور —',
+      sourceNoteHtml: 'ℹ️ عتبات التصنيف (15/30/60/90 ppm Olsen) ومنحنى الجرعات المقترحة هي قيم <strong>إرشادية</strong> فقط: لم تُستمد من منشور رسمي تونسي محدد (المعهد الوطني للبحوث الزراعية بتونس/CRDA/المخبر)، بل من التصنيفات المتعارف عليها للفسفور المتاح (Olsen) ومقاربة على غرار طريقة COMIFER/ARVALIS. يُرجى التحقق منها وتكييفها حسب المحصول والتوصيات الرسمية المعتمدة في منطقتكم. <a href="https://www.arvalis.fr/infos-techniques/connaitre-les-teneurs-seuils-dans-sa-region-selon-son-sol" target="_blank" rel="noopener">مثال على منهجية موثقة (COMIFER / ARVALIS)</a>.'
+    }
+  };
+  function p2o5T(key){
+    const dict = P2O5_I18N[currentLang] || P2O5_I18N.fr;
+    return dict[key] !== undefined ? dict[key] : P2O5_I18N.fr[key];
+  }
+
+  /* Classes agronomiques du P2O5 assimilable (Olsen, ppm) : mêmes seuils que la
+     cartographie de référence (script GEE fourni) : 15 / 30 / 60 / 90 ppm. */
+  const P2O5_BREAKS_FIXED = [15, 30, 60, 90];
+  /* Couleurs alignées du "problème" (rouge = très élevé) vers le "confort"
+     (vert = optimal), plutôt que l'inverse : rouge = Très élevé, orange =
+     Élevé, vert = Moyen (Optimal), bleu = Faible, violet = Très faible. */
+  const P2O5_CLASS_COLORS = ['#762a83','#4575b4','#1a9850','#fdae61','#d73027'];
+  const P2O5_CLASS_KEYS = ['classTresFaible','classFaible','classMoyen','classEleve','classTresEleve'];
+
+  /* Courbe d'apport indicative (kg P2O5/ha) en fonction du P2O5 assimilable (ppm).
+     ATTENTION : ce sont des valeurs de référence PAR DÉFAUT (aucune formule
+     n'a été fournie) — à ajuster selon la culture et les recommandations
+     agronomiques officielles. Logique : plus le sol est pauvre en P2O5, plus
+     l'apport recommandé est élevé ; interpolation linéaire entre ces points. */
+  const P2O5_DOSE_CURVE = [
+    {p2o5:0,   dose:150},
+    {p2o5:15,  dose:150},
+    {p2o5:30,  dose:100},
+    {p2o5:60,  dose:50},
+    {p2o5:90,  dose:20},
+    {p2o5:150, dose:0}
+  ];
+  function doseFromP2O5(v){
+    if(!Number.isFinite(v)) return null;
+    const pts=P2O5_DOSE_CURVE;
+    if(v<=pts[0].p2o5) return pts[0].dose;
+    if(v>=pts[pts.length-1].p2o5) return pts[pts.length-1].dose;
+    for(let i=0;i<pts.length-1;i++){
+      const a=pts[i], b=pts[i+1];
+      if(v>=a.p2o5 && v<=b.p2o5){
+        const t=(v-a.p2o5)/(b.p2o5-a.p2o5);
+        return a.dose+(b.dose-a.dose)*t;
+      }
+    }
+    return pts[pts.length-1].dose;
+  }
+
+  let p2o5MapA=null, p2o5MapB=null;
+  let p2o5OverlayA=null, p2o5OverlayB=null;
+  let p2o5BoundaryLayerA=null, p2o5BoundaryLayerB=null;
+  let p2o5PointsLayerA=null;
+  let p2o5Initialized=false;
+  let p2o5Syncing=false;
+  let p2o5BaseLayerA=null, p2o5BaseLayerB=null;
+  const p2o5State={ governorate:null, power:4, opacity:0.85, basemap:'clair' };
+
+  /* Mêmes fonds de carte que l'onglet "Carte" (satellite Esri, fond clair
+     Esri, OpenStreetMap, relief OpenTopoMap), déclinés en usines de calques
+     puisqu'un même calque Leaflet ne peut pas être ajouté à deux cartes. */
+  const P2O5_BASEMAP_DEFS={
+    satellite:{
+      url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      options:{attribution:'Tiles &copy; Esri', maxZoom:19}
+    },
+    clair:{
+      url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+      options:{attribution:'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom:16}
+    },
+    osm:{
+      url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      options:{attribution:'&copy; OpenStreetMap contributors', maxZoom:19}
+    },
+    relief:{
+      url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+      options:{attribution:'&copy; OpenTopoMap (CC-BY-SA)', maxZoom:17}
+    }
+  };
+
+  function setP2O5Basemap(key){
+    const def=P2O5_BASEMAP_DEFS[key] || P2O5_BASEMAP_DEFS.clair;
+    p2o5State.basemap=P2O5_BASEMAP_DEFS[key] ? key : 'clair';
+    if(p2o5BaseLayerA && p2o5MapA) p2o5MapA.removeLayer(p2o5BaseLayerA);
+    if(p2o5BaseLayerB && p2o5MapB) p2o5MapB.removeLayer(p2o5BaseLayerB);
+    p2o5BaseLayerA=L.tileLayer(def.url,def.options).addTo(p2o5MapA);
+    p2o5BaseLayerB=L.tileLayer(def.url,def.options).addTo(p2o5MapB);
+    /* Le fond de carte est ajouté en premier : on le renvoie tout en bas de
+       la pile pour qu'il reste toujours sous les contours et les points. */
+    p2o5BaseLayerA.bringToBack();
+    p2o5BaseLayerB.bringToBack();
+  }
+
+  function setP2O5Opacity(value){
+    p2o5State.opacity=value;
+    if(p2o5OverlayA) p2o5OverlayA.setOpacity(value);
+    if(p2o5OverlayB) p2o5OverlayB.setOpacity(value);
+  }
+
+  function ensureP2O5Maps(){
+    if(p2o5MapA && p2o5MapB) return;
+    p2o5MapA=L.map('p2o5MapA',{zoomControl:true});
+    p2o5MapB=L.map('p2o5MapB',{zoomControl:true});
+    // NB : tile.openstreetmap.org bloque desormais cet usage ("Access
+    // blocked" - politique d'usage des serveurs benevoles OSM), et les
+    // tuiles CartoDB (basemaps.cartocdn.com) affichent maintenant un
+    // filigrane "API KEY REQUIRED" pour les usages sans compte/API key.
+    // Le fond par defaut utilise donc les tuiles Esri (World_Light_Gray_Base),
+    // mais l'utilisateur peut choisir un autre fond via le selecteur dedie
+    // (satellite, OSM, relief), comme dans l'onglet "Carte".
+    setP2O5Basemap(p2o5State.basemap);
+    p2o5MapA.setView([34.0,9.5],7);
+    p2o5MapB.setView([34.0,9.5],7);
+
+    function syncFrom(src,dst){
+      if(p2o5Syncing) return;
+      p2o5Syncing=true;
+      dst.setView(src.getCenter(), src.getZoom(), {animate:false});
+      p2o5Syncing=false;
+    }
+    p2o5MapA.on('move zoom', () => syncFrom(p2o5MapA,p2o5MapB));
+    p2o5MapB.on('move zoom', () => syncFrom(p2o5MapB,p2o5MapA));
+  }
+
+  /* Sous-échantillonne un anneau de polygone pour accélérer les tests
+     point-dans-polygone lors du masquage de la grille IDW (les géométries des
+     gouvernorats peuvent compter des dizaines de milliers de sommets). */
+  function simplifyRingForMask(ring,maxPoints){
+    if(!ring || ring.length<=maxPoints) return ring;
+    const step=Math.ceil(ring.length/maxPoints);
+    const out=[];
+    for(let i=0;i<ring.length;i+=step) out.push(ring[i]);
+    if(out[out.length-1]!==ring[ring.length-1]) out.push(ring[ring.length-1]);
+    return out;
+  }
+  function simplifyGeometryForMask(geometry,maxPointsPerRing){
+    if(!geometry) return geometry;
+    if(geometry.type==='Polygon'){
+      return {type:'Polygon', coordinates:(geometry.coordinates||[]).map(r=>simplifyRingForMask(r,maxPointsPerRing))};
+    }
+    if(geometry.type==='MultiPolygon'){
+      return {type:'MultiPolygon', coordinates:(geometry.coordinates||[]).map(poly=>poly.map(r=>simplifyRingForMask(r,maxPointsPerRing)))};
+    }
+    return geometry;
+  }
+
+  function geometryBBox(geometry){
+    let minLon=Infinity,minLat=Infinity,maxLon=-Infinity,maxLat=-Infinity;
+    function scanRing(ring){
+      ring.forEach(pt=>{
+        const lon=Number(pt[0]), lat=Number(pt[1]);
+        if(lon<minLon) minLon=lon;
+        if(lon>maxLon) maxLon=lon;
+        if(lat<minLat) minLat=lat;
+        if(lat>maxLat) maxLat=lat;
+      });
+    }
+    if(geometry.type==='Polygon'){
+      (geometry.coordinates||[]).forEach(scanRing);
+    }else if(geometry.type==='MultiPolygon'){
+      (geometry.coordinates||[]).forEach(poly=>poly.forEach(scanRing));
+    }
+    return {minLon,minLat,maxLon,maxLat};
+  }
+
+  /* Recherche la feature de gouvernorat correspondant à un nom canonique, en
+     réutilisant la même logique de correspondance que governorateAtPoint(). */
+  function findGovernorateFeature(govName){
+    if(!governorateGeoJSON?.features) return null;
+    const target=normalizeGovName(govName);
+    if(!target) return null;
+    return governorateGeoJSON.features.find(f=>{
+      const p=f.properties||{};
+      const localCode=p.GOUV || p.gouv || p.Gouv;
+      let name=null;
+      if(localCode && LOCAL_GOUV_NAME_MAP[String(localCode).trim().toUpperCase()]){
+        name=LOCAL_GOUV_NAME_MAP[String(localCode).trim().toUpperCase()];
+      }else{
+        name=p.gouv_fr || p.name || (localCode ? String(localCode) : null);
+      }
+      return normalizeGovName(name)===target;
+    }) || null;
+  }
+
+  /* Liste des gouvernorats disposant d'au moins un point avec une valeur P2O5
+     exploitable (colonne "P2O5" du fichier importé). */
+  function getGovernoratesWithP2O5(){
+    const counts={};
+    (currentData||[]).forEach(d=>{
+      if(!isCoordinateValid(d)) return;
+      const v=getP2O5Value(d);
+      if(!Number.isFinite(v)) return;
+      const gov=d.actualGovernorate || d.declaredGovernorate;
+      if(!gov) return;
+      counts[gov]=(counts[gov]||0)+1;
+    });
+    return Object.keys(counts).sort((a,b)=>a.localeCompare(b)).map(name=>({name,count:counts[name]}));
+  }
+
+  function getP2O5PointsForGovernorate(govName){
+    const target=normalizeGovName(govName);
+    const pts=[];
+    (currentData||[]).forEach(d=>{
+      if(!isCoordinateValid(d)) return;
+      const gov=normalizeGovName(d.actualGovernorate || d.declaredGovernorate);
+      if(gov!==target) return;
+      const v=getP2O5Value(d);
+      if(!Number.isFinite(v)) return;
+      pts.push({lat:d.lat, lon:d.lon, value:v});
+    });
+    return pts;
+  }
+
+  /* Interpolation IDW (Inverse Distance Weighting) sur une grille régulière. */
+  function computeIDWGrid(points,power,bbox,cols,rows){
+    const grid=new Float64Array(cols*rows);
+    for(let r=0;r<rows;r++){
+      const lat=bbox.maxLat-(r+0.5)*(bbox.maxLat-bbox.minLat)/rows;
+      for(let c=0;c<cols;c++){
+        const lon=bbox.minLon+(c+0.5)*(bbox.maxLon-bbox.minLon)/cols;
+        let sumW=0,sumWZ=0,exact=null;
+        for(let i=0;i<points.length;i++){
+          const p=points[i];
+          const dLat=lat-p.lat, dLon=lon-p.lon;
+          const d=Math.sqrt(dLat*dLat+dLon*dLon);
+          if(d<1e-6){ exact=p.value; break; }
+          const w=Math.pow(d,-power);
+          sumW+=w; sumWZ+=w*p.value;
+        }
+        grid[r*cols+c]= exact!==null ? exact : (sumW>0 ? sumWZ/sumW : NaN);
+      }
+    }
+    return grid;
+  }
+
+  function computeMaskGrid(simplifiedGeometry,bbox,cols,rows){
+    const mask=new Uint8Array(cols*rows);
+    for(let r=0;r<rows;r++){
+      const lat=bbox.maxLat-(r+0.5)*(bbox.maxLat-bbox.minLat)/rows;
+      for(let c=0;c<cols;c++){
+        const lon=bbox.minLon+(c+0.5)*(bbox.maxLon-bbox.minLon)/cols;
+        mask[r*cols+c]=pointInGeometry(lon,lat,simplifiedGeometry) ? 1 : 0;
+      }
+    }
+    return mask;
+  }
+
+  function classIndexForP2O5(v){
+    if(!Number.isFinite(v)) return -1;
+    let idx=0;
+    for(let i=0;i<P2O5_BREAKS_FIXED.length;i++){
+      if(v>=P2O5_BREAKS_FIXED[i]) idx=i+1;
+    }
+    return idx;
+  }
+
+  function hexToRgbArrP2O5(hex){
+    hex=hex.replace('#','');
+    const n=parseInt(hex,16);
+    return [(n>>16)&255,(n>>8)&255,n&255];
+  }
+
+  /* Construit une image (dataURL) à partir d'une grille de valeurs, d'un
+     masque (1 = à l'intérieur du gouvernorat) et d'une fonction de
+     coloration (valeur -> couleur hex). Les cellules hors masque sont
+     rendues transparentes. */
+  function renderGridToDataURL(grid,mask,cols,rows,colorFn){
+    const canvas=document.createElement('canvas');
+    canvas.width=cols; canvas.height=rows;
+    const ctx=canvas.getContext('2d');
+    const img=ctx.createImageData(cols,rows);
+    for(let i=0;i<cols*rows;i++){
+      const v=grid[i];
+      const off=i*4;
+      if(mask[i]!==1 || !Number.isFinite(v)){
+        img.data[off+3]=0;
+        continue;
+      }
+      const rgb=hexToRgbArrP2O5(colorFn(v));
+      img.data[off]=rgb[0]; img.data[off+1]=rgb[1]; img.data[off+2]=rgb[2]; img.data[off+3]=232;
+    }
+    ctx.putImageData(img,0,0);
+    return canvas.toDataURL('image/png');
+  }
+
+  function colorForP2O5(v){
+    const idx=classIndexForP2O5(v);
+    return P2O5_CLASS_COLORS[Math.max(0,Math.min(P2O5_CLASS_COLORS.length-1,idx))];
+  }
+
+  /* Palette des apports : vert (faible besoin, sol déjà riche) -> rouge
+     (besoin élevé, sol pauvre). Légende recalculée (normalisée) à chaque
+     génération à partir du min/max réel de la grille des apports. */
+  const P2O5_DOSE_PALETTE=['#1a9850','#a6d96a','#fee08b','#fdae61','#f46d43','#d73027'];
+  function buildDoseClassifier(minDose,maxDose,nClasses){
+    if(!Number.isFinite(minDose) || !Number.isFinite(maxDose) || minDose>=maxDose){
+      minDose=0; maxDose=Number.isFinite(maxDose) ? Math.max(maxDose,1) : 150;
+    }
+    const breaks=[];
+    for(let i=0;i<=nClasses;i++) breaks.push(minDose+(maxDose-minDose)*i/nClasses);
+    const colors=[];
+    for(let i=0;i<nClasses;i++){
+      const t=nClasses>1 ? i/(nClasses-1) : 0;
+      const pos=t*(P2O5_DOSE_PALETTE.length-1);
+      const i0=Math.floor(pos), i1=Math.min(i0+1,P2O5_DOSE_PALETTE.length-1);
+      const frac=pos-i0;
+      const c0=hexToRgbArrP2O5(P2O5_DOSE_PALETTE[i0]), c1=hexToRgbArrP2O5(P2O5_DOSE_PALETTE[i1]);
+      const rgb=[c0[0]+(c1[0]-c0[0])*frac, c0[1]+(c1[1]-c0[1])*frac, c0[2]+(c1[2]-c0[2])*frac];
+      colors.push('#'+rgb.map(x=>{const s=Math.round(x).toString(16); return s.length===1?'0'+s:s;}).join(''));
+    }
+    function colorFn(v){
+      let idx=Math.floor((v-minDose)/(maxDose-minDose)*nClasses);
+      idx=Math.max(0,Math.min(nClasses-1,idx));
+      return colors[idx];
+    }
+    return {breaks,colors,colorFn};
+  }
+
+  function buildP2O5Legend(container){
+    if(!container) return;
+    container.innerHTML='';
+    const title=document.createElement('div');
+    title.style.fontWeight='700';
+    title.style.marginBottom='4px';
+    title.textContent=p2o5T('titleA');
+    container.appendChild(title);
+    for(let i=0;i<P2O5_CLASS_COLORS.length;i++){
+      const row=document.createElement('div');
+      row.className='legend-item';
+      const dot=document.createElement('span');
+      dot.className='legend-dot';
+      dot.style.background=P2O5_CLASS_COLORS[i];
+      row.appendChild(dot);
+      const lower=i===0?'0':P2O5_BREAKS_FIXED[i-1];
+      const upper=i===P2O5_BREAKS_FIXED.length?'+':P2O5_BREAKS_FIXED[i];
+      const label=document.createElement('span');
+      label.textContent=p2o5T(P2O5_CLASS_KEYS[i])+' ('+lower+'-'+upper+')';
+      row.appendChild(label);
+      container.appendChild(row);
+    }
+  }
+
+  function buildDoseLegend(container,classifier){
+    if(!container) return;
+    container.innerHTML='';
+    const title=document.createElement('div');
+    title.style.fontWeight='700';
+    title.style.marginBottom='4px';
+    title.textContent=p2o5T('titleB');
+    container.appendChild(title);
+    for(let i=0;i<classifier.colors.length;i++){
+      const row=document.createElement('div');
+      row.className='legend-item';
+      const dot=document.createElement('span');
+      dot.className='legend-dot';
+      dot.style.background=classifier.colors[i];
+      row.appendChild(dot);
+      const lower=classifier.breaks[i].toFixed(0);
+      const upper=classifier.breaks[i+1].toFixed(0);
+      const label=document.createElement('span');
+      label.textContent=lower+'-'+upper+' '+p2o5T('doseUnit');
+      row.appendChild(label);
+      container.appendChild(row);
+    }
+  }
+
+  function populateP2O5GovSelect(){
+    const sel=document.getElementById('p2o5GovSelect');
+    if(!sel) return;
+    const govs=getGovernoratesWithP2O5();
+    const previous=p2o5State.governorate;
+    sel.innerHTML='';
+    if(govs.length===0){
+      const opt=document.createElement('option');
+      opt.value='';
+      opt.textContent=p2o5T('selectGovPlaceholder');
+      sel.appendChild(opt);
+      sel.disabled=true;
+      p2o5State.governorate=null;
+      return;
+    }
+    sel.disabled=false;
+    govs.forEach(g=>{
+      const opt=document.createElement('option');
+      opt.value=g.name;
+      opt.textContent=localizeGovernorateName(g.name)+' ('+g.count+')';
+      sel.appendChild(opt);
+    });
+    if(!previous || !govs.some(g=>g.name===previous)){
+      p2o5State.governorate=govs[0].name;
+    }
+    sel.value=p2o5State.governorate;
+  }
+
+  function setP2O5Status(msg){
+    const el=document.getElementById('p2o5Status');
+    if(el) el.textContent=msg||'';
+  }
+
+  function refreshP2O5Maps(){
+    ensureP2O5Maps();
+    const govName=p2o5State.governorate;
+    if(!govName){
+      setP2O5Status(p2o5T('noGov'));
+      return;
+    }
+    const pts=getP2O5PointsForGovernorate(govName);
+    if(pts.length<3){
+      setP2O5Status(p2o5T('notEnoughPts')(pts.length));
+      return;
+    }
+    setP2O5Status(p2o5T('computing'));
+
+    setTimeout(()=>{
+      const feature=findGovernorateFeature(govName);
+      const geometry=feature ? feature.geometry : null;
+      let bbox;
+      if(geometry){
+        bbox=geometryBBox(geometry);
+      }else{
+        let minLon=Infinity,minLat=Infinity,maxLon=-Infinity,maxLat=-Infinity;
+        pts.forEach(p=>{
+          if(p.lon<minLon) minLon=p.lon; if(p.lon>maxLon) maxLon=p.lon;
+          if(p.lat<minLat) minLat=p.lat; if(p.lat>maxLat) maxLat=p.lat;
+        });
+        const padLon=(maxLon-minLon)*0.15||0.05, padLat=(maxLat-minLat)*0.15||0.05;
+        bbox={minLon:minLon-padLon,minLat:minLat-padLat,maxLon:maxLon+padLon,maxLat:maxLat+padLat};
+      }
+
+      const width=bbox.maxLon-bbox.minLon, height=bbox.maxLat-bbox.minLat;
+      const maxDim=130;
+      let cols,rows;
+      if(width>=height){ cols=maxDim; rows=Math.max(20,Math.round(maxDim*height/width)); }
+      else{ rows=maxDim; cols=Math.max(20,Math.round(maxDim*width/height)); }
+
+      const grid=computeIDWGrid(pts,p2o5State.power,bbox,cols,rows);
+
+      let mask;
+      if(geometry){
+        const simplified=simplifyGeometryForMask(geometry,500);
+        mask=computeMaskGrid(simplified,bbox,cols,rows);
+      }else{
+        mask=new Uint8Array(cols*rows).fill(1);
+      }
+
+      /* Grille des apports nécessaires (kg P2O5/ha), dérivée point par point
+         de la grille P2O5 interpolée ci-dessus. */
+      const doseGrid=new Float64Array(cols*rows);
+      let minDose=Infinity,maxDose=-Infinity;
+      for(let i=0;i<grid.length;i++){
+        if(mask[i]!==1 || !Number.isFinite(grid[i])){ doseGrid[i]=NaN; continue; }
+        const dose=doseFromP2O5(grid[i]);
+        doseGrid[i]=dose;
+        if(dose<minDose) minDose=dose;
+        if(dose>maxDose) maxDose=dose;
+      }
+
+      const dataURL_A=renderGridToDataURL(grid,mask,cols,rows,colorForP2O5);
+      const doseClassifier=buildDoseClassifier(minDose,maxDose,6);
+      const dataURL_B=renderGridToDataURL(doseGrid,mask,cols,rows,doseClassifier.colorFn);
+
+      const bounds=L.latLngBounds([[bbox.minLat,bbox.minLon],[bbox.maxLat,bbox.maxLon]]);
+
+      if(p2o5OverlayA) p2o5MapA.removeLayer(p2o5OverlayA);
+      if(p2o5OverlayB) p2o5MapB.removeLayer(p2o5OverlayB);
+      p2o5OverlayA=L.imageOverlay(dataURL_A,bounds,{opacity:p2o5State.opacity,interactive:false}).addTo(p2o5MapA);
+      p2o5OverlayB=L.imageOverlay(dataURL_B,bounds,{opacity:p2o5State.opacity,interactive:false}).addTo(p2o5MapB);
+
+      if(p2o5BoundaryLayerA) p2o5MapA.removeLayer(p2o5BoundaryLayerA);
+      if(p2o5BoundaryLayerB) p2o5MapB.removeLayer(p2o5BoundaryLayerB);
+      if(geometry){
+        p2o5BoundaryLayerA=L.geoJSON(geometry,{style:{color:'#375029',weight:2,fill:false}}).addTo(p2o5MapA);
+        p2o5BoundaryLayerB=L.geoJSON(geometry,{style:{color:'#375029',weight:2,fill:false}}).addTo(p2o5MapB);
+      }
+
+      if(p2o5PointsLayerA) p2o5MapA.removeLayer(p2o5PointsLayerA);
+      p2o5PointsLayerA=L.layerGroup(pts.map(p=>L.circleMarker([p.lat,p.lon],{radius:3,color:'#2c2620',weight:1,fillColor:'#fffdf8',fillOpacity:0.9}))).addTo(p2o5MapA);
+
+      p2o5Syncing=true;
+      p2o5MapA.fitBounds(bounds.pad(0.06));
+      p2o5MapB.fitBounds(bounds.pad(0.06));
+      p2o5Syncing=false;
+
+      buildP2O5Legend(document.getElementById('p2o5LegendA'));
+      buildDoseLegend(document.getElementById('p2o5LegendB'),doseClassifier);
+
+      setP2O5Status(p2o5T('pointsUsed')(pts.length));
+
+      setTimeout(()=>{
+        if(p2o5MapA) p2o5MapA.invalidateSize();
+        if(p2o5MapB) p2o5MapB.invalidateSize();
+      },60);
+    },30);
+  }
+
+  function initP2O5TabTexts(){
+    const dict=P2O5_I18N[currentLang]||P2O5_I18N.fr;
+    const govLabel=document.getElementById('p2o5GovLabel');
+    if(govLabel) govLabel.textContent=dict.govLabel;
+    const powerLabelText=document.getElementById('p2o5PowerLabelText');
+    if(powerLabelText) powerLabelText.textContent=dict.powerLabel;
+    const opacityLabelText=document.getElementById('p2o5OpacityLabelText');
+    if(opacityLabelText) opacityLabelText.textContent=dict.opacityLabel;
+    const basemapLabelText=document.getElementById('p2o5BasemapLabelText');
+    if(basemapLabelText) basemapLabelText.textContent=dict.basemapLabel;
+    const basemapSelect=document.getElementById('p2o5BasemapSelect');
+    if(basemapSelect){
+      const opts=basemapSelect.options;
+      for(let i=0;i<opts.length;i++){
+        const key='basemap'+opts[i].value.charAt(0).toUpperCase()+opts[i].value.slice(1);
+        if(dict[key]!==undefined) opts[i].textContent=dict[key];
+      }
+    }
+    const btn=document.getElementById('p2o5RefreshBtn');
+    if(btn) btn.textContent=dict.generateBtn;
+    const titleA=document.getElementById('p2o5TitleA');
+    if(titleA) titleA.textContent=dict.titleA;
+    const titleB=document.getElementById('p2o5TitleB');
+    if(titleB) titleB.textContent=dict.titleB;
+    const tabLabel=document.getElementById('p2o5TabLabel');
+    if(tabLabel) tabLabel.textContent=dict.tabP2O5;
+    const sourceNote=document.getElementById('p2o5SourceNote');
+    if(sourceNote) sourceNote.innerHTML=dict.sourceNoteHtml || '';
+    populateP2O5GovSelect();
+  }
+
+  function initP2O5Tab(){
+    ensureP2O5Maps();
+    initP2O5TabTexts();
+    setTimeout(()=>{
+      if(p2o5MapA) p2o5MapA.invalidateSize();
+      if(p2o5MapB) p2o5MapB.invalidateSize();
+    },80);
+    if(!p2o5Initialized){
+      const sel=document.getElementById('p2o5GovSelect');
+      if(sel){
+        sel.addEventListener('change',function(){
+          p2o5State.governorate=this.value;
+          refreshP2O5Maps();
+        });
+      }
+      const slider=document.getElementById('p2o5PowerSlider');
+      const valueLabel=document.getElementById('p2o5PowerValue');
+      if(slider){
+        slider.addEventListener('input',function(){
+          p2o5State.power=parseFloat(this.value);
+          if(valueLabel) valueLabel.textContent=p2o5State.power.toFixed(1);
+        });
+        slider.addEventListener('change',function(){
+          refreshP2O5Maps();
+        });
+      }
+      const opacitySlider=document.getElementById('p2o5OpacitySlider');
+      const opacityValueLabel=document.getElementById('p2o5OpacityValue');
+      if(opacitySlider){
+        opacitySlider.addEventListener('input',function(){
+          const v=parseFloat(this.value);
+          if(opacityValueLabel) opacityValueLabel.textContent=Math.round(v*100)+'%';
+          setP2O5Opacity(v);
+        });
+      }
+      const basemapSelect=document.getElementById('p2o5BasemapSelect');
+      if(basemapSelect){
+        basemapSelect.value=p2o5State.basemap;
+        basemapSelect.addEventListener('change',function(){
+          setP2O5Basemap(this.value);
+        });
+      }
+      const btn=document.getElementById('p2o5RefreshBtn');
+      if(btn) btn.addEventListener('click',refreshP2O5Maps);
+      p2o5Initialized=true;
+    }
+    if(p2o5State.governorate){
+      refreshP2O5Maps();
+    }else{
+      setP2O5Status(getGovernoratesWithP2O5().length ? '' : p2o5T('noGov'));
+    }
   }
 
   function updateVerificationFlags(data){
@@ -5552,7 +6304,7 @@ const I18N = {
   function openExcelConfig(parsed,isInitial,file){
     const headers=parsed.headers||[];
     const numeric=headers.filter(h=>{ if(/(^|\s)(latitude|longitude|lat|lon)(\s|$)/i.test(String(h).trim()) || /coordonn[ée]e?s?|coordinates?|إحداثيات|خط العرض|خط الطول/i.test(String(h))) return false; return parsed.data.slice(0,100).some(d=>{const v=String(d.row?.[h]??'').replace(/\s/g,'').replace(',','.');return v!==''&&Number.isFinite(parseFloat(v));}); });
-    const popupDefault=headers.filter(h=>[/groupe|group|المجموعة/i,/nom de l.?agriculteur|farmer name|اسم الفلاح/i,/lieu|location|plot|مكان|قطعة/i,/superficie|area|مساحة/i,/culture|crop|زراعة|محصول/i,/téléphone|phone|هاتف/i,/gouvernorat|governorate|wilaya|الولاية/i].some(rx=>rx.test(h)));
+    const popupDefault=headers.filter(h=>[/groupe|group|المجموعة/i,/nom de l.?agriculteur|farmer name|اسم الفلاح/i,/lieu|location|plot|مكان|قطعة/i,/superficie|area|مساحة/i,/culture|crop|زراعة|محصول/i,/téléphone|phone|هاتف/i].some(rx=>rx.test(h)));
     currentPendingImport={parsed,isInitial,file};
     document.getElementById('popupColumnsList').innerHTML=headers.map(h=>'<label class="excel-col-item"><input type="checkbox" class="popup-col" value="'+escapeHtml(h)+'" '+(popupDefault.includes(h)?'checked':'')+'><span>'+escapeHtml(h)+'</span></label>').join('');
     const groupCol=headers.find(h=>/groupe|group|المجموعة/i.test(h))||'';
@@ -5598,7 +6350,7 @@ const I18N = {
       img.src = 'Images/Logo_Climate.jpg?_check=' + Date.now();
 
       // Filet de sécurité si la requête reste bloquée / sans réponse.
-      setTimeout(() => finish(false), 10000);
+      setTimeout(() => finish(false), 4000);
     });
   }
 
@@ -6002,6 +6754,9 @@ const I18N = {
         try{ renderDynamicKPI(currentData); }catch(e){ console.warn('KPI', e); }
         applyFilters(false);
       }
+
+      /* Traductions de l'onglet "Carte P2O5" (s'il a déjà été ouvert une fois). */
+      try{ if(typeof initP2O5TabTexts==='function') initP2O5TabTexts(); }catch(e){ console.warn('P2O5 i18n', e); }
     } catch(err) {
       /*
          Une erreur secondaire ne doit JAMAIS annuler la sélection
@@ -6385,7 +7140,7 @@ const I18N = {
        périodiquement de revenir au service partagé. */
     const pollTimer = setInterval(function(){
       if(usingFallback){
-        fetchWithTimeout(AB_BASE + '/healthcheck', 10000)
+        fetchWithTimeout(AB_BASE + '/healthcheck', 4000)
           .then(r => { if(r.ok){ usingFallback = false; hitJoinWithRetry(1, 1000); } })
           .catch(() => {});
         return;
@@ -6429,78 +7184,6 @@ const I18N = {
     document.addEventListener('visibilitychange', function(){
       if(document.visibilityState === 'hidden') leaveNow();
     });
-
-  })();
-
-
-  /* =======================================================
-     LEGENDE DEPLACABLE (glisser-déposer via le titre)
-     ======================================================= */
-
-  (function setupLegendDrag(){
-
-    const legend = document.getElementById('mapLegend');
-    const handle = legend && legend.querySelector('h4');
-    const wrap = document.getElementById('mapWrap');
-    if(!legend || !handle || !wrap) return;
-
-    let dragging = false;
-    let startX = 0, startY = 0;
-    let startLeft = 0, startTop = 0;
-
-    function onPointerDown(e){
-      dragging = true;
-      legend.classList.add('dragging');
-
-      const legendRect = legend.getBoundingClientRect();
-      const wrapRect = wrap.getBoundingClientRect();
-
-      // Fige la position actuelle en left/top absolus et
-      // relâche bottom/right pour permettre le déplacement libre.
-      startLeft = legendRect.left - wrapRect.left;
-      startTop = legendRect.top - wrapRect.top;
-      legend.style.left = startLeft + 'px';
-      legend.style.top = startTop + 'px';
-      legend.style.right = 'auto';
-      legend.style.bottom = 'auto';
-
-      startX = e.clientX;
-      startY = e.clientY;
-
-      handle.setPointerCapture(e.pointerId);
-      e.preventDefault();
-    }
-
-    function onPointerMove(e){
-      if(!dragging) return;
-
-      const wrapRect = wrap.getBoundingClientRect();
-      const legendRect = legend.getBoundingClientRect();
-
-      let newLeft = startLeft + (e.clientX - startX);
-      let newTop = startTop + (e.clientY - startY);
-
-      const maxLeft = wrapRect.width - legendRect.width - 4;
-      const maxTop = wrapRect.height - legendRect.height - 4;
-
-      newLeft = Math.max(4, Math.min(newLeft, Math.max(4, maxLeft)));
-      newTop = Math.max(4, Math.min(newTop, Math.max(4, maxTop)));
-
-      legend.style.left = newLeft + 'px';
-      legend.style.top = newTop + 'px';
-    }
-
-    function onPointerUp(e){
-      if(!dragging) return;
-      dragging = false;
-      legend.classList.remove('dragging');
-      try{ handle.releasePointerCapture(e.pointerId); }catch(err){}
-    }
-
-    handle.addEventListener('pointerdown', onPointerDown);
-    handle.addEventListener('pointermove', onPointerMove);
-    handle.addEventListener('pointerup', onPointerUp);
-    handle.addEventListener('pointercancel', onPointerUp);
 
   })();
 
