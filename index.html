@@ -1822,12 +1822,12 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 
       <div class="p2o5-control-group">
         <label id="p2o5BasemapLabelText" for="p2o5BasemapSelect">Fond de carte :</label>
-        <select id="p2o5BasemapSelect">
-          <option value="satellite">Satellite (Esri)</option>
-          <option value="clair" selected>Fond clair</option>
-          <option value="osm">OpenStreetMap</option>
-          <option value="relief">Relief (OpenTopoMap)</option>
-        </select>
+	<select id="p2o5BasemapSelect">
+  	  <option value="satellite" selected>Satellite (Esri)</option>
+  	  <option value="osm">OpenStreetMap</option>
+  	  <option value="relief">Relief (OpenTopoMap)</option>
+  	  <option value="clair">Fond clair</option>
+	</select>
       </div>
 
       <div class="p2o5-control-group">
@@ -5606,7 +5606,7 @@ const I18N = {
   let p2o5Initialized=false;
   let p2o5Syncing=false;
   let p2o5BaseLayerA=null, p2o5BaseLayerB=null;
-  const p2o5State={ governorate:null, power:4, opacity:0.85, basemap:'clair' };
+  const p2o5State={ governorate:null, power:4, opacity:0.85, basemap:'satellite' };
 
   /* Mêmes fonds de carte que l'onglet "Carte" (satellite Esri, fond clair
      Esri, OpenStreetMap, relief OpenTopoMap), déclinés en usines de calques
