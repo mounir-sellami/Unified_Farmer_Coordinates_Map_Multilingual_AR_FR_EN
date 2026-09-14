@@ -3810,6 +3810,34 @@ const I18N = {
                 ? 40
                 : 48;
 
+          /* Vérifie si les points regroupés dans cette bulle de cluster
+             (regroupement spatial Leaflet) comportent des coordonnées
+             erronées : liseré rouge foncé si TOUS les points le sont,
+             orangé foncé si SEULEMENT UNE PARTIE l'est. */
+          const childMarkers =
+            c.getAllChildMarkers();
+
+          let badCount = 0;
+
+          childMarkers.forEach(m=>{
+            const d = m._meta;
+            if(d && (d.needsVerification || !isCoordinateValid(d))) badCount++;
+          });
+
+          const clusterBorder =
+            badCount === 0
+              ? '2px solid #fff'
+              : badCount === childMarkers.length
+                ? '4px solid #7a0d0d'
+                : '4px solid #b35c00';
+
+          const clusterGlow =
+            badCount === 0
+              ? ''
+              : badCount === childMarkers.length
+                ? 'box-shadow:0 0 0 3px rgba(122,13,13,.32),0 3px 8px rgba(60,0,0,.5);'
+                : 'box-shadow:0 0 0 3px rgba(179,92,0,.32),0 3px 8px rgba(90,45,0,.5);';
+
           return L.divIcon({
 
             html:
@@ -3825,8 +3853,8 @@ const I18N = {
               'font-family:Cairo,sans-serif;' +
               'font-weight:800;' +
               'font-size:'+(n<10?13:14)+'px;' +
-              'box-shadow:0 3px 8px rgba(0,0,0,.35);' +
-              'border:2px solid #fff;' +
+              (badCount === 0 ? 'box-shadow:0 3px 8px rgba(0,0,0,.35);' : clusterGlow) +
+              'border:'+clusterBorder+';' +
               '">' +
               n +
               '</div>',
@@ -5833,7 +5861,7 @@ const I18N = {
       if(!isCoordinateValid(d)) return;
       const v=getP2O5Value(d);
       if(!Number.isFinite(v)) return;
-      const gov=d.actualGovernorate || d.declaredGovernorate;
+      const gov=d.declaredGovernorate;
       if(!gov) return;
       counts[gov]=(counts[gov]||0)+1;
     });
@@ -5845,7 +5873,7 @@ const I18N = {
     const pts=[];
     (currentData||[]).forEach(d=>{
       if(!isCoordinateValid(d)) return;
-      const gov=normalizeGovName(d.actualGovernorate || d.declaredGovernorate);
+      const gov=normalizeGovName(d.declaredGovernorate);
       if(gov!==target) return;
       const v=getP2O5Value(d);
       if(!Number.isFinite(v)) return;
