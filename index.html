@@ -1314,7 +1314,17 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 /* =========================================================
    EXCEL CONFIGURATION MODAL
    ========================================================= */
-#excelConfigOverlay{position:fixed;inset:0;z-index:200;background:rgba(44,38,32,.58);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;}
+#excelConfigOverlay{
+  position:fixed;
+  inset:0;
+  z-index:5000 !important;
+  background:rgba(44,38,32,.58);
+  backdrop-filter:blur(4px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
 #excelConfigOverlay.show{display:flex;}
 .excel-config-card{width:min(980px,96vw);max-height:92vh;overflow:auto;background-image:linear-gradient(rgba(255,253,248,.55),rgba(255,253,248,.55)),url("Images/Excel_Charts_Background.png");background-size:100% 100%,100% 100%;background-position:center,center;background-repeat:no-repeat,no-repeat;background-attachment:scroll,scroll;background-origin:padding-box,padding-box;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.28);padding:20px;}
 .excel-config-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;}
