@@ -1744,7 +1744,7 @@ footer .contact-link [data-i18n="footerWaLabel"]{
       </svg>
 
       <span data-i18n="tabMap">
-        Carte
+        Répartition spatiale des échantillons
       </span>
 
     </button>
@@ -1814,7 +1814,7 @@ footer .contact-link [data-i18n="footerWaLabel"]{
     </button>
 
     <div class="tab-bar-credit" aria-label="Crédits">
-      <div><strong>Carte unifiée 2026/2027</strong></div>
+      <div><strong data-i18n="creditTitle">Carte unifiée 2026/2027</strong></div>
       <div>© Mounir SELLAMI</div>
     </div>
 
@@ -1840,7 +1840,7 @@ footer .contact-link [data-i18n="footerWaLabel"]{
       <div id="legendItems"></div>
 
       <div class="map-legend-credit">
-        <strong>Carte unifiée 2026/2027</strong><br>
+        <strong data-i18n="creditTitle">Carte unifiée 2026/2027</strong><br>
         © Mounir SELLAMI
       </div>
 
@@ -1995,7 +1995,7 @@ footer .contact-link [data-i18n="footerWaLabel"]{
       </div>
 
       <div class="quality-dashboard-card" id="qualityDashboardCard">
-        <h3 id="qualityDashboardTitle">⚠️ Qualité des données</h3>
+        <h3 id="qualityDashboardTitle" data-i18n="qualityDashboardTitle">⚠️ Qualité des données</h3>
         <div id="qualityDashboardRows"></div>
       </div>
 
@@ -2576,7 +2576,7 @@ const I18N = {
       "Mettre à jour depuis un fichier Excel",
 
     tabMap:
-      "Carte",
+      "Répartition spatiale des échantillons",
 
     tabCharts:
       "Graphiques",
@@ -2756,6 +2756,15 @@ const I18N = {
     footerWaLabel:
       "WhatsApp : ",
 
+    creditTitle:
+      "Carte unifiée 2026/2027",
+
+    qualityDashboardTitle:
+      "⚠️ Qualité des données",
+
+    kpiAverage:
+      "Moyenne",
+
     requiredHeader:[
       "Numéro de série",
       "Fichier source",
@@ -2813,7 +2822,7 @@ const I18N = {
       "Update from an Excel file",
 
     tabMap:
-      "Map",
+      "Spatial distribution of samples",
 
     tabCharts:
       "Charts",
@@ -2993,6 +3002,15 @@ const I18N = {
     footerWaLabel:
       "WhatsApp: ",
 
+    creditTitle:
+      "Unified Map 2026/2027",
+
+    qualityDashboardTitle:
+      "⚠️ Data quality",
+
+    kpiAverage:
+      "Average",
+
     requiredHeader:[
       "Serial Number",
       "Source File",
@@ -3050,7 +3068,7 @@ const I18N = {
       "تحديث من ملف إكسل",
 
     tabMap:
-      "الخريطة",
+      "التوزيع المجالي للعينات",
 
     tabCharts:
       "الرسوم البيانية",
@@ -3229,6 +3247,15 @@ const I18N = {
 
     footerWaLabel:
       "واتساب :",
+
+    creditTitle:
+      "الخريطة الموحدة 2026/2027",
+
+    qualityDashboardTitle:
+      "⚠️ جودة البيانات",
+
+    kpiAverage:
+      "المتوسط",
 
     requiredHeader:[
       "الرقم التسلسلي",
@@ -4108,7 +4135,7 @@ const I18N = {
     }
 
     html += '<span class="popup-badge">#' + escapeHtml(fmt(d.id)) + ' — ' + escapeHtml(fmt(d.source)) + '</span>';
-    html += '<div class="popup-credit"><strong>Carte unifiée 2026/2027</strong><br><span class="popup-author">© Mounir SELLAMI</span></div></div>';
+    html += '<div class="popup-credit"><strong>' + escapeHtml(t().creditTitle) + '</strong><br><span class="popup-author">© Mounir SELLAMI</span></div></div>';
     return html;
   }
 
@@ -5118,11 +5145,12 @@ const I18N = {
       : currentLang==='en'
       ? {points:'Points',coords:'Valid coordinates',area:'Total area',groups:'Groups',groupsSub:'Distinct categories'}
       : {points:'Points',coords:'Coordonnées valides',area:'Superficie totale',groups:'Groupes / délégations',groupsSub:'Catégories distinctes'};
+    const kpiAverageLabel = t().kpiAverage;
 
     document.getElementById('kpiRow').innerHTML=
       '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">👨‍🌾</span>'+escapeHtml(kpiLabels.points)+'</div><div class="kpi-value">'+total.toLocaleString()+'</div><div class="kpi-sub">'+escapeHtml(kpiLabels.coords)+' : '+validCoords.toLocaleString()+'</div></div>'+
       '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">📍</span>'+escapeHtml(kpiLabels.coords)+'</div><div class="kpi-value">'+validCoords.toLocaleString()+'</div><div class="kpi-sub">'+(total?Math.round(validCoords/total*100):0)+'%</div></div>'+
-      '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🌾</span>'+escapeHtml(kpiLabels.area)+(areaCol?' — '+escapeHtml(areaCol):'')+'</div><div class="kpi-value">'+(areaCol?areaTotal.toLocaleString(undefined,{maximumFractionDigits:2}):'—')+'</div><div class="kpi-sub">'+(areaVals.length?('Moyenne : '+areaAvg.toLocaleString(undefined,{maximumFractionDigits:2})):'')+'</div></div>'+
+      '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🌾</span>'+escapeHtml(kpiLabels.area)+(areaCol?' — '+escapeHtml(areaCol):'')+'</div><div class="kpi-value">'+(areaCol?areaTotal.toLocaleString(undefined,{maximumFractionDigits:2}):'—')+'</div><div class="kpi-sub">'+(areaVals.length?(escapeHtml(kpiAverageLabel)+' : '+areaAvg.toLocaleString(undefined,{maximumFractionDigits:2})):'')+'</div></div>'+
       '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🗺️</span>'+escapeHtml(kpiLabels.groups)+'</div><div class="kpi-value">'+groupCount.toLocaleString()+'</div><div class="kpi-sub">'+escapeHtml(kpiLabels.groupsSub)+'</div></div>';
 
     document.getElementById('areaNote').textContent=category?(t().chartCategoryLabel+': '+category):'';
@@ -5629,7 +5657,7 @@ const I18N = {
       classTresEleve: 'Très élevé',
       doseUnit: 'kg P2O5/ha',
       selectGovPlaceholder: '— Aucune donnée P2O5 —',
-      sourceNoteHtml: 'ℹ️ Seuils de classification (15/30/60/90 ppm Olsen) et courbe d\'apport <strong>indicatifs</strong> : ils ne proviennent pas d\'une publication officielle tunisienne spécifique (Laboratoire/CRDA/INRAT), mais des classes usuelles du P2O5 assimilable (Olsen) et d\'un raisonnement de type COMIFER/ARVALIS. À confirmer et ajuster selon la culture et les recommandations officielles applicables à votre région. <a href="https://www.arvalis.fr/infos-techniques/connaitre-les-teneurs-seuils-dans-sa-region-selon-son-sol" target="_blank" rel="noopener">Exemple de méthode documentée (COMIFER / ARVALIS)</a>.'
+      sourceNoteHtml: 'ℹ️ Seuils de classification (15/30/60/90 ppm Olsen) et courbe d\'apport <strong>indicatifs</strong> : ils ne proviennent pas d\'une publication officielle tunisienne spécifique (Laboratoire/CRDA/INRAT), mais des classes usuelles du P2O5 assimilable (Olsen) et d\'un raisonnement de type COMIFER/ARVALIS. À confirmer et ajuster selon la culture et les recommandations officielles applicables à votre région. <a href="https://www.arvalis.fr/infos-techniques/connaitre-les-teneurs-seuils-dans-sa-region-selon-son-sol" target="_blank" rel="noopener">Exemple de méthode documentée (COMIFER / ARVALIS)</a>.<br><br>📘 <strong>Document d\'appui — dosage du P2O5 :</strong> pour comprendre comment passer de la teneur analytique à une dose réellement adaptée (exigence de la culture, seuils de renforcement/impasse, ancienneté du dernier apport, devenir des résidus de récolte), consultez ce guide détaillé de la méthode COMIFER : <a href=\"https://www.terreom.fr/post/fertilisation-phospho-potassique-comifer\" target=\"_blank\" rel=\"noopener\">Fertilisation phospho-potassique : calculer sa dose avec la méthode COMIFER (TERREOM)</a>.'
     },
     en: {
       tabP2O5: 'P2O5 Map',
@@ -5655,7 +5683,7 @@ const I18N = {
       classTresEleve: 'Very high',
       doseUnit: 'kg P2O5/ha',
       selectGovPlaceholder: '— No P2O5 data —',
-      sourceNoteHtml: 'ℹ️ Classification thresholds (15/30/60/90 ppm Olsen) and the dose curve are <strong>indicative</strong>: they are not taken from a specific official Tunisian publication (INRAT/CRDA/lab), but from common Olsen-P agronomic classes and a COMIFER/ARVALIS-style approach. Confirm and adjust per crop and the official recommendations that apply in your region. <a href="https://www.arvalis.fr/infos-techniques/connaitre-les-teneurs-seuils-dans-sa-region-selon-son-sol" target="_blank" rel="noopener">Example of a documented method (COMIFER / ARVALIS)</a>.'
+      sourceNoteHtml: 'ℹ️ Classification thresholds (15/30/60/90 ppm Olsen) and the dose curve are <strong>indicative</strong>: they are not taken from a specific official Tunisian publication (INRAT/CRDA/lab), but from common Olsen-P agronomic classes and a COMIFER/ARVALIS-style approach. Confirm and adjust per crop and the official recommendations that apply in your region. <a href="https://www.arvalis.fr/infos-techniques/connaitre-les-teneurs-seuils-dans-sa-region-selon-son-sol" target="_blank" rel="noopener">Example of a documented method (COMIFER / ARVALIS)</a>.<br><br>📘 <strong>Supporting document — P2O5 dosage:</strong> to understand how to go from a lab value to an appropriately adjusted dose (crop requirement, reinforcement/skip thresholds, time since last application, residue management), see this detailed guide to the COMIFER method: <a href=\"https://www.terreom.fr/post/fertilisation-phospho-potassique-comifer\" target=\"_blank\" rel=\"noopener\">Fertilisation phospho-potassique : calculer sa dose avec la méthode COMIFER (TERREOM, in French)</a>.'
     },
     ar: {
       tabP2O5: 'خريطة الفسفور',
@@ -5681,7 +5709,7 @@ const I18N = {
       classTresEleve: 'مرتفع جدا',
       doseUnit: 'كغ فسفور/هك',
       selectGovPlaceholder: '— لا توجد بيانات فسفور —',
-      sourceNoteHtml: 'ℹ️ عتبات التصنيف (15/30/60/90 ppm Olsen) ومنحنى الجرعات المقترحة هي قيم <strong>إرشادية</strong> فقط: لم تُستمد من منشور رسمي تونسي محدد (المعهد الوطني للبحوث الزراعية بتونس/CRDA/المخبر)، بل من التصنيفات المتعارف عليها للفسفور المتاح (Olsen) ومقاربة على غرار طريقة COMIFER/ARVALIS. يُرجى التحقق منها وتكييفها حسب المحصول والتوصيات الرسمية المعتمدة في منطقتكم. <a href="https://www.arvalis.fr/infos-techniques/connaitre-les-teneurs-seuils-dans-sa-region-selon-son-sol" target="_blank" rel="noopener">مثال على منهجية موثقة (COMIFER / ARVALIS)</a>.'
+      sourceNoteHtml: 'ℹ️ عتبات التصنيف (15/30/60/90 ppm Olsen) ومنحنى الجرعات المقترحة هي قيم <strong>إرشادية</strong> فقط: لم تُستمد من منشور رسمي تونسي محدد (المعهد الوطني للبحوث الزراعية بتونس/CRDA/المخبر)، بل من التصنيفات المتعارف عليها للفسفور المتاح (Olsen) ومقاربة على غرار طريقة COMIFER/ARVALIS. يُرجى التحقق منها وتكييفها حسب المحصول والتوصيات الرسمية المعتمدة في منطقتكم. <a href="https://www.arvalis.fr/infos-techniques/connaitre-les-teneurs-seuils-dans-sa-region-selon-son-sol" target="_blank" rel="noopener">مثال على منهجية موثقة (COMIFER / ARVALIS)</a>.<br><br>📘 <strong>وثيقة دعم — تحديد جرعة P2O5:</strong> لمعرفة كيفية تحويل قيمة التحليل إلى جرعة مناسبة فعليًا (حاجة المحصول، عتبات التعزيز/الإعفاء، مدة الإضافة الأخيرة، مصير مخلفات الحصاد)، يمكن الرجوع إلى هذا الدليل المفصّل لطريقة COMIFER: <a href=\"https://www.terreom.fr/post/fertilisation-phospho-potassique-comifer\" target=\"_blank\" rel=\"noopener\">Fertilisation phospho-potassique : calculer sa dose avec la méthode COMIFER (TERREOM، بالفرنسية)</a>.'
     }
   };
   function p2o5T(key){
@@ -5733,7 +5761,7 @@ const I18N = {
   let p2o5Initialized=false;
   let p2o5Syncing=false;
   let p2o5BaseLayerA=null, p2o5BaseLayerB=null;
-  const p2o5State={ governorate:null, power:4, opacity:0.85, basemap:'satellite' };
+  const p2o5State={ governorate:null, power:4, opacity:0.85, basemap:'satellite', lastStatusKind:null, lastStatusArg:null };
 
   /* Mêmes fonds de carte que l'onglet "Carte" (satellite Esri, fond clair
      Esri, OpenStreetMap, relief OpenTopoMap), déclinés en usines de calques
@@ -6087,19 +6115,42 @@ const I18N = {
     if(el) el.textContent=msg||'';
   }
 
+  /*
+     Le statut affiché sous les commandes P2O5 (ex : « X point(s) utilisé(s)
+     pour l'interpolation ») doit rester traduit même si la langue change
+     APRÈS l'affichage initial du message (sans nouveau clic sur « Générer /
+     Actualiser »). On mémorise donc le dernier statut sous forme de
+     « clé + argument » plutôt que sous forme de texte déjà traduit, afin de
+     pouvoir le recalculer dans la langue courante à chaque changement de
+     langue (voir renderP2O5Status(), appelée depuis initP2O5TabTexts()).
+  */
+  function setP2O5StatusKind(kind, arg){
+    p2o5State.lastStatusKind = kind;
+    p2o5State.lastStatusArg = arg;
+    renderP2O5Status();
+  }
+
+  function renderP2O5Status(){
+    const kind = p2o5State.lastStatusKind;
+    if(!kind) return;
+    const val = p2o5T(kind);
+    const msg = typeof val === 'function' ? val(p2o5State.lastStatusArg) : val;
+    setP2O5Status(msg);
+  }
+
   function refreshP2O5Maps(){
     ensureP2O5Maps();
     const govName=p2o5State.governorate;
     if(!govName){
-      setP2O5Status(p2o5T('noGov'));
+      setP2O5StatusKind('noGov');
       return;
     }
     const pts=getP2O5PointsForGovernorate(govName);
     if(pts.length<3){
-      setP2O5Status(p2o5T('notEnoughPts')(pts.length));
+      setP2O5StatusKind('notEnoughPts', pts.length);
       return;
     }
-    setP2O5Status(p2o5T('computing'));
+    setP2O5StatusKind('computing');
 
     setTimeout(()=>{
       const feature=findGovernorateFeature(govName);
@@ -6174,7 +6225,7 @@ const I18N = {
       buildP2O5Legend(document.getElementById('p2o5LegendA'));
       buildDoseLegend(document.getElementById('p2o5LegendB'),doseClassifier);
 
-      setP2O5Status(p2o5T('pointsUsed')(pts.length));
+      setP2O5StatusKind('pointsUsed', pts.length);
 
       setTimeout(()=>{
         if(p2o5MapA) p2o5MapA.invalidateSize();
@@ -6212,6 +6263,7 @@ const I18N = {
     const sourceNote=document.getElementById('p2o5SourceNote');
     if(sourceNote) sourceNote.innerHTML=dict.sourceNoteHtml || '';
     populateP2O5GovSelect();
+    renderP2O5Status();
   }
 
   function initP2O5Tab(){
@@ -6262,8 +6314,12 @@ const I18N = {
     }
     if(p2o5State.governorate){
       refreshP2O5Maps();
+    }else if(getGovernoratesWithP2O5().length){
+      p2o5State.lastStatusKind=null;
+      p2o5State.lastStatusArg=null;
+      setP2O5Status('');
     }else{
-      setP2O5Status(getGovernoratesWithP2O5().length ? '' : p2o5T('noGov'));
+      setP2O5StatusKind('noGov');
     }
   }
 
