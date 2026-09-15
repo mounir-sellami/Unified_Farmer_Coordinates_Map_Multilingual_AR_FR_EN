@@ -1561,6 +1561,9 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   font-weight:700;
 }
 
+
+.p2o5-hover-info{position:absolute;z-index:9999;pointer-events:none;display:none;background:rgba(255,255,255,.97);border:1px solid #777;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.25);padding:7px 9px;font:12px/1.45 Arial,sans-serif;color:#222;white-space:nowrap;direction:ltr;text-align:left;}
+.p2o5-hover-info.show{display:block;}
 </style>
 </head>
 
@@ -5881,7 +5884,7 @@ const I18N = {
   let p2o5Initialized=false;
   let p2o5Syncing=false;
   let p2o5BaseLayerA=null, p2o5BaseLayerB=null;
-  const p2o5State={ governorate:null, power:4, opacity:0.85, basemap:'satellite', lastStatusKind:null, lastStatusArg:null };
+  const p2o5State={ governorate:null, power:4, opacity:0.85, basemap:'satellite', lastStatusKind:null, lastStatusArg:null, hoverDataA:null, hoverDataB:null };
 
   /* Mêmes fonds de carte que l'onglet "Carte" (satellite Esri, fond clair
      Esri, OpenStreetMap, relief OpenTopoMap), déclinés en usines de calques
@@ -5924,6 +5927,67 @@ const I18N = {
     if(p2o5OverlayB) p2o5OverlayB.setOpacity(value);
   }
 
+  /* Affichage au survol des cartes P2O5 : coordonnées X/Y et valeur de la
+     surface interpolée. X = longitude, Y = latitude. */
+  function ensureP2O5HoverBox(map){
+    if(!map) return null;
+    const container=map.getContainer();
+    let box=container.querySelector('.p2o5-hover-info');
+    if(box) return box;
+    box=document.createElement('div');
+    box.className='p2o5-hover-info';
+    box.style.cssText='position:absolute;z-index:1000;display:none;pointer-events:none;background:rgba(255,255,255,.96);border:1px solid #777;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.25);padding:7px 9px;font:12px/1.45 Arial,sans-serif;color:#222;white-space:nowrap;direction:ltr;text-align:left;';
+    container.appendChild(box);
+    return box;
+  }
+
+  function updateP2O5Hover(map, e, data, kind){
+    const box=ensureP2O5HoverBox(map);
+    const container=map ? map.getContainer() : null;
+    if(!box || !container || !e || !e.latlng) return;
+    const lat=e.latlng.lat, lon=e.latlng.lng;
+    let inMask=false, v=null;
+    /* Même avant la fin de l'interpolation, les coordonnées X/Y doivent être
+       visibles. La valeur est ajoutée dès que la grille correspondante est
+       disponible. */
+    if(data && data.bbox && data.grid && data.mask){
+      const {bbox,grid,mask,cols,rows}=data;
+      if(lon>=bbox.minLon && lon<=bbox.maxLon && lat>=bbox.minLat && lat<=bbox.maxLat){
+        const c=Math.max(0,Math.min(cols-1,Math.floor((lon-bbox.minLon)/(bbox.maxLon-bbox.minLon)*cols)));
+        const r=Math.max(0,Math.min(rows-1,Math.floor((bbox.maxLat-lat)/(bbox.maxLat-bbox.minLat)*rows)));
+        const idx=r*cols+c;
+        v=grid[idx];
+        inMask=mask[idx]===1 && Number.isFinite(v);
+      }
+    }
+    const lang=(typeof currentLang!=='undefined' ? currentLang : 'fr');
+    const labels=lang==='ar'
+      ? {x:'X (خط الطول)',y:'Y (خط العرض)',value:kind==='p2o5'?'قيمة P2O5':'قيمة الإضافة',unit:kind==='p2o5'?'ppm':'كغ/هكتار'}
+      : lang==='en'
+      ? {x:'X (Longitude)',y:'Y (Latitude)',value:kind==='p2o5'?'P2O5 value':'Input value',unit:kind==='p2o5'?'ppm':'kg/ha'}
+      : {x:'X (Longitude)',y:'Y (Latitude)',value:kind==='p2o5'?'Valeur P2O5':'Valeur apport',unit:kind==='p2o5'?'ppm':'kg/ha'};
+    const valueHtml=inMask ? `<strong>${labels.value} :</strong> ${Number(v).toFixed(2)} ${labels.unit}` : `<strong>${labels.value} :</strong> —`;
+    box.innerHTML=`<div><strong>${labels.x} :</strong> ${lon.toFixed(6)}</div><div><strong>${labels.y} :</strong> ${lat.toFixed(6)}</div><div>${valueHtml}</div>`;
+    const pt=map.latLngToContainerPoint(e.latlng);
+    const left=Math.min(pt.x+12, Math.max(4, container.clientWidth-box.offsetWidth-4));
+    const top=Math.min(pt.y+12, Math.max(4, container.clientHeight-box.offsetHeight-4));
+    box.style.left=left+'px'; box.style.top=top+'px'; box.style.display='block';
+  }
+
+  function setupP2O5Hover(){
+    ensureP2O5HoverBox(p2o5MapA); ensureP2O5HoverBox(p2o5MapB);
+    if(p2o5MapA && !p2o5MapA._p2o5HoverBound){
+      p2o5MapA.on('mousemove',e=>updateP2O5Hover(p2o5MapA,e,p2o5State.hoverDataA,'p2o5'));
+      p2o5MapA.on('mouseout',()=>{ const b=ensureP2O5HoverBox(p2o5MapA); if(b)b.style.display='none'; });
+      p2o5MapA._p2o5HoverBound=true;
+    }
+    if(p2o5MapB && !p2o5MapB._p2o5HoverBound){
+      p2o5MapB.on('mousemove',e=>updateP2O5Hover(p2o5MapB,e,p2o5State.hoverDataB,'dose'));
+      p2o5MapB.on('mouseout',()=>{ const b=ensureP2O5HoverBox(p2o5MapB); if(b)b.style.display='none'; });
+      p2o5MapB._p2o5HoverBound=true;
+    }
+  }
+
   function ensureP2O5Maps(){
     if(p2o5MapA && p2o5MapB) return;
     p2o5MapA=L.map('p2o5MapA',{zoomControl:true});
@@ -5938,6 +6002,7 @@ const I18N = {
     setP2O5Basemap(p2o5State.basemap);
     addMapExtras(p2o5MapA);
     addMapExtras(p2o5MapB);
+    setupP2O5Hover();
     p2o5MapA.setView([34.0,9.5],7);
     p2o5MapB.setView([34.0,9.5],7);
 
@@ -6318,7 +6383,10 @@ const I18N = {
 
       const dataURL_A=renderGridToDataURL(grid,mask,cols,rows,colorForP2O5);
       const doseClassifier=buildDoseClassifier(minDose,maxDose,6);
+      /* Conserver la grille courante pour l'affichage dynamique au survol. */
+      p2o5State.hoverDataA={bbox,grid,mask,cols,rows};
       const dataURL_B=renderGridToDataURL(doseGrid,mask,cols,rows,doseClassifier.colorFn);
+      p2o5State.hoverDataB={bbox,grid:doseGrid,mask,cols,rows};
 
       const bounds=L.latLngBounds([[bbox.minLat,bbox.minLon],[bbox.maxLat,bbox.maxLon]]);
 
