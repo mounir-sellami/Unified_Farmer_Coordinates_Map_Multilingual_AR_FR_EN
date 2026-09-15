@@ -1522,7 +1522,9 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 #mounirCreditTooltip{
   position:fixed;
   z-index:99999;
-  max-width:290px;
+  width:390px;
+  max-width:calc(100vw - 28px);
+  box-sizing:border-box;
   background:#2c2620;
   color:#f5efe6;
   border-radius:10px;
@@ -1552,6 +1554,7 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 #mounirCreditTooltip .mct-line{
   display:block;
   margin-top:4px;
+  white-space:nowrap;
 }
 #mounirCreditTooltip .mct-line:first-child{
   margin-top:0;
@@ -7596,9 +7599,9 @@ document.addEventListener('keydown', function(e){
      lien LinkedIn, l'e-mail et les numéros de téléphone restent
      identiques dans les trois langues ; seuls les libellés changent. */
   var MCT_LABELS = {
-    fr:{ dev:'Développement', linkedin:'LinkedIn', email:'Email', phone:'Téléphone' },
-    en:{ dev:'Development',   linkedin:'LinkedIn', email:'Email', phone:'Phone'     },
-    ar:{ dev:'تطوير',          linkedin:'LinkedIn', email:'البريد الإلكتروني', phone:'الهاتف' }
+    fr:{ dev:'Développement', linkedin:'LinkedIn', email:'Email', phone:'Téléphone', whatsapp:'WhatsApp', author:'Mounir Sellami' },
+    en:{ dev:'Development',   linkedin:'LinkedIn', email:'Email', phone:'Phone', whatsapp:'WhatsApp', author:'Mounir Sellami' },
+    ar:{ dev:'تطوير',          linkedin:'لينكد ان', email:'البريد الإلكتروني', phone:'الهاتف', whatsapp:'واتس آب', author:'منير السلامي' }
   };
 
   function buildMounirTooltipHTML(){
@@ -7610,10 +7613,12 @@ document.addEventListener('keydown', function(e){
                ((typeof currentLang !== 'undefined' && MCT_LABELS[currentLang]) ? currentLang : 'fr');
     var L = MCT_LABELS[lang];
     return (
-      '<span class="mct-line">' + L.dev + ' : Mounir Sellami</span>' +
+      '<span class="mct-line">' + L.dev + ' : ' + (L.author || 'Mounir Sellami') + '</span>' +
       '<span class="mct-line">🔗 ' + L.linkedin + ' : <a href="https://www.linkedin.com/in/sellami-mounir-b273822b7/" target="_blank" rel="noopener noreferrer">linkedin.com/in/sellami-mounir-b273822b7</a></span>' +
       '<span class="mct-line">📧 ' + L.email + ' : <a href="mailto:mounir_sellami@yahoo.fr">mounir_sellami@yahoo.fr</a></span>' +
-      '<span class="mct-line mct-phone-line">📞 ' + L.phone + ' : <bdi class="mct-phone" dir="ltr">+216 22 72 34 86</bdi> <bdi class="mct-whatsapp" dir="ltr">(WhatsApp)</bdi> <bdi class="mct-phone" dir="ltr">| 92 61 73 39 | 50 238 949</bdi></span>'
+      '<span class="mct-line mct-phone-line">📞 ' + L.phone + ' : <bdi class="mct-phone" dir="ltr">+216 22 72 34 86</bdi> <bdi class="mct-whatsapp" dir="ltr">(' + L.whatsapp + ')</bdi></span>' +
+      '<span class="mct-line mct-phone-line">📞 <bdi class="mct-phone" dir="ltr">92 61 73 39</bdi></span>' +
+      '<span class="mct-line mct-phone-line">📞 <bdi class="mct-phone" dir="ltr">50 238 949</bdi></span>'
     );
   }
 
@@ -7634,6 +7639,11 @@ document.addEventListener('keydown', function(e){
     var activeLang = document.documentElement.getAttribute('data-current-lang');
     var lang = (activeLang && MCT_LABELS[activeLang]) ? activeLang :
                ((typeof currentLang !== 'undefined') ? currentLang : 'fr');
+    /* En arabe, l'ensemble du popup est aligné à droite. Les numéros,
+       l'adresse e-mail et l'URL restent isolés en LTR via <bdi>. */
+    tooltipEl.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    tooltipEl.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
+    tooltipEl.style.textAlign = lang === 'ar' ? 'right' : 'left';
     if(lang !== tooltipLangRendered){
       tooltipEl.innerHTML = buildMounirTooltipHTML();
       tooltipLangRendered = lang;
