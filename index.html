@@ -789,6 +789,22 @@ header::after{
 }
 .p2o5-btn:hover{ filter:brightness(1.05); }
 
+.p2o5-btn-export{ background:var(--olive-dark); }
+
+.p2o5-btn:disabled{ opacity:.6; cursor:default; filter:none; }
+
+.p2o5-quality{
+  font-size:.78rem;
+  color:var(--olive-dark);
+  font-weight:700;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:6px 14px;
+  min-height:1.1em;
+}
+.p2o5-quality:empty{ display:none; }
+
 .p2o5-status{
   font-size:.75rem;
   color:var(--ink-soft);
@@ -1564,6 +1580,142 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 
 .p2o5-hover-info{position:absolute;z-index:9999;pointer-events:none;display:none;background:rgba(255,255,255,.97);border:1px solid #777;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.25);padding:7px 9px;font:12px/1.45 Arial,sans-serif;color:#222;white-space:nowrap;direction:ltr;text-align:left;}
 .p2o5-hover-info.show{display:block;}
+
+/* =========================================================
+   POPUP D'EXPLICATION DE LA QUALITÉ DE L'INTERPOLATION P2O5
+   ========================================================= */
+.p2o5-quality-wrap{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin:0 0 2px;
+}
+.p2o5-quality-wrap .p2o5-quality{
+  flex:1;
+  margin:0;
+}
+.p2o5-quality-wrap .p2o5-quality{cursor:pointer;}
+.p2o5-quality-info-btn{
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
+  border:1px solid var(--olive);
+  border-radius:50%;
+  background:var(--olive);
+  color:#fff;
+  font-family:'Cairo',sans-serif;
+  font-size:.82rem;
+  font-weight:800;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 2px 5px rgba(44,38,32,.16);
+  transition:.15s;
+}
+.p2o5-quality-info-btn:hover{
+  background:var(--olive-dark);
+  transform:translateY(-1px);
+}
+#p2o5QualityOverlay{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  background:rgba(44,38,32,.60);
+  backdrop-filter:blur(4px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+#p2o5QualityOverlay.show{display:flex;}
+.p2o5-quality-card{
+  position:relative;
+  width:min(760px,94vw);
+  max-height:90vh;
+  overflow:auto;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.30);
+  padding:22px 24px 20px;
+}
+.p2o5-quality-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:14px;
+}
+.p2o5-quality-head h2{
+  margin:0;
+  font-family:'Cairo',sans-serif;
+  font-size:1.05rem;
+  color:var(--olive-dark);
+}
+.p2o5-quality-head p{
+  margin:4px 0 0;
+  color:var(--ink-soft);
+  font-size:.74rem;
+  line-height:1.45;
+}
+.p2o5-quality-close{
+  border:0;
+  background:#eee6d7;
+  color:var(--ink);
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:1.2rem;
+  line-height:1;
+  flex-shrink:0;
+}
+.p2o5-quality-summary{
+  background:#fffaf1;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 12px;
+  margin-bottom:14px;
+  font-size:.8rem;
+  font-weight:800;
+  color:var(--olive-dark);
+}
+.p2o5-quality-section{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:11px 13px;
+  margin:9px 0;
+  background:#fff;
+}
+.p2o5-quality-section h3{
+  margin:0 0 5px;
+  font-family:'Cairo',sans-serif;
+  font-size:.82rem;
+  color:var(--olive-dark);
+}
+.p2o5-quality-section p{
+  margin:0;
+  font-size:.76rem;
+  line-height:1.55;
+  color:var(--ink);
+}
+.p2o5-quality-warning{
+  background:#fff4f2;
+  border-color:#e3aaa3;
+}
+.p2o5-quality-note{
+  margin-top:12px;
+  font-size:.68rem;
+  line-height:1.5;
+  color:var(--ink-soft);
+  font-style:italic;
+}
+[dir="rtl"] .p2o5-quality-card{text-align:right;}
+[dir="rtl"] .p2o5-quality-head{flex-direction:row;}
+@media(max-width:620px){
+  .p2o5-quality-card{width:98vw;padding:17px 15px;}
+}
 </style>
 </head>
 
@@ -1994,8 +2146,38 @@ footer .contact-link [data-i18n="footerWaLabel"]{
         <button id="p2o5RefreshBtn" type="button" class="p2o5-btn">Générer / Actualiser</button>
       </div>
 
+      <div class="p2o5-control-group">
+        <button id="p2o5ExportBtn" type="button" class="p2o5-btn p2o5-btn-export">Exporter XLSX (grille 100 m)</button>
+      </div>
+
       <div id="p2o5Status" class="p2o5-status"></div>
 
+    </div>
+
+    <div class="p2o5-quality-wrap">
+      <div id="p2o5Quality" class="p2o5-quality"></div>
+      <button id="p2o5QualityInfoBtn" type="button" class="p2o5-quality-info-btn"
+              title="Explication / Explanation / شرح" aria-label="Explication de la qualité de l'interpolation">?</button>
+    </div>
+
+    <div id="p2o5QualityOverlay" aria-hidden="true">
+      <div class="p2o5-quality-card" role="dialog" aria-modal="true" aria-labelledby="p2o5QualityPopupTitle">
+        <div class="p2o5-quality-head">
+          <div>
+            <h2 id="p2o5QualityPopupTitle"></h2>
+            <p id="p2o5QualityPopupIntro"></p>
+          </div>
+          <button id="p2o5QualityClose" type="button" class="p2o5-quality-close"
+                  aria-label="Fermer">×</button>
+        </div>
+        <div id="p2o5QualityPopupSummary" class="p2o5-quality-summary"></div>
+        <div id="p2o5QualityPopupR2" class="p2o5-quality-section"></div>
+        <div id="p2o5QualityPopupRMSE" class="p2o5-quality-section"></div>
+        <div id="p2o5QualityPopupMAE" class="p2o5-quality-section"></div>
+        <div id="p2o5QualityPopupComparison" class="p2o5-quality-section"></div>
+        <div id="p2o5QualityPopupCaution" class="p2o5-quality-section p2o5-quality-warning"></div>
+        <div id="p2o5QualityPopupNote" class="p2o5-quality-note"></div>
+      </div>
     </div>
 
     <div id="p2o5SourceNote" class="p2o5-source-note"></div>
@@ -2319,6 +2501,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+
 
 
 <script>
@@ -2696,6 +2880,18 @@ const I18N = {
     updateBtn:
       "Mettre à jour depuis un fichier Excel",
 
+    exportPdfBtn:
+      "Exporter en PDF",
+
+    exportPdfPreparing:
+      "Préparation du PDF en cours…",
+
+    exportPdfDone:
+      "PDF exporté avec succès.",
+
+    exportPdfError:
+      "Erreur lors de l'export PDF.",
+
     tabMap:
       "Répartition spatiale des échantillons",
 
@@ -2942,6 +3138,18 @@ const I18N = {
     updateBtn:
       "Update from an Excel file",
 
+    exportPdfBtn:
+      "Export to PDF",
+
+    exportPdfPreparing:
+      "Preparing the PDF…",
+
+    exportPdfDone:
+      "PDF exported successfully.",
+
+    exportPdfError:
+      "Error while exporting the PDF.",
+
     tabMap:
       "Spatial distribution of samples",
 
@@ -3187,6 +3395,18 @@ const I18N = {
 
     updateBtn:
       "تحديث من ملف إكسل",
+
+    exportPdfBtn:
+      "تصدير بصيغة PDF",
+
+    exportPdfPreparing:
+      "جارٍ تحضير ملف PDF…",
+
+    exportPdfDone:
+      "تم تصدير ملف PDF بنجاح.",
+
+    exportPdfError:
+      "حدث خطأ أثناء تصدير PDF.",
 
     tabMap:
       "التوزيع المجالي للعينات",
@@ -5773,6 +5993,29 @@ const I18N = {
       notEnoughPts: n => 'Pas assez de points P2O5 valides dans ce gouvernorat (' + n + ' point(s), 3 minimum requis).',
       computing: "Calcul de l'interpolation en cours…",
       pointsUsed: n => n + ' point(s) utilisé(s) pour l\'interpolation.',
+      exportBtn: 'Exporter XLSX (grille 100 m)',
+      exportComputing: "Génération de la grille d'export en cours…",
+      exportDone: (n,res) => 'Export terminé : ' + n + ' point(s) exporté(s) (résolution \u2248 ' + res + ' m).',
+      exportAdjusted: res => 'Résolution ajustée à \u2248 ' + res + ' m pour rester fluide (zone trop vaste pour 100 m).',
+      exportNoPoints: 'Aucune cellule exploitable à exporter pour ce gouvernorat.',
+      qualityLabel: "Qualité de l'interpolation :",
+      qualityComputing: 'Évaluation de la qualité en cours…',
+      qualityText: (r2,rmse,mae,n) => 'R\u00b2 = ' + r2 + ' \u00b7 RMSE = ' + rmse + ' ppm \u00b7 MAE = ' + mae + ' ppm (validation croisée, n=' + n + ')',
+      qualityNA: '',
+      qualityInfoBtn: 'Explication',
+      qualityPopupTitle: "Comprendre la qualité de l'interpolation",
+      qualityPopupIntro: "Les indicateurs ci-dessous sont calculés par validation croisée leave-one-out (LOOCV).",
+      qualityPopupR2Title: "R² — capacité explicative",
+      qualityPopupR2Text: (v) => "R² = " + v + ". Une valeur proche de 0 signifie que le modèle explique très peu de la variabilité observée des concentrations de P2O5. Cela indique ici une capacité prédictive faible.",
+      qualityPopupRMSETitle: "RMSE — erreur quadratique moyenne",
+      qualityPopupRMSEText: (v) => "RMSE = " + v + " ppm. Cette mesure représente l'erreur moyenne en donnant davantage de poids aux grandes erreurs : les écarts importants influencent donc davantage le résultat.",
+      qualityPopupMAETitle: "MAE — erreur absolue moyenne",
+      qualityPopupMAEText: (v) => "MAE = " + v + " ppm. En moyenne, les estimations s'écartent de la valeur observée d'environ " + v + " ppm, en valeur absolue.",
+      qualityPopupComparisonTitle: "RMSE et MAE",
+      qualityPopupComparisonText: (rmse,mae,ratio) => "RMSE = " + rmse + " ppm > MAE = " + mae + " ppm (ratio ≈ " + ratio + "). Cela suggère la présence de quelques erreurs relativement importantes.",
+      qualityPopupCautionTitle: "⚠️ Lecture globale",
+      qualityPopupCautionText: "Une carte interpolée peut paraître spatialement cohérente tout en ayant une faible capacité prédictive en validation croisée. R², RMSE et MAE doivent donc être interprétés ensemble et comparés entre les différents modèles.",
+      qualityPopupNote: (n) => "Validation croisée sur " + n + " observation(s). Le résultat dépend notamment de la distribution spatiale des points et de la puissance IDW choisie.",
       classTresFaible: 'Très faible',
       classFaible: 'Faible',
       classMoyen: 'Moyen (Optimal)',
@@ -5799,6 +6042,29 @@ const I18N = {
       notEnoughPts: n => 'Not enough valid P2O5 points in this governorate (' + n + ' point(s), 3 minimum required).',
       computing: 'Computing interpolation…',
       pointsUsed: n => n + ' point(s) used for interpolation.',
+      exportBtn: 'Export XLSX (100 m grid)',
+      exportComputing: 'Generating export grid…',
+      exportDone: (n,res) => 'Export done: ' + n + ' point(s) exported (resolution \u2248 ' + res + ' m).',
+      exportAdjusted: res => 'Resolution adjusted to \u2248 ' + res + ' m to stay responsive (area too large for 100 m).',
+      exportNoPoints: 'No usable cell to export for this governorate.',
+      qualityLabel: 'Interpolation quality:',
+      qualityComputing: 'Computing quality…',
+      qualityText: (r2,rmse,mae,n) => 'R\u00b2 = ' + r2 + ' \u00b7 RMSE = ' + rmse + ' ppm \u00b7 MAE = ' + mae + ' ppm (cross-validation, n=' + n + ')',
+      qualityNA: '',
+      qualityInfoBtn: 'Explanation',
+      qualityPopupTitle: 'Understanding interpolation quality',
+      qualityPopupIntro: 'The indicators below are computed using leave-one-out cross-validation (LOOCV).',
+      qualityPopupR2Title: 'R² — explanatory capacity',
+      qualityPopupR2Text: (v) => 'R² = ' + v + '. A value close to 0 means that the model explains very little of the observed variability in P2O5 concentrations. Here, this indicates low predictive capacity.',
+      qualityPopupRMSETitle: 'RMSE — root mean square error',
+      qualityPopupRMSEText: (v) => 'RMSE = ' + v + ' ppm. This measures prediction error while giving more weight to large errors; large deviations therefore influence the result more strongly.',
+      qualityPopupMAETitle: 'MAE — mean absolute error',
+      qualityPopupMAEText: (v) => 'MAE = ' + v + ' ppm. On average, the estimates differ from the observed value by about ' + v + ' ppm in absolute terms.',
+      qualityPopupComparisonTitle: 'RMSE versus MAE',
+      qualityPopupComparisonText: (rmse,mae,ratio) => 'RMSE = ' + rmse + ' ppm > MAE = ' + mae + ' ppm (ratio ≈ ' + ratio + '). This suggests the presence of some relatively large errors.',
+      qualityPopupCautionTitle: '⚠️ Overall interpretation',
+      qualityPopupCautionText: 'An interpolated map can look spatially coherent while still having low predictive capacity in cross-validation. R², RMSE and MAE should therefore be interpreted together and compared across the different models.',
+      qualityPopupNote: (n) => 'Cross-validation on ' + n + ' observation(s). The result depends in particular on the spatial distribution of the points and the selected IDW power.',
       classTresFaible: 'Very low',
       classFaible: 'Low',
       classMoyen: 'Medium (Optimal)',
@@ -5825,6 +6091,29 @@ const I18N = {
       notEnoughPts: n => 'عدد النقاط غير كافٍ في هذه الولاية (' + n + ' نقطة، الحد الأدنى 3 نقاط).',
       computing: 'جارٍ حساب الاستيفاء…',
       pointsUsed: n => n + ' نقطة تم استخدامها للاستيفاء.',
+      exportBtn: 'تصدير XLSX (شبكة 100 م)',
+      exportComputing: 'جارٍ إنشاء شبكة التصدير…',
+      exportDone: (n,res) => 'اكتمل التصدير: ' + n + ' نقطة تم تصديرها (الدقة \u2248 ' + res + ' م).',
+      exportAdjusted: res => 'تم تعديل الدقة إلى \u2248 ' + res + ' م للحفاظ على الأداء (المنطقة كبيرة جدا لدقة 100 م).',
+      exportNoPoints: 'لا توجد خلية صالحة للتصدير في هذه الولاية.',
+      qualityLabel: 'جودة الاستيفاء:',
+      qualityComputing: 'جارٍ تقييم الجودة…',
+      qualityText: (r2,rmse,mae,n) => 'R\u00b2 = ' + r2 + ' \u00b7 RMSE = ' + rmse + ' ppm \u00b7 MAE = ' + mae + ' ppm (تحقق متقاطع، n=' + n + ')',
+      qualityNA: '',
+      qualityInfoBtn: 'شرح',
+      qualityPopupTitle: 'فهم جودة الاستيفاء',
+      qualityPopupIntro: 'تم حساب المؤشرات أدناه بواسطة التحقق المتقاطع بطريقة حذف نقطة واحدة في كل مرة (LOOCV).',
+      qualityPopupR2Title: 'R² — القدرة التفسيرية',
+      qualityPopupR2Text: (v) => 'R² = ' + v + '. القيمة القريبة من 0 تعني أن النموذج يفسر جزءًا ضئيلاً جدًا من التباين الملحوظ في تركيزات P2O5. وهذا يدل هنا على قدرة تنبؤية ضعيفة.',
+      qualityPopupRMSETitle: 'RMSE — متوسط الخطأ التربيعي',
+      qualityPopupRMSEText: (v) => 'RMSE = ' + v + ' ppm. يقيس هذا المؤشر خطأ التنبؤ مع إعطاء وزن أكبر للأخطاء الكبيرة، ولذلك تؤثر الانحرافات الكبيرة بشكل أكبر في النتيجة.',
+      qualityPopupMAETitle: 'MAE — متوسط الخطأ المطلق',
+      qualityPopupMAEText: (v) => 'MAE = ' + v + ' ppm. في المتوسط، تختلف التقديرات عن القيمة المرصودة بحوالي ' + v + ' ppm من حيث القيمة المطلقة.',
+      qualityPopupComparisonTitle: 'مقارنة RMSE وMAE',
+      qualityPopupComparisonText: (rmse,mae,ratio) => 'RMSE = ' + rmse + ' ppm > MAE = ' + mae + ' ppm (النسبة ≈ ' + ratio + '). وهذا يشير إلى وجود بعض الأخطاء الكبيرة نسبيًا.',
+      qualityPopupCautionTitle: '⚠️ القراءة الإجمالية',
+      qualityPopupCautionText: 'يمكن أن تبدو خريطة الاستيفاء متناسقة مكانيًا، مع أن قدرتها التنبؤية ضعيفة في التحقق المتقاطع. لذلك ينبغي تفسير R² وRMSE وMAE معًا ومقارنتها بين النماذج المختلفة.',
+      qualityPopupNote: (n) => 'تم إجراء التحقق المتقاطع على ' + n + ' ملاحظة. تعتمد النتيجة خصوصًا على التوزيع المكاني للنقاط وعلى قوة IDW المختارة.',
       classTresFaible: 'منخفض جدا',
       classFaible: 'منخفض',
       classMoyen: 'متوسط (مثالي)',
@@ -5884,7 +6173,7 @@ const I18N = {
   let p2o5Initialized=false;
   let p2o5Syncing=false;
   let p2o5BaseLayerA=null, p2o5BaseLayerB=null;
-  const p2o5State={ governorate:null, power:4, opacity:0.85, basemap:'satellite', lastStatusKind:null, lastStatusArg:null, hoverDataA:null, hoverDataB:null };
+  const p2o5State={ governorate:null, power:4, opacity:0.85, basemap:'satellite', lastStatusKind:null, lastStatusArg:null, hoverDataA:null, hoverDataB:null, lastQuality:null };
 
   /* Mêmes fonds de carte que l'onglet "Carte" (satellite Esri, fond clair
      Esri, OpenStreetMap, relief OpenTopoMap), déclinés en usines de calques
@@ -5954,7 +6243,9 @@ const I18N = {
       const {bbox,grid,mask,cols,rows}=data;
       if(lon>=bbox.minLon && lon<=bbox.maxLon && lat>=bbox.minLat && lat<=bbox.maxLat){
         const c=Math.max(0,Math.min(cols-1,Math.floor((lon-bbox.minLon)/(bbox.maxLon-bbox.minLon)*cols)));
-        const r=Math.max(0,Math.min(rows-1,Math.floor((bbox.maxLat-lat)/(bbox.maxLat-bbox.minLat)*rows)));
+        const y=latToMercatorY(lat);
+        const yMax=latToMercatorY(bbox.maxLat), yMin=latToMercatorY(bbox.minLat);
+        const r=Math.max(0,Math.min(rows-1,Math.floor((yMax-y)/(yMax-yMin)*rows)));
         const idx=r*cols+c;
         v=grid[idx];
         inMask=mask[idx]===1 && Number.isFinite(v);
@@ -6016,9 +6307,9 @@ const I18N = {
     p2o5MapB.on('move zoom', () => syncFrom(p2o5MapB,p2o5MapA));
   }
 
-  /* Sous-échantillonne un anneau de polygone pour accélérer les tests
-     point-dans-polygone lors du masquage de la grille IDW (les géométries des
-     gouvernorats peuvent compter des dizaines de milliers de sommets). */
+  /* Utilitaire conservé pour les traitements qui pourraient nécessiter une
+     simplification de géométrie. Les cartes P2O5 utilisent désormais la
+     géométrie exacte afin d'éviter tout décalage avec le contour. */
   function simplifyRingForMask(ring,maxPoints){
     if(!ring || ring.length<=maxPoints) return ring;
     const step=Math.ceil(ring.length/maxPoints);
@@ -6105,11 +6396,33 @@ const I18N = {
     return pts;
   }
 
-  /* Interpolation IDW (Inverse Distance Weighting) sur une grille régulière. */
+  /* Conversion latitude <-> Web Mercator utilisée pour construire la grille.
+     Leaflet projette les coordonnées géographiques en Web Mercator (EPSG:3857)
+     lorsqu'il affiche une imageOverlay. Une grille espacée linéairement en
+     latitude serait donc légèrement déformée verticalement par rapport au
+     contour vectoriel. On construit ici les lignes de grille dans le même
+     espace projeté que Leaflet afin que l'interpolation et le contour restent
+     parfaitement superposés dans l'application et dans le PDF. */
+  function latToMercatorY(lat){
+    const clamped=Math.max(-85.05112878,Math.min(85.05112878,Number(lat)));
+    const rad=clamped*Math.PI/180;
+    return Math.log(Math.tan(Math.PI/4+rad/2));
+  }
+  function mercatorYToLat(y){
+    return (2*Math.atan(Math.exp(y))-Math.PI/2)*180/Math.PI;
+  }
+  function gridCellCenterLat(bbox,r,rows){
+    const yMax=latToMercatorY(bbox.maxLat), yMin=latToMercatorY(bbox.minLat);
+    const y=yMax-(r+0.5)*(yMax-yMin)/rows;
+    return mercatorYToLat(y);
+  }
+
+  /* Interpolation IDW (Inverse Distance Weighting) sur une grille régulière
+     alignée sur la projection Web Mercator de Leaflet. */
   function computeIDWGrid(points,power,bbox,cols,rows){
     const grid=new Float64Array(cols*rows);
     for(let r=0;r<rows;r++){
-      const lat=bbox.maxLat-(r+0.5)*(bbox.maxLat-bbox.minLat)/rows;
+      const lat=gridCellCenterLat(bbox,r,rows);
       for(let c=0;c<cols;c++){
         const lon=bbox.minLon+(c+0.5)*(bbox.maxLon-bbox.minLon)/cols;
         let sumW=0,sumWZ=0,exact=null;
@@ -6127,13 +6440,125 @@ const I18N = {
     return grid;
   }
 
-  function computeMaskGrid(simplifiedGeometry,bbox,cols,rows){
+  /* Prédiction IDW ponctuelle (mêmes formules que computeIDWGrid), avec
+     possibilité d'exclure un point (utilisé pour la validation croisée
+     "leave-one-out" : on exclut le point observé qu'on cherche à prédire). */
+  function idwPredictAt(lat,lon,points,power,skipIndex){
+    let sumW=0,sumWZ=0;
+    for(let i=0;i<points.length;i++){
+      if(i===skipIndex) continue;
+      const p=points[i];
+      const dLat=lat-p.lat, dLon=lon-p.lon;
+      const d=Math.sqrt(dLat*dLat+dLon*dLon);
+      if(d<1e-9) return p.value;
+      const w=Math.pow(d,-power);
+      sumW+=w; sumWZ+=w*p.value;
+    }
+    return sumW>0 ? sumWZ/sumW : NaN;
+  }
+
+  /* Évalue la qualité de l'interpolation IDW par validation croisée
+     "leave-one-out" (LOOCV) : chaque point mesuré est retiré tour à tour,
+     ré-estimé à partir des autres points avec la même puissance IDW, puis
+     comparé à sa valeur réelle. On en tire :
+       - RMSE (Root Mean Square Error, en ppm)
+       - MAE  (Mean Absolute Error, en ppm)
+       - R²   (coefficient de détermination, prédit vs observé)
+     Ces indicateurs donnent une idée de la fiabilité de la carte P2O5
+     générée pour le gouvernorat/puissance IDW sélectionnés. */
+  function computeP2O5Quality(points,power){
+    const n=points.length;
+    if(n<3) return null;
+    const obs=[], pred=[];
+    for(let i=0;i<n;i++){
+      const p=points[i];
+      const est=idwPredictAt(p.lat,p.lon,points,power,i);
+      if(!Number.isFinite(est)) continue;
+      obs.push(p.value);
+      pred.push(est);
+    }
+    const m=obs.length;
+    if(m<3) return null;
+    let sumErr2=0,sumAbsErr=0;
+    for(let i=0;i<m;i++){
+      const e=pred[i]-obs[i];
+      sumErr2+=e*e;
+      sumAbsErr+=Math.abs(e);
+    }
+    const rmse=Math.sqrt(sumErr2/m);
+    const mae=sumAbsErr/m;
+    const meanObs=obs.reduce((a,b)=>a+b,0)/m;
+    let ssTot=0;
+    for(let i=0;i<m;i++){ const d=obs[i]-meanObs; ssTot+=d*d; }
+    const r2 = ssTot>0 ? Math.max(0, 1-(sumErr2/ssTot)) : null;
+    return {r2, rmse, mae, n:m};
+  }
+
+  function renderP2O5Quality(quality){
+    const box=document.getElementById('p2o5Quality');
+    if(!box) return;
+    if(!quality){
+      box.textContent='';
+      return;
+    }
+    const r2Txt = quality.r2===null ? 'n/a' : quality.r2.toFixed(2);
+    const rmseTxt = quality.rmse.toFixed(1);
+    const maeTxt = quality.mae.toFixed(1);
+    box.textContent = p2o5T('qualityLabel')+' '+p2o5T('qualityText')(r2Txt,rmseTxt,maeTxt,quality.n);
+    renderP2O5QualityPopup(quality);
+  }
+
+  function renderP2O5QualityPopup(quality){
+    const title=document.getElementById('p2o5QualityPopupTitle');
+    const intro=document.getElementById('p2o5QualityPopupIntro');
+    const summary=document.getElementById('p2o5QualityPopupSummary');
+    const r2Box=document.getElementById('p2o5QualityPopupR2');
+    const rmseBox=document.getElementById('p2o5QualityPopupRMSE');
+    const maeBox=document.getElementById('p2o5QualityPopupMAE');
+    const cmpBox=document.getElementById('p2o5QualityPopupComparison');
+    const cautionBox=document.getElementById('p2o5QualityPopupCaution');
+    const note=document.getElementById('p2o5QualityPopupNote');
+    if(!title || !quality) return;
+
+    const r2Txt=quality.r2===null ? 'n/a' : quality.r2.toFixed(2);
+    const rmseTxt=quality.rmse.toFixed(1);
+    const maeTxt=quality.mae.toFixed(1);
+    const ratio=quality.mae>0 ? (quality.rmse/quality.mae).toFixed(2) : 'n/a';
+
+    title.textContent=p2o5T('qualityPopupTitle');
+    intro.textContent=p2o5T('qualityPopupIntro');
+    summary.textContent=p2o5T('qualityLabel')+' '+p2o5T('qualityText')(r2Txt,rmseTxt,maeTxt,quality.n);
+
+    r2Box.innerHTML='<h3>'+p2o5T('qualityPopupR2Title')+'</h3><p>'+p2o5T('qualityPopupR2Text')(r2Txt)+'</p>';
+    rmseBox.innerHTML='<h3>'+p2o5T('qualityPopupRMSETitle')+'</h3><p>'+p2o5T('qualityPopupRMSEText')(rmseTxt)+'</p>';
+    maeBox.innerHTML='<h3>'+p2o5T('qualityPopupMAETitle')+'</h3><p>'+p2o5T('qualityPopupMAEText')(maeTxt)+'</p>';
+    cmpBox.innerHTML='<h3>'+p2o5T('qualityPopupComparisonTitle')+'</h3><p>'+p2o5T('qualityPopupComparisonText')(rmseTxt,maeTxt,ratio)+'</p>';
+    cautionBox.innerHTML='<h3>'+p2o5T('qualityPopupCautionTitle')+'</h3><p>'+p2o5T('qualityPopupCautionText')+'</p>';
+    note.textContent=p2o5T('qualityPopupNote')(quality.n);
+  }
+
+  function openP2O5QualityPopup(){
+    const overlay=document.getElementById('p2o5QualityOverlay');
+    if(!overlay || !p2o5State.lastQuality) return;
+    renderP2O5QualityPopup(p2o5State.lastQuality);
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden','false');
+  }
+
+  function closeP2O5QualityPopup(){
+    const overlay=document.getElementById('p2o5QualityOverlay');
+    if(!overlay) return;
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden','true');
+  }
+
+  function computeMaskGrid(geometry,bbox,cols,rows){
     const mask=new Uint8Array(cols*rows);
     for(let r=0;r<rows;r++){
-      const lat=bbox.maxLat-(r+0.5)*(bbox.maxLat-bbox.minLat)/rows;
+      const lat=gridCellCenterLat(bbox,r,rows);
       for(let c=0;c<cols;c++){
         const lon=bbox.minLon+(c+0.5)*(bbox.maxLon-bbox.minLon)/cols;
-        mask[r*cols+c]=pointInGeometry(lon,lat,simplifiedGeometry) ? 1 : 0;
+        mask[r*cols+c]=pointInGeometry(lon,lat,geometry) ? 1 : 0;
       }
     }
     return mask;
@@ -6328,14 +6753,18 @@ const I18N = {
     const govName=p2o5State.governorate;
     if(!govName){
       setP2O5StatusKind('noGov');
+      renderP2O5Quality(null);
       return;
     }
     const pts=getP2O5PointsForGovernorate(govName);
     if(pts.length<3){
       setP2O5StatusKind('notEnoughPts', pts.length);
+      renderP2O5Quality(null);
       return;
     }
     setP2O5StatusKind('computing');
+    const qualityBox=document.getElementById('p2o5Quality');
+    if(qualityBox) qualityBox.textContent=p2o5T('qualityComputing');
 
     setTimeout(()=>{
       const feature=findGovernorateFeature(govName);
@@ -6363,8 +6792,7 @@ const I18N = {
 
       let mask;
       if(geometry){
-        const simplified=simplifyGeometryForMask(geometry,500);
-        mask=computeMaskGrid(simplified,bbox,cols,rows);
+        mask=computeMaskGrid(geometry,bbox,cols,rows);
       }else{
         mask=new Uint8Array(cols*rows).fill(1);
       }
@@ -6415,10 +6843,146 @@ const I18N = {
 
       setP2O5StatusKind('pointsUsed', pts.length);
 
+      /* Indicateurs de qualité (R², RMSE, MAE) calculés par validation
+         croisée leave-one-out, pour informer l'utilisateur de la fiabilité
+         de la carte P2O5 générée avec les paramètres actuels. */
+      const quality=computeP2O5Quality(pts,p2o5State.power);
+      p2o5State.lastQuality=quality;
+      renderP2O5Quality(quality);
+
       setTimeout(()=>{
         if(p2o5MapA) p2o5MapA.invalidateSize();
         if(p2o5MapB) p2o5MapB.invalidateSize();
       },60);
+    },30);
+  }
+
+  /* Export XLSX d'une grille régulière (résolution cible ≈ 100 m) couvrant
+     le gouvernorat sélectionné, avec pour chaque cellule intérieure au
+     gouvernorat : Id, X (longitude), Y (latitude), P2O5 interpolé (IDW) et
+     l'apport conseillé de P2O5 (kg/ha) qui en découle. Les deux "cartes"
+     (P2O5 et apports) sont donc réunies dans un seul export, ligne par
+     ligne, plus une feuille récapitulant les paramètres et indicateurs de
+     qualité (R², RMSE, MAE) de l'interpolation utilisée. */
+  function exportP2O5GridXLSX(){
+    const govName=p2o5State.governorate;
+    if(!govName){ showToast(p2o5T('noGov'),'error'); return; }
+    const pts=getP2O5PointsForGovernorate(govName);
+    if(pts.length<3){ showToast(p2o5T('notEnoughPts')(pts.length),'error'); return; }
+
+    const btn=document.getElementById('p2o5ExportBtn');
+    if(btn) btn.disabled=true;
+    showToast(p2o5T('exportComputing'),'info',6000);
+
+    setTimeout(()=>{
+      try{
+        const feature=findGovernorateFeature(govName);
+        const geometry=feature ? feature.geometry : null;
+        let bbox;
+        if(geometry){
+          bbox=geometryBBox(geometry);
+        }else{
+          let minLon=Infinity,minLat=Infinity,maxLon=-Infinity,maxLat=-Infinity;
+          pts.forEach(p=>{
+            if(p.lon<minLon) minLon=p.lon; if(p.lon>maxLon) maxLon=p.lon;
+            if(p.lat<minLat) minLat=p.lat; if(p.lat>maxLat) maxLat=p.lat;
+          });
+          const padLon=(maxLon-minLon)*0.15||0.05, padLat=(maxLat-minLat)*0.15||0.05;
+          bbox={minLon:minLon-padLon,minLat:minLat-padLat,maxLon:maxLon+padLon,maxLat:maxLat+padLat};
+        }
+
+        /* Conversion degrés -> mètres (approximation locale suffisante pour
+           dimensionner une grille), à partir de la latitude moyenne de la
+           zone (la longueur d'un degré de longitude dépend de la latitude). */
+        const latCenter=(bbox.minLat+bbox.maxLat)/2;
+        const metersPerDegLat=111320;
+        const metersPerDegLon=111320*Math.cos(latCenter*Math.PI/180);
+        const widthM=(bbox.maxLon-bbox.minLon)*metersPerDegLon;
+        const heightM=(bbox.maxLat-bbox.minLat)*metersPerDegLat;
+
+        const TARGET_RES_M=100;
+        let cols=Math.max(2,Math.round(widthM/TARGET_RES_M));
+        let rows=Math.max(2,Math.round(heightM/TARGET_RES_M));
+
+        /* Garde-fou : une grille à 100 m sur un très grand gouvernorat peut
+           représenter plusieurs centaines de milliers de cellules. On
+           plafonne le nombre total de cellules pour rester fluide dans le
+           navigateur, quitte à dégrader légèrement la résolution réelle
+           (l'utilisateur est prévenu par un message). */
+        const MAX_CELLS=250000;
+        let actualResM=TARGET_RES_M;
+        if(cols*rows>MAX_CELLS){
+          const scale=Math.sqrt((cols*rows)/MAX_CELLS);
+          cols=Math.max(2,Math.round(cols/scale));
+          rows=Math.max(2,Math.round(rows/scale));
+          actualResM=Math.round(((widthM/cols)+(heightM/rows))/2);
+          showToast(p2o5T('exportAdjusted')(actualResM),'info',6000);
+        }
+
+        const grid=computeIDWGrid(pts,p2o5State.power,bbox,cols,rows);
+
+        let mask;
+        if(geometry){
+          mask=computeMaskGrid(geometry,bbox,cols,rows);
+        }else{
+          mask=new Uint8Array(cols*rows).fill(1);
+        }
+
+        const rowsOut=[];
+        let id=1;
+        for(let r=0;r<rows;r++){
+          const lat=gridCellCenterLat(bbox,r,rows);
+          for(let c=0;c<cols;c++){
+            const idx=r*cols+c;
+            if(mask[idx]!==1) continue;
+            const v=grid[idx];
+            if(!Number.isFinite(v)) continue;
+            const lon=bbox.minLon+(c+0.5)*(bbox.maxLon-bbox.minLon)/cols;
+            const dose=doseFromP2O5(v);
+            rowsOut.push({
+              Id:id++,
+              X:Number(lon.toFixed(6)),
+              Y:Number(lat.toFixed(6)),
+              P2O5:Number(v.toFixed(2)),
+              Apport_conseille_P2O5_kg_ha: Number.isFinite(dose) ? Number(dose.toFixed(1)) : ''
+            });
+          }
+        }
+
+        if(!rowsOut.length){
+          showToast(p2o5T('exportNoPoints'),'error');
+          if(btn) btn.disabled=false;
+          return;
+        }
+
+        const ws=XLSX.utils.json_to_sheet(rowsOut);
+        const wb=XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb,ws,'Grille_P2O5_100m');
+
+        const quality=p2o5State.lastQuality || computeP2O5Quality(pts,p2o5State.power);
+        const infoRows=[
+          {Parametre:'Gouvernorat', Valeur: localizeGovernorateName(govName) || govName},
+          {Parametre:'Puissance IDW (p)', Valeur: p2o5State.power},
+          {Parametre:'Points mesures utilises', Valeur: pts.length},
+          {Parametre:'Resolution grille visee (m)', Valeur: TARGET_RES_M},
+          {Parametre:'Resolution grille reelle (m)', Valeur: actualResM},
+          {Parametre:'Cellules exportees', Valeur: rowsOut.length},
+          {Parametre:'R2 (validation croisee leave-one-out)', Valeur: quality && quality.r2!==null ? Number(quality.r2.toFixed(3)) : ''},
+          {Parametre:'RMSE ppm (validation croisee)', Valeur: quality ? Number(quality.rmse.toFixed(2)) : ''},
+          {Parametre:'MAE ppm (validation croisee)', Valeur: quality ? Number(quality.mae.toFixed(2)) : ''}
+        ];
+        const wsInfo=XLSX.utils.json_to_sheet(infoRows);
+        XLSX.utils.book_append_sheet(wb,wsInfo,'Qualite_Parametres');
+
+        const safeName=String(govName||'Gouvernorat').replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_');
+        XLSX.writeFile(wb,'P2O5_Grille_100m_'+safeName+'.xlsx');
+
+        showToast(p2o5T('exportDone')(rowsOut.length, actualResM), 'success', 6000);
+      }catch(err){
+        showToast('⚠️ '+(err && err.message ? err.message : String(err)),'error');
+      }finally{
+        if(btn) btn.disabled=false;
+      }
     },30);
   }
 
@@ -6440,8 +7004,16 @@ const I18N = {
         if(dict[key]!==undefined) opts[i].textContent=dict[key];
       }
     }
+    const infoBtn=document.getElementById('p2o5QualityInfoBtn');
+    if(infoBtn){
+      infoBtn.textContent='?';
+      infoBtn.title=dict.qualityInfoBtn;
+      infoBtn.setAttribute('aria-label',dict.qualityInfoBtn);
+    }
     const btn=document.getElementById('p2o5RefreshBtn');
     if(btn) btn.textContent=dict.generateBtn;
+    const exportBtn=document.getElementById('p2o5ExportBtn');
+    if(exportBtn) exportBtn.textContent=dict.exportBtn;
     const titleA=document.getElementById('p2o5TitleA');
     if(titleA) titleA.textContent=dict.titleA;
     const titleB=document.getElementById('p2o5TitleB');
@@ -6452,6 +7024,7 @@ const I18N = {
     if(sourceNote) sourceNote.innerHTML=dict.sourceNoteHtml || '';
     populateP2O5GovSelect();
     renderP2O5Status();
+    renderP2O5Quality(p2o5State.lastQuality);
   }
 
   function initP2O5Tab(){
@@ -6498,6 +7071,23 @@ const I18N = {
       }
       const btn=document.getElementById('p2o5RefreshBtn');
       if(btn) btn.addEventListener('click',refreshP2O5Maps);
+      const exportBtn=document.getElementById('p2o5ExportBtn');
+      if(exportBtn) exportBtn.addEventListener('click',exportP2O5GridXLSX);
+
+      const qualityInfoBtn=document.getElementById('p2o5QualityInfoBtn');
+      if(qualityInfoBtn) qualityInfoBtn.addEventListener('click',openP2O5QualityPopup);
+      const qualityBox=document.getElementById('p2o5Quality');
+      if(qualityBox) qualityBox.addEventListener('click',openP2O5QualityPopup);
+      const qualityClose=document.getElementById('p2o5QualityClose');
+      if(qualityClose) qualityClose.addEventListener('click',closeP2O5QualityPopup);
+      const qualityOverlay=document.getElementById('p2o5QualityOverlay');
+      if(qualityOverlay) qualityOverlay.addEventListener('click',function(e){
+        if(e.target===qualityOverlay) closeP2O5QualityPopup();
+      });
+      document.addEventListener('keydown',function(e){
+        if(e.key==='Escape') closeP2O5QualityPopup();
+      });
+
       p2o5Initialized=true;
     }
     if(p2o5State.governorate){
