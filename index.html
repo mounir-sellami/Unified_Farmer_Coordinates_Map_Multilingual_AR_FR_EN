@@ -7335,7 +7335,7 @@ const I18N = {
       img.src = getProtectedAssetPath() + '?_check=' + Date.now();
 
       // Filet de sécurité si la requête reste bloquée / sans réponse.
-      setTimeout(() => finish(false), 4000);
+      setTimeout(() => finish(false), 10000);
     });
   }
 
