@@ -5887,7 +5887,7 @@ const I18N = {
       sourceData
         .map(getGov)
         .filter(v => v && v !== t().unspecified)
-    )].sort((a,b)=>a.localeCompare(b, t().locale || undefined, {sensitivity:'base'}));
+    )].sort((a,b)=>localizeGovernorateName(a).localeCompare(localizeGovernorateName(b), t().locale || undefined, {sensitivity:'base'}));
 
     const previousGov = govSelect.value || '__all__';
     govSelect.innerHTML =
@@ -5896,7 +5896,7 @@ const I18N = {
       '</option>' +
       allGovs.map(g =>
         '<option value="' + escapeHtml(g).replace(/"/g,'&quot;') + '">' +
-        escapeHtml(g) +
+        escapeHtml(localizeGovernorateName(g)) +
         '</option>'
       ).join('');
 
