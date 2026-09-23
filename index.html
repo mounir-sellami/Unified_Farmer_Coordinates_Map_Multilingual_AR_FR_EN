@@ -772,17 +772,20 @@ header::after{
 
 .p2o5-controls{
   display:flex;
-  flex-wrap:nowrap;
+  flex-wrap:wrap;
   align-items:center;
   justify-content:space-between;
-  gap:22px;
+  gap:10px 22px;
   background:var(--paper);
   border:1px solid var(--line);
   border-radius:10px;
   padding:10px 18px;
-  overflow-x:auto;
-  overflow-y:hidden;
+  overflow:visible;
 }
+
+/* Les blocs de l'onglet ne doivent jamais être écrasés : c'est la zone
+   entière qui défile verticalement si l'écran est trop petit. */
+.p2o5-wrap > *{ flex-shrink:0; }
 
 .p2o5-control-group{
   display:flex;
@@ -861,7 +864,7 @@ header::after{
 .p2o5-source-note a{ color:var(--olive-dark); font-style:normal; }
 
 .p2o5-maps-row{
-  flex:1;
+  flex:1 0 auto;
   min-height:340px;
   display:flex;
   gap:12px;
@@ -908,35 +911,21 @@ header::after{
   background:rgba(255,253,248,.95);
   border:1px solid var(--line);
   border-radius:8px;
-  padding:8px 10px;
+  padding:8px 12px;
   font-size:.68rem;
-  max-width:190px;
+  width:max-content;
+  max-width:calc(100% - 20px);
   box-shadow:0 3px 10px rgba(44,38,32,.18);
   pointer-events:auto;
-  overflow-x:auto;
-  overflow-y:hidden;
-  scrollbar-width:thin;
-  scrollbar-color:var(--olive-dark) rgba(0,0,0,.08);
+  overflow:visible;
 }
 [dir="rtl"] .p2o5-legend{ left:auto; right:10px; }
 
-.p2o5-legend::-webkit-scrollbar{
-  height:6px;
-}
-.p2o5-legend::-webkit-scrollbar-track{
-  background:rgba(0,0,0,.06);
-  border-radius:999px;
-}
-.p2o5-legend::-webkit-scrollbar-thumb{
-  background:var(--olive-dark);
-  border-radius:999px;
-}
-
 .p2o5-legend .legend-item{
-  white-space:nowrap;
+  white-space:normal;
 }
 .p2o5-legend .legend-item span:last-child{
-  white-space:nowrap;
+  white-space:normal;
 }
 
 .p2o5-legend-credit{
@@ -1356,6 +1345,13 @@ header::after{
   font-size:.88rem;
   padding:11px 22px;
   margin:0 auto;
+}
+
+.start-btn.start-btn-disabled{
+  opacity:.5;
+  cursor:not-allowed;
+  pointer-events:none;
+  filter:grayscale(.4);
 }
 
 .start-error{
@@ -2136,7 +2132,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
       <p class="start-hint"
          data-i18n="startHint"></p>
 
-      <label class="btn btn-upload start-btn"
+      <label class="btn btn-upload start-btn start-btn-disabled"
+             aria-disabled="true"
              for="startFileInput">
 
         <svg viewBox="0 0 24 24"
@@ -2160,7 +2157,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 
       <input type="file"
              id="startFileInput"
-             accept=".xlsx,.xls">
+             accept=".xlsx,.xls"
+             disabled>
 
       <p class="start-error"
          id="startError"></p>
@@ -6321,6 +6319,12 @@ const I18N = {
     if(grid) grid.innerHTML='';
 
     function addChart(title, chartLabels, values, type='bar', datasetLabel=title){
+      /* Histogrammes : tri décroissant (du plus important au moins important). */
+      if(type==='bar'){
+        const order=chartLabels.map((_,i)=>i).sort((a,b)=>(Number(values[b])||0)-(Number(values[a])||0));
+        chartLabels=order.map(i=>chartLabels[i]);
+        values=order.map(i=>values[i]);
+      }
       const card=document.createElement('div');
       card.className='chart-card';
       const h=document.createElement('h3');
@@ -6353,6 +6357,7 @@ const I18N = {
       card.appendChild(holder);
       if(grid) grid.appendChild(card);
 
+      const isRTLChart = (currentLang==='ar') && isCartesian;
       const chart=new Chart(canvas.getContext('2d'),{
         type,
         data:{
@@ -6370,6 +6375,8 @@ const I18N = {
           plugins:{
             legend:{display:type==='doughnut'||type==='pie'},
             tooltip:{
+              rtl:isRTLChart,
+              textDirection:isRTLChart?'rtl':'ltr',
               callbacks:{
                 label:function(ctx){
                   const vals = ctx.dataset.data || [];
@@ -6385,6 +6392,8 @@ const I18N = {
           scales:(type==='doughnut'||type==='pie')?{}:{
             x:{
               beginAtZero:true,
+              /* Arabe : histogrammes de droite à gauche (1re barre à droite). */
+              reverse:isRTLChart,
               ticks:{
                 autoSkip:false,
                 maxRotation:55,
@@ -6397,6 +6406,7 @@ const I18N = {
             },
             y:{
               beginAtZero:true,
+              position:isRTLChart?'right':'left',
               grid:{
                 display:true,
                 drawTicks:true
@@ -8693,21 +8703,58 @@ const I18N = {
   function applyOverlayBackground(){
     const overlay = document.getElementById('startOverlay');
     if(!overlay) return;
-
-    /* Le fond illustré est optionnel en mode double-clic.
-       On ne déclenche aucune requête locale obligatoire. */
     overlay.style.backgroundImage =
-      'linear-gradient(160deg, rgba(55,80,41,.10) 0%, rgba(76,107,63,.08) 55%, rgba(90,122,73,.12) 100%)';
+      'linear-gradient(160deg, rgba(55,80,41,0) 0%, rgba(76,107,63,0) 55%, rgba(90,122,73,0) 100%), ' +
+      'url("' + getProtectedAssetPath() + '")';
+  }
+
+  /* Le bouton « Choisir un fichier Excel » reste inactif tant que
+     l'image de référence n'est pas complètement chargée. */
+  let logoReady = false;
+
+  function setStartButtonEnabled(enabled){
+    const input = document.getElementById('startFileInput');
+    const label = document.querySelector('label.start-btn');
+    if(input) input.disabled = !enabled;
+    if(label){
+      label.classList.toggle('start-btn-disabled', !enabled);
+      label.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+    }
+  }
+
+  /* Image absente : message puis rechargement depuis le lien officiel. */
+  function redirectToOfficialApp(){
+    // Durée d'affichage du toast avant redirection (ms).
+    const REDIRECT_TOAST_DURATION = 5000;
+    try{
+      showToast(
+        '⚠️ Copie corrompue ou piratée — rechargement depuis le lien officiel...',
+        'error',
+        REDIRECT_TOAST_DURATION
+      );
+    }catch(_){}
+    setTimeout(() => {
+      window.location.href = OFFICIAL_APP_URL;
+    }, REDIRECT_TOAST_DURATION);
+  }
+
+  /* Contrôle au démarrage : le bouton n'est activé qu'une fois
+     l'image entièrement chargée. */
+  async function runStartupLogoCheck(){
+    setStartButtonEnabled(false);
+    const ok = await checkLogoAssetAvailable();
+    if(ok){
+      logoReady = true;
+      setStartButtonEnabled(true);
+    }else{
+      redirectToOfficialApp();
+    }
   }
 
   async function ensureDeploymentIntegrityOrReload(){
-    /*
-      MODE LOCAL AUTONOME :
-      une copie ouverte par double-clic ne doit jamais être redirigée
-      vers le déploiement en ligne simplement parce qu'un visuel local
-      optionnel (logo de fond) n'est pas présent.
-    */
-    return true;
+    const ok = await checkLogoAssetAvailable();
+    if(!ok) redirectToOfficialApp();
+    return ok;
   }
 
   async function applyExcelConfig(){
@@ -8786,6 +8833,7 @@ const I18N = {
   })();
 
   function handleFile(file,isInitial){
+    if(isInitial && !logoReady) return;
     const reader=new FileReader();
     reader.onload=function(e){try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});const parsed=parseWorkbook(wb);openExcelConfig(parsed,isInitial,file);}catch(err){if(isInitial) document.getElementById('startError').textContent='⚠️ '+err.message;else showToast('⚠️ '+err.message,'error');}};
     reader.onerror=function(){const msg=t().errCannotRead;if(isInitial) document.getElementById('startError').textContent='⚠️ '+msg;else showToast('⚠️ '+msg,'error');};
@@ -9556,6 +9604,24 @@ const I18N = {
 
   initMap();
   applyOverlayBackground();
+  runStartupLogoCheck();
+
+  /* Plein écran : uniquement juste après l'appui sur « Afficher les
+     données » (le navigateur exige une action de l'utilisateur). */
+  (function(){
+    const root = document.documentElement;
+    const request = root.requestFullscreen || root.webkitRequestFullscreen || root.msRequestFullscreen;
+    if(!request) return;
+    function enterFullscreen(){
+      if(document.fullscreenElement || document.webkitFullscreenElement) return;
+      try{
+        const r = request.call(root);
+        if(r && r.catch) r.catch(()=>{});
+      }catch(_){}
+    }
+    const applyBtn = document.getElementById('excelConfigApply');
+    if(applyBtn) applyBtn.addEventListener('click', enterFullscreen, true);
+  })();
 
   /* Rendu initial garanti après le chargement complet du DOM. */
   setLanguage(currentLang, {first:true, notify:false});
