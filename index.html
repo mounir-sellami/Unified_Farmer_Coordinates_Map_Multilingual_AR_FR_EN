@@ -912,9 +912,32 @@ header::after{
   font-size:.68rem;
   max-width:190px;
   box-shadow:0 3px 10px rgba(44,38,32,.18);
-  pointer-events:none;
+  pointer-events:auto;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:var(--olive-dark) rgba(0,0,0,.08);
 }
 [dir="rtl"] .p2o5-legend{ left:auto; right:10px; }
+
+.p2o5-legend::-webkit-scrollbar{
+  height:6px;
+}
+.p2o5-legend::-webkit-scrollbar-track{
+  background:rgba(0,0,0,.06);
+  border-radius:999px;
+}
+.p2o5-legend::-webkit-scrollbar-thumb{
+  background:var(--olive-dark);
+  border-radius:999px;
+}
+
+.p2o5-legend .legend-item{
+  white-space:nowrap;
+}
+.p2o5-legend .legend-item span:last-child{
+  white-space:nowrap;
+}
 
 .p2o5-legend-credit{
   margin-top:5px;
@@ -1045,6 +1068,142 @@ header::after{
 .chart-holder{
   height:230px;
   position:relative;
+}
+
+/* =========================================================
+   ASCENSEUR HORIZONTAL POUR LES AXES X DES GRAPHIQUES
+   ---------------------------------------------------------
+   Les graphiques à barres peuvent contenir beaucoup de
+   catégories (groupes, délégations, cultures...). Une largeur
+   minimale est attribuée au graphique et le conteneur permet
+   de faire défiler horizontalement toutes les étiquettes de
+   l'axe X sans les supprimer.
+   ========================================================= */
+.chart-holder-xscroll{
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:var(--olive-dark) rgba(0,0,0,.10);
+  padding-bottom:5px;
+}
+
+.chart-holder-xscroll::-webkit-scrollbar{
+  height:9px;
+}
+
+.chart-holder-xscroll::-webkit-scrollbar-track{
+  background:rgba(0,0,0,.07);
+  border-radius:999px;
+}
+
+.chart-holder-xscroll::-webkit-scrollbar-thumb{
+  background:var(--olive-dark);
+  border-radius:999px;
+  border:2px solid rgba(0,0,0,.07);
+}
+
+.chart-scroll-inner{
+  position:relative;
+  height:100%;
+  min-width:100%;
+}
+
+.chart-scroll-inner canvas{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+}
+
+/* Graphiques en anneau (doughnut) avec légende HTML à droite :
+   légende un peu plus large que la légende native de Chart.js, et
+   dotée d'un ascenseur vertical dès qu'elle dépasse la hauteur du
+   graphique (nombreux groupes/délégations ou types de culture). */
+.chart-holder-donut{
+  display:flex;
+  align-items:stretch;
+  gap:10px;
+}
+
+.chart-canvas-wrap{
+  position:relative;
+  flex:1 1 auto;
+  min-width:0;
+}
+
+.chart-legend-scroll{
+  flex:0 0 44%;
+  max-width:230px;
+  min-width:150px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-right:4px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--olive-dark) rgba(0,0,0,.08);
+}
+
+.chart-legend-scroll::-webkit-scrollbar{
+  width:6px;
+}
+
+.chart-legend-scroll::-webkit-scrollbar-track{
+  background:rgba(0,0,0,.06);
+  border-radius:999px;
+}
+
+.chart-legend-scroll::-webkit-scrollbar-thumb{
+  background:var(--olive-dark);
+  border-radius:999px;
+}
+
+.chart-legend-list{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.chart-legend-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  font-size:.7rem;
+  line-height:1.25;
+  color:var(--ink);
+}
+
+.chart-legend-item:hover{
+  color:var(--olive-dark);
+}
+
+.chart-legend-item-hidden{
+  opacity:.45;
+  text-decoration:line-through;
+}
+
+.chart-legend-swatch{
+  width:12px;
+  height:12px;
+  border-radius:3px;
+  flex:none;
+  border:1px solid rgba(0,0,0,.15);
+}
+
+.chart-legend-text{
+  word-break:break-word;
+}
+
+@media (max-width:640px){
+  .chart-holder-donut{
+    flex-direction:column;
+  }
+  .chart-legend-scroll{
+    flex:0 0 auto;
+    max-width:none;
+    max-height:120px;
+  }
 }
 
 @media (max-width:900px){
@@ -5622,6 +5781,42 @@ const I18N = {
   let chartPie;
   let chartAvgArea;
   let dynamicCharts = [];
+  let htmlLegendSeq = 0;
+
+  /* Légende HTML (hors canvas) pour les graphiques en anneau : permet
+     une largeur ajustable en CSS et un ascenseur vertical quand la
+     liste de groupes/délégations (ou types de culture) est plus
+     grande que le graphique — ce que la légende native de Chart.js,
+     dessinée dans le canvas, ne permet pas. */
+  const htmlLegendPlugin = {
+    id: 'htmlLegend',
+    afterUpdate(chart, args, options){
+      const container = options && options.containerID
+        ? document.getElementById(options.containerID)
+        : null;
+      if(!container) return;
+      container.innerHTML = '';
+      const items = chart.options.plugins.legend.labels.generateLabels(chart);
+      items.forEach(item=>{
+        const li = document.createElement('li');
+        li.className = 'chart-legend-item' + (item.hidden ? ' chart-legend-item-hidden' : '');
+        li.addEventListener('click', () => {
+          chart.toggleDataVisibility(item.index);
+          chart.update();
+        });
+        const box = document.createElement('span');
+        box.className = 'chart-legend-swatch';
+        box.style.background = item.fillStyle;
+        box.style.borderColor = item.strokeStyle || 'rgba(0,0,0,.15)';
+        const text = document.createElement('span');
+        text.className = 'chart-legend-text';
+        text.textContent = item.text;
+        li.appendChild(box);
+        li.appendChild(text);
+        container.appendChild(li);
+      });
+    }
+  };
   let currentConfig = {popupColumns:[],chartCategory:'',chartNumericColumns:[],titleColumn:null,schemaLang:null};
   let currentPendingImport = null;
 
@@ -5821,11 +6016,11 @@ const I18N = {
      KPI — CLASSES DE P2O5 (OLSEN)
      -------------------------------------------------------
      Classes :
-       0 <= P2O5 < 7 ppm
-       7 <= P2O5 <= 14 ppm
+       P2O5 <= 7 ppm
+       7 <  P2O5 <= 14 ppm
        P2O5 > 14 ppm
-     Le 7 est donc compté dans la classe 7–14 et le 14
-     dans cette même classe, afin d'éviter tout chevauchement.
+     Le 7 est donc compté dans la classe <= 7 et le 14
+     dans la classe 7–14, afin d'éviter tout chevauchement.
      ======================================================= */
   function renderDynamicKPI(data, options){
     const section = document.getElementById('p2o5KpiSection');
@@ -5927,10 +6122,10 @@ const I18N = {
     }
 
     const classes = [
-      {key:'low', label: currentLang==='ar' ? '0 – 7' : currentLang==='en' ? '0 – 7' : '0 – 7', cls:'class-low',
-       test:v => v >= 0 && v < 7},
+      {key:'low', label: currentLang==='ar' ? '≤ 7' : currentLang==='en' ? '≤ 7' : '≤ 7', cls:'class-low',
+       test:v => v >= 0 && v <= 7},
       {key:'medium', label: currentLang==='ar' ? '7 – 14' : currentLang==='en' ? '7 – 14' : '7 – 14', cls:'class-medium',
-       test:v => v >= 7 && v <= 14},
+       test:v => v > 7 && v <= 14},
       {key:'high', label: currentLang==='ar' ? '> 14' : currentLang==='en' ? '> 14' : '> 14', cls:'class-high',
        test:v => v > 14}
     ];
@@ -6131,9 +6326,29 @@ const I18N = {
       const h=document.createElement('h3');
       h.textContent=title;
       const holder=document.createElement('div');
-      holder.className='chart-holder';
+      const isCartesian = !['doughnut','pie','polarArea','radar'].includes(type);
+      holder.className = 'chart-holder' + (isCartesian ? ' chart-holder-xscroll' : '');
+
       const canvas=document.createElement('canvas');
-      holder.appendChild(canvas);
+
+      if(isCartesian){
+        /*
+         * Axe X avec beaucoup de catégories :
+         * le graphique reçoit une largeur minimale proportionnelle au
+         * nombre d'étiquettes et le conteneur devient horizontalement
+         * défilable. Ainsi aucune étiquette de l'axe X n'est supprimée
+         * par Chart.js et l'utilisateur peut faire défiler pour toutes
+         * les consulter.
+         */
+        const scrollInner=document.createElement('div');
+        scrollInner.className='chart-scroll-inner';
+        scrollInner.style.width=`max(100%, ${Math.max(chartLabels.length * 105, 420)}px)`;
+        scrollInner.appendChild(canvas);
+        holder.appendChild(scrollInner);
+      }else{
+        holder.appendChild(canvas);
+      }
+
       card.appendChild(h);
       card.appendChild(holder);
       if(grid) grid.appendChild(card);
@@ -6169,7 +6384,16 @@ const I18N = {
           },
           scales:(type==='doughnut'||type==='pie')?{}:{
             x:{
-              beginAtZero:true
+              beginAtZero:true,
+              ticks:{
+                autoSkip:false,
+                maxRotation:55,
+                minRotation:35,
+                padding:6
+              },
+              grid:{
+                display:false
+              }
             },
             y:{
               beginAtZero:true,
@@ -6198,10 +6422,23 @@ const I18N = {
       h.textContent=title;
 
       const holder=document.createElement('div');
-      holder.className='chart-holder';
+      holder.className='chart-holder chart-holder-donut';
 
+      const canvasWrap=document.createElement('div');
+      canvasWrap.className='chart-canvas-wrap';
       const canvas=document.createElement('canvas');
-      holder.appendChild(canvas);
+      canvasWrap.appendChild(canvas);
+
+      const legendId='chartLegend'+(++htmlLegendSeq);
+      const legendScroll=document.createElement('div');
+      legendScroll.className='chart-legend-scroll';
+      const legendList=document.createElement('ul');
+      legendList.className='chart-legend-list';
+      legendList.id=legendId;
+      legendScroll.appendChild(legendList);
+
+      holder.appendChild(canvasWrap);
+      holder.appendChild(legendScroll);
       card.appendChild(h);
       card.appendChild(holder);
 
@@ -6224,6 +6461,8 @@ const I18N = {
         {
           type:'doughnut',
 
+          plugins:[htmlLegendPlugin],
+
           data:{
             labels:chartLabels,
             datasets:[{
@@ -6241,8 +6480,11 @@ const I18N = {
 
             plugins:{
               legend:{
-                display:true,
-                position:'right'
+                display:false
+              },
+
+              htmlLegend:{
+                containerID:legendId
               },
 
               tooltip:{
@@ -6770,41 +7012,26 @@ const I18N = {
     return dict[key] !== undefined ? dict[key] : P2O5_I18N.fr[key];
   }
 
-  /* Classes agronomiques du P2O5 assimilable (Olsen, ppm) : mêmes seuils que la
-     cartographie de référence (script GEE fourni) : 15 / 30 / 60 / 90 ppm. */
-  const P2O5_BREAKS_FIXED = [15, 30, 60, 90];
-  /* Couleurs alignées du "problème" (rouge = très élevé) vers le "confort"
-     (vert = optimal), plutôt que l'inverse : rouge = Très élevé, orange =
-     Élevé, vert = Moyen (Optimal), bleu = Faible, violet = Très faible. */
-  const P2O5_CLASS_COLORS = ['#762a83','#4575b4','#1a9850','#fdae61','#d73027'];
-  const P2O5_CLASS_KEYS = ['classTresFaible','classFaible','classMoyen','classEleve','classTresEleve'];
+  /* Classes agronomiques du P2O5 assimilable (Olsen, ppm) : seuils fixes
+     alignés sur le KPI ci-dessus : <= 7 / 7-14 / > 14 ppm. */
+  const P2O5_BREAKS_FIXED = [7, 14];
+  /* Couleurs : rouge = classe <= 7 (sol pauvre, besoin élevé), orange =
+     classe 7-14 (moyen), vert = classe > 14 (sol riche, besoin faible). */
+  const P2O5_CLASS_COLORS = ['#d73027','#fdae61','#1a9850'];
+  const P2O5_CLASS_KEYS = ['classFaible','classMoyen','classEleve'];
 
-  /* Courbe d'apport indicative (kg P2O5/ha) en fonction du P2O5 assimilable (ppm).
-     ATTENTION : ce sont des valeurs de référence PAR DÉFAUT (aucune formule
-     n'a été fournie) — à ajuster selon la culture et les recommandations
-     agronomiques officielles. Logique : plus le sol est pauvre en P2O5, plus
-     l'apport recommandé est élevé ; interpolation linéaire entre ces points. */
-  const P2O5_DOSE_CURVE = [
-    {p2o5:0,   dose:150},
-    {p2o5:15,  dose:150},
-    {p2o5:30,  dose:100},
-    {p2o5:60,  dose:50},
-    {p2o5:90,  dose:20},
-    {p2o5:150, dose:0}
-  ];
+  /* Apport recommandé (kg P2O5/ha) par classe agronomique du P2O5
+     assimilable (Olsen, ppm), sur les mêmes seuils fixes que ci-dessus :
+       P2O5 <= 7 ppm      -> 150 kg/ha
+       7 <  P2O5 <= 14 ppm -> 100 kg/ha
+       P2O5 > 14 ppm      -> 50 kg/ha
+     ATTENTION : barème de référence — à ajuster selon la culture et les
+     recommandations agronomiques officielles si besoin. */
+  const P2O5_DOSE_BY_CLASS = [150, 100, 50];
   function doseFromP2O5(v){
     if(!Number.isFinite(v)) return null;
-    const pts=P2O5_DOSE_CURVE;
-    if(v<=pts[0].p2o5) return pts[0].dose;
-    if(v>=pts[pts.length-1].p2o5) return pts[pts.length-1].dose;
-    for(let i=0;i<pts.length-1;i++){
-      const a=pts[i], b=pts[i+1];
-      if(v>=a.p2o5 && v<=b.p2o5){
-        const t=(v-a.p2o5)/(b.p2o5-a.p2o5);
-        return a.dose+(b.dose-a.dose)*t;
-      }
-    }
-    return pts[pts.length-1].dose;
+    const idx=classIndexForP2O5(v);
+    return P2O5_DOSE_BY_CLASS[Math.max(0,Math.min(P2O5_DOSE_BY_CLASS.length-1,idx))];
   }
 
   let p2o5MapA=null, p2o5MapB=null;
@@ -7425,7 +7652,7 @@ const I18N = {
     if(!Number.isFinite(v)) return -1;
     let idx=0;
     for(let i=0;i<P2O5_BREAKS_FIXED.length;i++){
-      if(v>=P2O5_BREAKS_FIXED[i]) idx=i+1;
+      if(v>P2O5_BREAKS_FIXED[i]) idx=i+1;
     }
     return idx;
   }
@@ -7461,6 +7688,17 @@ const I18N = {
 
   function colorForP2O5(v){
     const idx=classIndexForP2O5(v);
+    return P2O5_CLASS_COLORS[Math.max(0,Math.min(P2O5_CLASS_COLORS.length-1,idx))];
+  }
+
+  /* Couleur de la carte des apports (kg P2O5/ha) : dérivée directement de
+     la classe agronomique du P2O5 (mêmes 3 classes fixes que la carte A),
+     et non plus d'un dégradé continu recalculé sur le min/max de la
+     grille. Chaque valeur d'apport (150 / 100 / 50 kg/ha) correspond
+     exactement à l'une des 3 classes P2O5 <= 7 / 7-14 / > 14 ppm. */
+  function colorForDoseValue(v){
+    let idx=P2O5_DOSE_BY_CLASS.indexOf(v);
+    if(idx<0) idx=0;
     return P2O5_CLASS_COLORS[Math.max(0,Math.min(P2O5_CLASS_COLORS.length-1,idx))];
   }
 
@@ -7514,16 +7752,32 @@ const I18N = {
       dot.className='legend-dot';
       dot.style.background=P2O5_CLASS_COLORS[i];
       row.appendChild(dot);
-      const lower=i===0?'0':P2O5_BREAKS_FIXED[i-1];
-      const upper=i===P2O5_BREAKS_FIXED.length?'+':P2O5_BREAKS_FIXED[i];
+      let rangeLabel;
+      if(i===0){
+        rangeLabel='\u2264'+P2O5_BREAKS_FIXED[0];
+      }else if(i===P2O5_BREAKS_FIXED.length){
+        rangeLabel='>'+P2O5_BREAKS_FIXED[P2O5_BREAKS_FIXED.length-1];
+      }else{
+        rangeLabel=P2O5_BREAKS_FIXED[i-1]+'-'+P2O5_BREAKS_FIXED[i];
+      }
       const label=document.createElement('span');
-      label.textContent=p2o5T(P2O5_CLASS_KEYS[i])+' ('+lower+'-'+upper+')';
+      label.textContent=p2o5T(P2O5_CLASS_KEYS[i])+' ('+rangeLabel+')';
       row.appendChild(label);
       container.appendChild(row);
     }
     appendP2O5LegendCredit(container);
   }
 
+  /* Légende de la carte des apports (kg P2O5/ha) : 3 classes FIXES,
+     alignées sur les seuils agronomiques du P2O5 (P2O5_BREAKS_FIXED =
+     [7,14]) et sur les doses conseillées (P2O5_DOSE_BY_CLASS =
+     [150,100,50]) :
+       P2O5 <= 7 ppm       -> 150 kg P2O5/ha
+       7 <  P2O5 <= 14 ppm -> 100 kg P2O5/ha
+       P2O5 > 14 ppm       ->  50 kg P2O5/ha
+     Le paramètre "classifier" n'est plus utilisé (conservé pour
+     compatibilité d'appel) : la légende ne dépend plus du min/max de la
+     grille interpolée, elle est toujours identique. */
   function buildDoseLegend(container,classifier){
     if(!container) return;
     container.innerHTML='';
@@ -7532,17 +7786,23 @@ const I18N = {
     title.style.marginBottom='4px';
     title.textContent=p2o5T('titleB');
     container.appendChild(title);
-    for(let i=0;i<classifier.colors.length;i++){
+    for(let i=0;i<P2O5_DOSE_BY_CLASS.length;i++){
       const row=document.createElement('div');
       row.className='legend-item';
       const dot=document.createElement('span');
       dot.className='legend-dot';
-      dot.style.background=classifier.colors[i];
+      dot.style.background=P2O5_CLASS_COLORS[i];
       row.appendChild(dot);
-      const lower=classifier.breaks[i].toFixed(0);
-      const upper=classifier.breaks[i+1].toFixed(0);
+      let rangeLabel;
+      if(i===0){
+        rangeLabel='\u2264'+P2O5_BREAKS_FIXED[0];
+      }else if(i===P2O5_BREAKS_FIXED.length){
+        rangeLabel='>'+P2O5_BREAKS_FIXED[P2O5_BREAKS_FIXED.length-1];
+      }else{
+        rangeLabel=P2O5_BREAKS_FIXED[i-1]+'-'+P2O5_BREAKS_FIXED[i];
+      }
       const label=document.createElement('span');
-      label.textContent=lower+'-'+upper+' '+p2o5T('doseUnit');
+      label.textContent=P2O5_DOSE_BY_CLASS[i]+' '+p2o5T('doseUnit')+' (P2O5 '+rangeLabel+' ppm)';
       row.appendChild(label);
       container.appendChild(row);
     }
@@ -7701,13 +7961,13 @@ const I18N = {
       }
 
       const dataURL_A=renderGridToDataURL(grid,mask,cols,rows,colorForP2O5);
-      const doseClassifier=buildDoseClassifier(minDose,maxDose,6);
-      /* Mémorisé pour pouvoir reconstruire la légende dans une autre langue
-         sans relancer tout le calcul IDW (voir initP2O5TabTexts). */
-      p2o5State.lastDoseClassifier=doseClassifier;
+      /* La carte des apports (B) utilise désormais les 3 classes fixes
+         (voir colorForDoseValue / buildDoseLegend) et non plus un
+         classifieur continu recalculé sur le min/max de la grille. */
+      p2o5State.lastDoseClassifier=true;
 
       p2o5State.hoverDataA={bbox,grid,mask,cols,rows};
-      const dataURL_B=renderGridToDataURL(doseGrid,mask,cols,rows,doseClassifier.colorFn);
+      const dataURL_B=renderGridToDataURL(doseGrid,mask,cols,rows,colorForDoseValue);
       p2o5State.hoverDataB={bbox,grid:doseGrid,mask,cols,rows};
 
       const bounds=L.latLngBounds([[bbox.minLat,bbox.minLon],[bbox.maxLat,bbox.maxLon]]);
@@ -7750,7 +8010,7 @@ const I18N = {
       p2o5Syncing=false;
 
       buildP2O5Legend(document.getElementById('p2o5LegendA'));
-      buildDoseLegend(document.getElementById('p2o5LegendB'),doseClassifier);
+      buildDoseLegend(document.getElementById('p2o5LegendB'));
 
       setP2O5StatusKind('pointsUsed', pts.length);
 
@@ -7954,8 +8214,8 @@ const I18N = {
     const legendA=document.getElementById('p2o5LegendA');
     if(legendA && legendA.children.length) buildP2O5Legend(legendA);
     const legendB=document.getElementById('p2o5LegendB');
-    if(legendB && legendB.children.length && p2o5State.lastDoseClassifier){
-      buildDoseLegend(legendB, p2o5State.lastDoseClassifier);
+    if(legendB && legendB.children.length){
+      buildDoseLegend(legendB);
     }
   }
 
