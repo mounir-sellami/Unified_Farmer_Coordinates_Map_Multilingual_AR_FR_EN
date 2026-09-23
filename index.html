@@ -22,6 +22,10 @@
   --wheat-dark:#b3822e;
   --olive:#4c6b3f;
   --olive-dark:#375029;
+  --orange-dark:#c1521b;
+  --red-dark:#b3261e;
+  --yellow-dark:#b8860b;
+  --green_dark:#2e7d32;
   --cream:#faf6ee;
   --paper:#fffdf8;
   --ink:#2c2620;
@@ -1641,11 +1645,14 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 .p2o5-kpi-class{
   font-family:'Cairo',sans-serif;
   font-weight:800;
-  font-size:.86rem;
+  font-size:1.15rem;
   color:var(--olive-dark);
 }
+.p2o5-kpi-card.class-low .p2o5-kpi-class{color:var(--red-dark);}
+.p2o5-kpi-card.class-medium .p2o5-kpi-class{color:var(--yellow-dark);}
+.p2o5-kpi-card.class-high .p2o5-kpi-class{color:var(--green_dark);}
 .p2o5-kpi-unit{
-  font-size:.67rem;
+  font-size:.75rem;
   color:var(--ink-soft);
   margin-top:1px;
 }
