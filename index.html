@@ -8767,16 +8767,23 @@ const I18N = {
     if(!chartNumericColumns.length){showToast('⚠️ '+t().chartNumericLabel,'error');return;}
     currentConfig={popupColumns,chartCategory,chartNumericColumns,titleColumn:popupColumns.find(h=>/nom de l.?agriculteur|farmer name|اسم الفلاح/i.test(h))||popupColumns[0],schemaLang:parsed.schemaLang};
     closeExcelConfig();
+
+    /* L'écran de démarrage est masqué tout de suite (sinon il réapparaît
+       brièvement pendant le chargement des données), et le contrôle du
+       visuel de référence se fait en parallèle. */
+    const startOv=document.getElementById('startOverlay');
+    if(isInitial) startOv.classList.add('hidden');
+    const integrityPromise=ensureDeploymentIntegrityOrReload();
+
     const valid=await loadData(parsed.data);
 
-    // Protection : juste après le téléversement, on s'assure que le
-    // déploiement est complet (visuel de référence accessible).
-    // Sinon, on recharge directement le lien officiel de l'application.
-    const deploymentOk = await ensureDeploymentIntegrityOrReload();
-    if(!deploymentOk) return;
+    const deploymentOk=await integrityPromise;
+    if(!deploymentOk){
+      if(isInitial) startOv.classList.remove('hidden');
+      return;
+    }
 
-    if(isInitial) document.getElementById('startOverlay').classList.add('hidden');
-    else showToast(t().toastUpdated(parsed.data.length,valid),null);
+    if(!isInitial) showToast(t().toastUpdated(parsed.data.length,valid),null);
   }
 
   /* =======================================================
