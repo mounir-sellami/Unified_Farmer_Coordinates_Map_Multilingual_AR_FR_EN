@@ -1563,6 +1563,148 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 }
 
 /* =========================================================
+   KPI — CLASSES P2O5 (OLSEN)
+   ========================================================= */
+.p2o5-kpi-section{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:15px 16px 13px;
+  margin:8px 0 18px;
+  box-shadow:0 2px 8px rgba(44,38,32,.06);
+}
+.p2o5-kpi-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:13px;
+}
+.p2o5-kpi-head h3{
+  margin:0;
+  font-family:'Cairo',sans-serif;
+  font-size:.92rem;
+  color:var(--olive-dark);
+}
+.p2o5-kpi-head p{
+  margin:3px 0 0;
+  color:var(--ink-soft);
+  font-size:.72rem;
+}
+.p2o5-kpi-filter{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:0 0 auto;
+}
+.p2o5-kpi-filter label{
+  font-size:.74rem;
+  color:var(--olive-dark);
+  font-weight:800;
+  white-space:nowrap;
+}
+.p2o5-kpi-filter select{
+  min-width:190px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:7px 9px;
+  background:#fff;
+  color:var(--ink);
+  font-family:'Tajawal',sans-serif;
+  font-size:.76rem;
+}
+.p2o5-kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+.p2o5-kpi-card{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(145deg,#fffdf8,#fffaf1);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:13px 14px 12px;
+  min-width:0;
+}
+.p2o5-kpi-card::before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:5px;
+  background:var(--olive);
+}
+.p2o5-kpi-card.class-low::before{background:var(--wheat);}
+.p2o5-kpi-card.class-medium::before{background:var(--olive);}
+.p2o5-kpi-card.class-high::before{background:var(--clay);}
+.p2o5-kpi-class{
+  font-family:'Cairo',sans-serif;
+  font-weight:800;
+  font-size:.86rem;
+  color:var(--olive-dark);
+}
+.p2o5-kpi-unit{
+  font-size:.67rem;
+  color:var(--ink-soft);
+  margin-top:1px;
+}
+.p2o5-kpi-metrics{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+.p2o5-kpi-metric{
+  border-top:1px dashed var(--line);
+  padding-top:7px;
+  min-width:0;
+}
+.p2o5-kpi-metric-label{
+  font-size:.67rem;
+  color:var(--ink-soft);
+  font-weight:700;
+}
+.p2o5-kpi-metric-value{
+  font-family:'Cairo',sans-serif;
+  font-size:1.28rem;
+  font-weight:900;
+  color:var(--ink);
+  margin-top:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.p2o5-kpi-metric-sub{
+  font-size:.62rem;
+  color:var(--ink-soft);
+  margin-top:1px;
+}
+.p2o5-kpi-foot{
+  margin-top:10px;
+  padding-top:8px;
+  border-top:1px solid var(--line);
+  color:var(--ink-soft);
+  font-size:.68rem;
+  line-height:1.45;
+}
+.p2o5-kpi-empty{
+  grid-column:1/-1;
+  text-align:center;
+  padding:15px;
+  color:var(--ink-soft);
+  font-size:.76rem;
+}
+[dir="rtl"] .p2o5-kpi-card::before{
+  inset:0 0 0 auto;
+}
+@media(max-width:900px){
+  .p2o5-kpi-grid{grid-template-columns:1fr;}
+  .p2o5-kpi-filter{width:100%;}
+  .p2o5-kpi-filter select{flex:1;min-width:0;}
+}
+
+/* =========================================================
    INFOBULLE "© Mounir SELLAMI"
    ========================================================= */
 .mounir-credit-hoverable{
@@ -2261,6 +2403,27 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 
       <div class="kpi-row"
            id="kpiRow"></div>
+
+      <!-- =====================================================
+           KPI — CLASSES DE P2O5 (OLSEN)
+           ===================================================== -->
+      <section class="p2o5-kpi-section" id="p2o5KpiSection">
+        <div class="p2o5-kpi-head">
+          <div>
+            <h3 id="p2o5KpiTitle">📊 Répartition des parcelles selon le P2O5 Olsen</h3>
+            <p id="p2o5KpiSubtitle">Nombre de parcelles et superficie totale par classe de teneur.</p>
+          </div>
+          <div class="p2o5-kpi-filter">
+            <label id="p2o5KpiGovLabel" for="p2o5KpiGovSelect">Gouvernorat :</label>
+            <select id="p2o5KpiGovSelect">
+              <option value="__all__">Tous les gouvernorats</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="p2o5-kpi-grid" id="p2o5KpiGrid"></div>
+        <div class="p2o5-kpi-foot" id="p2o5KpiFoot"></div>
+      </section>
 
       <p id="areaNote"
          style="font-size:.78rem;color:var(--ink-soft);margin:-8px 2px 18px;"></p>
@@ -4430,6 +4593,35 @@ const I18N = {
       .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   }
 
+  /* =======================================================
+     TRADUCTION DES LIBELLÉS DE COLONNES SELON LA LANGUE CHOISIE
+     ---------------------------------------------------------
+     Les en-têtes du fichier Excel importé sont dans la langue du
+     fichier (schemaLang), pas forcément celle choisie dans
+     l'interface (currentLang). Pour les 15 colonnes "standard"
+     (celles listées dans I18N[lang].requiredHeader), on peut donc
+     toujours retrouver l'équivalent dans la langue actuellement
+     affichée et l'utiliser comme libellé, tout en continuant à
+     utiliser l'en-tête d'origine comme clé pour lire la valeur
+     dans d.row (qui reste indexé sur les en-têtes du fichier).
+     Les colonnes "libres" (non standard, ajoutées par l'utilisateur
+     dans son fichier) n'ont pas d'équivalent connu : leur en-tête
+     d'origine est alors affiché tel quel, faute de traduction.
+     ======================================================= */
+  function fieldLabel(rawHeader){
+    const h = String(rawHeader || '').trim();
+    if(!h) return h;
+    const schemaLang = currentConfig && currentConfig.schemaLang;
+    if(schemaLang && I18N[schemaLang] && I18N[schemaLang].requiredHeader){
+      const src = I18N[schemaLang].requiredHeader.map(x => x.trim());
+      const idx = src.indexOf(h);
+      if(idx !== -1 && I18N[currentLang] && I18N[currentLang].requiredHeader && I18N[currentLang].requiredHeader[idx]){
+        return I18N[currentLang].requiredHeader[idx].trim();
+      }
+    }
+    return rawHeader;
+  }
+
   function buildPopup(d){
     const cols = currentConfig.popupColumns || [];
     const titleHeader = currentConfig.titleColumn || null;
@@ -4437,7 +4629,7 @@ const I18N = {
     let html = '<div class="popup-card"><h3>' + escapeHtml(fmt(titleValue)) + '</h3>';
     cols.forEach(col => {
       const value = d.row && Object.prototype.hasOwnProperty.call(d.row,col) ? d.row[col] : '';
-      html += '<div class="popup-row"><span>' + escapeHtml(col) + '</span><span>' + escapeHtml(fmt(value)) + '</span></div>';
+      html += '<div class="popup-row"><span>' + escapeHtml(fieldLabel(col)) + '</span><span>' + escapeHtml(fmt(value)) + '</span></div>';
     });
 
     const latCol=d.headers?.find(h=>/latitude|خط العرض/i.test(h));
@@ -5030,6 +5222,15 @@ const I18N = {
     );
 
 
+    /* Le KPI P2O5 suit le même sous-ensemble que le filtre de la carte.
+       On le met à jour même lorsque zoomToResults=false (changement de
+       langue, synchronisation ou simple rafraîchissement). */
+    try{
+      renderDynamicKPI(visibleMarkers.map(m => m._meta));
+    }catch(e){
+      console.warn('P2O5 KPI filter refresh:',e);
+    }
+
     if(!zoomToResults) return;
 
 
@@ -5501,6 +5702,338 @@ const I18N = {
     chartCount = chartArea = chartPie = chartAvgArea = null;
   }
 
+
+  /* =======================================================
+     TYPES DE CULTURE — SYNCHRONISATION FR / EN / AR
+     -------------------------------------------------------
+     La colonne "type de culture" du fichier importé est
+     remplie librement par les agents (parfois en français,
+     parfois en anglais abrégé, parfois en arabe : "blè", "BLE",
+     "orge", "قمح صلب", "حلبة (fenugrec)"...). Sans normalisation,
+     les graphiques mélangent les langues dans une même légende
+     et comptent séparément deux libellés qui désignent la même
+     culture.
+
+     CULTURE_TYPE_I18N : dictionnaire des cultures reconnues,
+     avec leur libellé dans les 3 langues.
+     CULTURE_TYPE_ALIASES : toutes les variantes brutes déjà
+     rencontrées (n'importe quelle langue/orthographe), pointant
+     vers la clé canonique correspondante. La comparaison se fait
+     via normalizeCultureKey (minuscules, accents supprimés,
+     espaces normalisés), donc "Blè", "BLE", "  blé  " sont
+     équivalents.
+
+     Pour ajouter une culture manquante ou une nouvelle variante :
+       1) si la culture n'existe pas encore, ajouter une entrée
+          dans CULTURE_TYPE_I18N (choisir une clé canonique libre) ;
+       2) ajouter la ou les variantes brutes dans
+          CULTURE_TYPE_ALIASES, en pointant vers cette clé.
+     Toute valeur brute non reconnue est affichée telle quelle
+     (aucune perte de donnée), simplement sans traduction.
+     ======================================================= */
+  const CULTURE_TYPE_I18N = {
+    ble_dur:      { fr:'Blé dur',              en:'Durum wheat',        ar:'قمح صلب' },
+    ble_tendre:   { fr:'Blé tendre',           en:'Soft wheat',         ar:'قمح لين' },
+    ble:          { fr:'Blé',                  en:'Wheat',              ar:'قمح' },
+    ble_orge:     { fr:'Blé et orge',          en:'Wheat & barley',     ar:'قمح و شعير' },
+    orge:         { fr:'Orge',                 en:'Barley',             ar:'شعير' },
+    avoine:       { fr:'Avoine',               en:'Oats',               ar:'شوفان' },
+    triticale:    { fr:'Triticale',            en:'Triticale',          ar:'تريتيكال' },
+    colza:        { fr:'Colza',                en:'Rapeseed (colza)',   ar:'سلجم زيتي' },
+    feve:         { fr:'Fève / féverole',      en:'Fava bean',          ar:'فول' },
+    feve_egypt:   { fr:'Fève égyptienne',      en:'Egyptian fava bean', ar:'فول مصري' },
+    pois_chiche:  { fr:'Pois chiche',          en:'Chickpea',           ar:'حمص' },
+    lentille:     { fr:'Lentille',             en:'Lentil',             ar:'عدس' },
+    fenugrec:     { fr:'Fenugrec',             en:'Fenugreek',          ar:'حلبة' },
+    jachere:      { fr:'Jachère',              en:'Fallow',             ar:'بور' },
+    autre:        { fr:'Autre / non précisé',  en:'Other / unspecified',ar:'أخرى / غير محدد' }
+  };
+
+  /* Variantes brutes -> clé canonique. Clés écrites en minuscules
+     (le français/anglais est comparé sans accents ni casse ; les
+     entrées arabes sont comparées telles quelles). */
+  const CULTURE_TYPE_ALIASES = {
+    // Blé
+    'ble':'ble', 'ble.':'ble', 'blé':'ble',
+    'ble dur':'ble_dur', 'blé dur':'ble_dur', 'durum':'ble_dur', 'durum wheat':'ble_dur',
+    'ble tendre':'ble_tendre', 'blé tendre':'ble_tendre', 'soft wheat':'ble_tendre',
+    'قمح':'ble', 'قمح صلب':'ble_dur', 'قمح لين':'ble_tendre', 'قمح و شعير':'ble_orge', 'قمح وشعير':'ble_orge',
+    // Orge
+    'orge':'orge', 'barley':'orge', 'شعير':'orge',
+    // Avoine
+    'avoine':'avoine', 'oats':'avoine', 'شوفان':'avoine',
+    // Triticale
+    'triticale':'triticale', 'تريتيكال':'triticale',
+    // Colza
+    'colza':'colza', 'rapeseed':'colza', 'سلجم زيتي':'colza', 'سلجم زيتي colza':'colza', 'سلجم زيتي (colza)':'colza',
+    // Fève / fenugrec / légumineuses
+    'foul':'feve', 'fève':'feve', 'feve':'feve', 'fava bean':'feve', 'فول':'feve',
+    'foul masri':'feve_egypt', 'fève égyptienne':'feve_egypt', 'egyptian fava bean':'feve_egypt', 'فول مصري':'feve_egypt',
+    'pois chiche':'pois_chiche', 'chickpea':'pois_chiche', 'حمص':'pois_chiche',
+    'lentille':'lentille', 'lentil':'lentille', 'عدس':'lentille',
+    'halba':'fenugrec', 'helba':'fenugrec', 'fenugrec':'fenugrec', 'fenugreek':'fenugrec',
+    'حلبة':'fenugrec', 'حلبة (fenugrec)':'fenugrec', 'حلبة(fenugrec)':'fenugrec',
+    // Jachère
+    'bour':'jachere', 'bor':'jachere', 'jachere':'jachere', 'jachère':'jachere', 'fallow':'jachere', 'بور':'jachere'
+  };
+
+  /* Normalise une valeur brute pour la comparaison : minuscules,
+     accents supprimés, espaces multiples réduits à un seul. */
+  function normalizeCultureKey(raw){
+    return String(raw ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,' ');
+  }
+
+  /* Retourne {key, label} pour une valeur brute de type de culture :
+     - key : clé canonique si reconnue, sinon la valeur brute normalisée
+       (ce qui permet quand même de regrouper deux saisies identiques
+       non reconnues, sans les traduire) ;
+     - label : libellé dans la langue courante si reconnu, sinon la
+       valeur brute affichée telle qu'elle a été saisie. */
+  function translateCultureType(raw){
+    const rawTrim = String(raw ?? '').trim();
+    const norm = normalizeCultureKey(rawTrim);
+    const canonicalKey = CULTURE_TYPE_ALIASES[norm];
+    if(canonicalKey && CULTURE_TYPE_I18N[canonicalKey]){
+      const dict = CULTURE_TYPE_I18N[canonicalKey];
+      const label = dict[currentLang] || dict.fr;
+      return {key:canonicalKey, label};
+    }
+    return {key:'raw:'+norm, label:rawTrim};
+  }
+
+  /* =======================================================
+     KPI — CLASSES DE P2O5 (OLSEN)
+     -------------------------------------------------------
+     Classes :
+       0 <= P2O5 < 7 ppm
+       7 <= P2O5 <= 14 ppm
+       P2O5 > 14 ppm
+     Le 7 est donc compté dans la classe 7–14 et le 14
+     dans cette même classe, afin d'éviter tout chevauchement.
+     ======================================================= */
+  function renderDynamicKPI(data, options){
+    const section = document.getElementById('p2o5KpiSection');
+    const grid = document.getElementById('p2o5KpiGrid');
+    const govSelect = document.getElementById('p2o5KpiGovSelect');
+    const foot = document.getElementById('p2o5KpiFoot');
+    if(!section || !grid || !govSelect) return;
+
+    options = options || {};
+    const sourceData = Array.isArray(data) ? data : [];
+
+    const headers = sourceData.length && sourceData[0]?.row
+      ? Object.keys(sourceData[0].row)
+      : [];
+
+    const findColumn = (regexes, preferred) => {
+      const cols = headers.filter(h => regexes.some(rx => rx.test(String(h))));
+      if(preferred){
+        const exact = cols.find(h => String(h).trim().toLowerCase() === String(preferred).trim().toLowerCase());
+        if(exact) return exact;
+      }
+      return cols[0] || null;
+    };
+
+    const p2o5Col = findColumn([
+      /p\s*[₂2]\s*o\s*5/i,
+      /p2o5/i,
+      /phosphore.*olsen/i,
+      /phosphorus.*olsen/i,
+      /olsen/i
+    ], options.p2o5Column);
+
+    const areaCol = findColumn([
+      /superficie/i,
+      /surface/i,
+      /\barea\b/i,
+      /مساحة/i
+    ], options.areaColumn);
+
+    const govCol = findColumn([
+      /gouvernorat/i,
+      /governorate/i,
+      /\bgouv\b/i,
+      /ولاية/i
+    ], options.govColumn);
+
+    const parseNumber = v => {
+      if(typeof v === 'number') return Number.isFinite(v) ? v : NaN;
+      const s = String(v ?? '').trim().replace(/\s/g,'').replace(',','.');
+      if(!s) return NaN;
+      const n = Number(s);
+      return Number.isFinite(n) ? n : NaN;
+    };
+
+    const getGov = d => {
+      if(!govCol) return '';
+      const raw = String(d.row?.[govCol] ?? '').trim();
+      if(!raw) return t().unspecified;
+      try{
+        if(typeof normalizeGovName === 'function'){
+          const normalized = normalizeGovName(raw);
+          if(normalized) return normalized;
+        }
+      }catch(e){}
+      return raw;
+    };
+
+    /* Reconstitue la liste des gouvernorats à partir du jeu de données
+       complet, puis conserve la sélection actuelle si elle existe. */
+    const allGovs = [...new Set(
+      sourceData
+        .map(getGov)
+        .filter(v => v && v !== t().unspecified)
+    )].sort((a,b)=>a.localeCompare(b, t().locale || undefined, {sensitivity:'base'}));
+
+    const previousGov = govSelect.value || '__all__';
+    govSelect.innerHTML =
+      '<option value="__all__">' +
+      escapeHtml(currentLang==='ar' ? 'كل الولايات' : currentLang==='en' ? 'All governorates' : 'Tous les gouvernorats') +
+      '</option>' +
+      allGovs.map(g =>
+        '<option value="' + escapeHtml(g).replace(/"/g,'&quot;') + '">' +
+        escapeHtml(g) +
+        '</option>'
+      ).join('');
+
+    if(previousGov === '__all__' || allGovs.includes(previousGov)){
+      govSelect.value = previousGov;
+    }else{
+      govSelect.value = '__all__';
+    }
+
+    /* Le filtre de gouvernorat est appliqué sur le sous-ensemble actuellement
+       affiché (par exemple après un filtre groupe/recherche). */
+    let rows = sourceData.slice();
+    const selectedGov = govSelect.value;
+    if(selectedGov && selectedGov !== '__all__' && govCol){
+      rows = rows.filter(d => getGov(d) === selectedGov);
+    }
+
+    const classes = [
+      {key:'low', label: currentLang==='ar' ? '0 – 7' : currentLang==='en' ? '0 – 7' : '0 – 7', cls:'class-low',
+       test:v => v >= 0 && v < 7},
+      {key:'medium', label: currentLang==='ar' ? '7 – 14' : currentLang==='en' ? '7 – 14' : '7 – 14', cls:'class-medium',
+       test:v => v >= 7 && v <= 14},
+      {key:'high', label: currentLang==='ar' ? '> 14' : currentLang==='en' ? '> 14' : '> 14', cls:'class-high',
+       test:v => v > 14}
+    ];
+
+    const buckets = classes.map(c => ({
+      ...c,
+      count:0,
+      area:0,
+      areaCount:0
+    }));
+
+    let validP2O5 = 0;
+    let totalArea = 0;
+    let areaCount = 0;
+
+    if(p2o5Col){
+      rows.forEach(d => {
+        const v = parseNumber(d.row?.[p2o5Col]);
+        if(!Number.isFinite(v) || v < 0) return;
+        const bucket = buckets.find(b => b.test(v));
+        if(!bucket) return;
+
+        bucket.count++;
+        validP2O5++;
+
+        const a = parseNumber(areaCol ? d.row?.[areaCol] : d.area);
+        if(Number.isFinite(a)){
+          bucket.area += a;
+          bucket.areaCount++;
+          totalArea += a;
+          areaCount++;
+        }
+      });
+    }
+
+    const countTotal = buckets.reduce((s,b)=>s+b.count,0);
+    const areaTotal = buckets.reduce((s,b)=>s+b.area,0);
+
+    const labels = currentLang==='ar'
+      ? {count:'عدد القطع', area:'المساحة الإجمالية', pctCount:'من عدد القطع', pctArea:'من المساحة', ppm:'ppm — طريقة Olsen'}
+      : currentLang==='en'
+        ? {count:'Number of parcels', area:'Total area', pctCount:'of parcels', pctArea:'of area', ppm:'ppm — Olsen method'}
+        : {count:'Nombre de parcelles', area:'Superficie totale', pctCount:'du nombre de parcelles', pctArea:'de la superficie', ppm:'ppm — Olsen'};
+
+    if(!p2o5Col){
+      grid.innerHTML =
+        '<div class="p2o5-kpi-empty">' +
+        escapeHtml(currentLang==='ar'
+          ? 'لم يتم العثور على عمود P2O5 / Olsen في البيانات.'
+          : currentLang==='en'
+            ? 'No P2O5 / Olsen column was found in the imported data.'
+            : 'Aucune colonne P2O5 / Olsen n’a été trouvée dans les données importées.') +
+        '</div>';
+      foot.textContent = '';
+      return;
+    }
+
+    grid.innerHTML = buckets.map(b => {
+      const countPct = countTotal ? b.count / countTotal * 100 : 0;
+      const areaPct = areaTotal ? b.area / areaTotal * 100 : 0;
+      const areaText = b.areaCount
+        ? b.area.toLocaleString(undefined,{maximumFractionDigits:2})
+        : '—';
+
+      return '<div class="p2o5-kpi-card '+b.cls+'">' +
+        '<div class="p2o5-kpi-class">'+escapeHtml(b.label)+'</div>' +
+        '<div class="p2o5-kpi-unit">'+escapeHtml(labels.ppm)+'</div>' +
+        '<div class="p2o5-kpi-metrics">' +
+          '<div class="p2o5-kpi-metric">' +
+            '<div class="p2o5-kpi-metric-label">'+escapeHtml(labels.count)+'</div>' +
+            '<div class="p2o5-kpi-metric-value">'+b.count.toLocaleString()+'</div>' +
+            '<div class="p2o5-kpi-metric-sub">'+countPct.toFixed(1)+'% '+escapeHtml(labels.pctCount)+'</div>' +
+          '</div>' +
+          '<div class="p2o5-kpi-metric">' +
+            '<div class="p2o5-kpi-metric-label">'+escapeHtml(labels.area)+' (ha)</div>' +
+            '<div class="p2o5-kpi-metric-value">'+areaText+'</div>' +
+            '<div class="p2o5-kpi-metric-sub">'+areaPct.toFixed(1)+'% '+escapeHtml(labels.pctArea)+'</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    const govText = selectedGov && selectedGov !== '__all__'
+      ? selectedGov
+      : (currentLang==='ar' ? 'جميع الولايات' : currentLang==='en' ? 'All governorates' : 'Tous les gouvernorats');
+
+    const areaMissing = validP2O5 - areaCount;
+    const colText = p2o5Col ? 'P2O5 : '+p2o5Col : '';
+
+    foot.textContent =
+      (currentLang==='ar'
+        ? 'النطاق: '+govText+' — '+validP2O5+' قيمة P2O5 صالحة. '
+        : currentLang==='en'
+          ? 'Scope: '+govText+' — '+validP2O5+' valid P2O5 values. '
+          : 'Périmètre : '+govText+' — '+validP2O5+' valeur(s) P2O5 valide(s). ') +
+      (areaCol
+        ? (currentLang==='ar'
+            ? 'المساحة محسوبة من عمود «'+areaCol+'».'
+            : currentLang==='en'
+              ? 'Area is calculated from the «'+areaCol+'» column.'
+              : 'La superficie est calculée à partir de la colonne «'+areaCol+'».')
+        : (currentLang==='ar'
+            ? 'لا يوجد عمود مساحة exploitable.'
+            : currentLang==='en'
+              ? 'No usable area column was found.'
+              : 'Aucune colonne de superficie exploitable n’a été trouvée.')) +
+      (areaMissing > 0
+        ? (currentLang==='ar'
+            ? ' '+areaMissing+' قيمة بدون مساحة.'
+            : currentLang==='en'
+              ? ' '+areaMissing+' parcel(s) without area.'
+              : ' '+areaMissing+' parcelle(s) sans superficie.')
+        : '');
+  }
+
   function renderCharts(data){
     destroyCharts();
     const empty = document.getElementById('chartsEmpty');
@@ -5574,10 +6107,10 @@ const I18N = {
     document.getElementById('kpiRow').innerHTML=
       '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">👨‍🌾</span>'+escapeHtml(kpiLabels.points)+'</div><div class="kpi-value">'+total.toLocaleString()+'</div><div class="kpi-sub">'+escapeHtml(kpiLabels.coords)+' : '+validCoords.toLocaleString()+'</div></div>'+
       '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">📍</span>'+escapeHtml(kpiLabels.coords)+'</div><div class="kpi-value">'+validCoords.toLocaleString()+'</div><div class="kpi-sub">'+(total?Math.round(validCoords/total*100):0)+'%</div></div>'+
-      '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🌾</span>'+escapeHtml(kpiLabels.area)+(areaCol?' — '+escapeHtml(areaCol):'')+'</div><div class="kpi-value">'+(areaCol?areaTotal.toLocaleString(undefined,{maximumFractionDigits:2}):'—')+'</div><div class="kpi-sub">'+(areaVals.length?(escapeHtml(kpiAverageLabel)+' : '+areaAvg.toLocaleString(undefined,{maximumFractionDigits:2})):'')+'</div></div>'+
+      '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🌾</span>'+escapeHtml(kpiLabels.area)+(areaCol?' — '+escapeHtml(fieldLabel(areaCol)):'')+'</div><div class="kpi-value">'+(areaCol?areaTotal.toLocaleString(undefined,{maximumFractionDigits:2}):'—')+'</div><div class="kpi-sub">'+(areaVals.length?(escapeHtml(kpiAverageLabel)+' : '+areaAvg.toLocaleString(undefined,{maximumFractionDigits:2})):'')+'</div></div>'+
       '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🗺️</span>'+escapeHtml(kpiLabels.groups)+'</div><div class="kpi-value">'+groupCount.toLocaleString()+'</div><div class="kpi-sub">'+escapeHtml(kpiLabels.groupsSub)+'</div></div>';
 
-    document.getElementById('areaNote').textContent=category?(t().chartCategoryLabel+': '+category):'';
+    document.getElementById('areaNote').textContent=category?(t().chartCategoryLabel+': '+fieldLabel(category)):'';
     if(grid) grid.innerHTML='';
 
     function addChart(title, chartLabels, values, type='bar', datasetLabel=title){
@@ -5807,8 +6340,9 @@ const I18N = {
         return x && x.count ? Math.round((x.sum/x.count)*100)/100 : 0;
       });
 
-      const totalTitle=currentLang==='ar' ? `الإجمالي — ${col} حسب ${category||'الفئة'}` : currentLang==='en' ? `Total — ${col} by ${category||'category'}` : `Total — ${col} par ${category||'catégorie'}`;
-      const avgTitle=currentLang==='ar' ? `المتوسط — ${col} حسب ${category||'الفئة'}` : currentLang==='en' ? `Average — ${col} by ${category||'category'}` : `Moyenne — ${col} par ${category||'catégorie'}`;
+      const colLbl=fieldLabel(col); const catLbl=category?fieldLabel(category):'';
+      const totalTitle=currentLang==='ar' ? `الإجمالي — ${colLbl} حسب ${catLbl||'الفئة'}` : currentLang==='en' ? `Total — ${colLbl} by ${catLbl||'category'}` : `Total — ${colLbl} par ${catLbl||'catégorie'}`;
+      const avgTitle=currentLang==='ar' ? `المتوسط — ${colLbl} حسب ${catLbl||'الفئة'}` : currentLang==='en' ? `Average — ${colLbl} by ${catLbl||'category'}` : `Moyenne — ${colLbl} par ${catLbl||'catégorie'}`;
       addChart(totalTitle,labels,totalValues,'bar');
       addChart(avgTitle,labels,avgValues,'bar');
     });
@@ -5819,26 +6353,31 @@ const I18N = {
       : null;
 
     if(cultureCol){
+      /* Regroupement par clé CANONIQUE (via translateCultureType) et
+         non par texte brut : "blè", "BLE" et "قمح" comptent ainsi
+         pour une seule et même culture, avec un libellé traduit dans
+         la langue active plutôt que la langue de saisie d'origine. */
       const cultureMap={};
       data.forEach(d=>{
-        const culture=String(d.row?.[cultureCol] ?? '').trim();
-        if(!culture) return;
-        if(!cultureMap[culture]) cultureMap[culture]={count:0,area:0,areaCount:0};
-        cultureMap[culture].count++;
+        const rawCulture=String(d.row?.[cultureCol] ?? '').trim();
+        if(!rawCulture) return;
+        const {key,label}=translateCultureType(rawCulture);
+        if(!cultureMap[key]) cultureMap[key]={label,count:0,area:0,areaCount:0};
+        cultureMap[key].count++;
         if(areaCol){
           const a=parseFloat(String(d.row?.[areaCol] ?? '').replace(/\s/g,'').replace(',','.'));
-          if(Number.isFinite(a)){ cultureMap[culture].area+=a; cultureMap[culture].areaCount++; }
+          if(Number.isFinite(a)){ cultureMap[key].area+=a; cultureMap[key].areaCount++; }
         }
       });
 
       const cultures=Object.entries(cultureMap).sort((a,b)=>b[1].count-a[1].count).slice(0,20);
       if(cultures.length){
-        const labelsCulture=cultures.map(x=>x[0]);
-        const cultureCountTitle=currentLang==='ar' ? `عدد النقاط حسب نوع الزراعة (${cultureCol})` : currentLang==='en' ? `Number of points by crop type (${cultureCol})` : `Nombre de points par type de culture (${cultureCol})`;
+        const labelsCulture=cultures.map(x=>x[1].label);
+        const cultureCountTitle=currentLang==='ar' ? `عدد النقاط حسب نوع الزراعة (${fieldLabel(cultureCol)})` : currentLang==='en' ? `Number of points by crop type (${fieldLabel(cultureCol)})` : `Nombre de points par type de culture (${fieldLabel(cultureCol)})`;
         addChart(cultureCountTitle,labelsCulture,cultures.map(x=>x[1].count),labelsCulture.length<=8?'doughnut':'bar');
         if(areaCol){
           const cultureAreas = cultures.map(x=>Math.round(x[1].area*100)/100);
-          const cultureAreaTitle=currentLang==='ar' ? `إجمالي المساحات حسب نوع الزراعة (${areaCol})` : currentLang==='en' ? `Total area by crop type (${areaCol})` : `Superficie totale par type de culture (${areaCol})`;
+          const cultureAreaTitle=currentLang==='ar' ? `إجمالي المساحات حسب نوع الزراعة (${fieldLabel(areaCol)})` : currentLang==='en' ? `Total area by crop type (${fieldLabel(areaCol)})` : `Superficie totale par type de culture (${fieldLabel(areaCol)})`;
           addChart(cultureAreaTitle,labelsCulture,cultureAreas,'bar');
 
           /* Un seul graphique circulaire pour les deux pourcentages :
@@ -5886,7 +6425,7 @@ const I18N = {
         const filled=data.filter(d=>d.row?.[col]!==null && d.row?.[col]!==undefined && String(d.row[col]).trim()!=='').length;
         return {col,pct:total?Math.round(filled/total*100):0};
       }).sort((a,b)=>a.pct-b.pct);
-      qBox.innerHTML=qRows.map(q=>'<div class="quality-row"><div>'+escapeHtml(q.col)+'</div><div class="quality-bar"><span style="width:'+q.pct+'%"></span></div><strong>'+q.pct+'%</strong></div>').join('');
+      qBox.innerHTML=qRows.map(q=>'<div class="quality-row"><div>'+escapeHtml(fieldLabel(q.col))+'</div><div class="quality-bar"><span style="width:'+q.pct+'%"></span></div><strong>'+q.pct+'%</strong></div>').join('');
     }
   }
 
@@ -6060,6 +6599,8 @@ const I18N = {
     fr: {
       tabP2O5: 'Carte P2O5',
       govLabel: 'Gouvernorat :',
+      kpiTitle: '📊 Répartition des parcelles selon le P2O5 Olsen',
+      kpiSubtitle: 'Nombre de parcelles et superficie totale par classe de teneur.',
       powerLabel: 'Puissance IDW (p) :',
       opacityLabel: 'Transparence :',
       basemapLabel: 'Fond de carte :',
@@ -6110,6 +6651,8 @@ const I18N = {
     en: {
       tabP2O5: 'P2O5 Map',
       govLabel: 'Governorate:',
+      kpiTitle: '📊 Parcel distribution by Olsen P2O5',
+      kpiSubtitle: 'Number of parcels and total area by content class.',
       powerLabel: 'IDW power (p):',
       opacityLabel: 'Opacity:',
       basemapLabel: 'Basemap:',
@@ -6160,6 +6703,8 @@ const I18N = {
     ar: {
       tabP2O5: 'خريطة الفسفور',
       govLabel: 'الولاية:',
+      kpiTitle: '📊 توزيع القطع حسب الفسفور (طريقة Olsen)',
+      kpiSubtitle: 'عدد القطع والمساحة الإجمالية حسب فئة التركيز.',
       powerLabel: 'قوة IDW (p):',
       opacityLabel: 'الشفافية:',
       basemapLabel: 'الخريطة الأساسية:',
@@ -6289,7 +6834,8 @@ const I18N = {
     hoverDataA:null,
     hoverDataB:null,
     lastQuality:null,
-    parcelSource:null
+    parcelSource:null,
+    lastDoseClassifier:null
   };
 
   /* Mêmes fonds de carte que l'onglet "Carte" (satellite Esri, fond clair
@@ -7144,6 +7690,9 @@ const I18N = {
 
       const dataURL_A=renderGridToDataURL(grid,mask,cols,rows,colorForP2O5);
       const doseClassifier=buildDoseClassifier(minDose,maxDose,6);
+      /* Mémorisé pour pouvoir reconstruire la légende dans une autre langue
+         sans relancer tout le calcul IDW (voir initP2O5TabTexts). */
+      p2o5State.lastDoseClassifier=doseClassifier;
 
       p2o5State.hoverDataA={bbox,grid,mask,cols,rows};
       const dataURL_B=renderGridToDataURL(doseGrid,mask,cols,rows,doseClassifier.colorFn);
@@ -7341,6 +7890,12 @@ const I18N = {
     const dict=P2O5_I18N[currentLang]||P2O5_I18N.fr;
     const govLabel=document.getElementById('p2o5GovLabel');
     if(govLabel) govLabel.textContent=dict.govLabel;
+    const kpiTitle=document.getElementById('p2o5KpiTitle');
+    if(kpiTitle) kpiTitle.textContent=dict.kpiTitle;
+    const kpiSubtitle=document.getElementById('p2o5KpiSubtitle');
+    if(kpiSubtitle) kpiSubtitle.textContent=dict.kpiSubtitle;
+    const kpiGovLabel=document.getElementById('p2o5KpiGovLabel');
+    if(kpiGovLabel) kpiGovLabel.textContent=dict.govLabel;
     const powerLabelText=document.getElementById('p2o5PowerLabelText');
     if(powerLabelText) powerLabelText.textContent=dict.powerLabel;
     const opacityLabelText=document.getElementById('p2o5OpacityLabelText');
@@ -7376,6 +7931,20 @@ const I18N = {
     populateP2O5GovSelect();
     renderP2O5Status();
     renderP2O5Quality(p2o5State.lastQuality);
+
+    /* Rebuild the two map legends (title + class labels) in the new
+       language, WITHOUT recomputing the IDW interpolation and without
+       requiring the user to click "Generate / Refresh". The legend for
+       map A only depends on fixed thresholds/colors, so it can always be
+       rebuilt; the legend for map B needs the classifier from the last
+       computed dose grid (stored in p2o5State.lastDoseClassifier), which
+       is only available once a map has been generated at least once. */
+    const legendA=document.getElementById('p2o5LegendA');
+    if(legendA && legendA.children.length) buildP2O5Legend(legendA);
+    const legendB=document.getElementById('p2o5LegendB');
+    if(legendB && legendB.children.length && p2o5State.lastDoseClassifier){
+      buildDoseLegend(legendB, p2o5State.lastDoseClassifier);
+    }
   }
 
   function initP2O5Tab(){
@@ -8312,6 +8881,33 @@ const I18N = {
     });
   });
 
+
+  /* Le sélecteur de gouvernorat du KPI est volontairement indépendant
+     du filtre de la carte : il permet de comparer les classes P2O5
+     sans modifier la carte ni les autres graphiques. */
+  document.getElementById('p2o5KpiGovSelect')?.addEventListener('change', function(){
+    try{
+      const visible = allMarkers && allMarkers.length
+        ? allMarkers
+            .filter(m => {
+              const input = document.getElementById('searchInput');
+              const select = document.getElementById('groupFilter');
+              const q = String(input?.value || '').trim().toLowerCase();
+              const grp = select?.value || '__none__';
+              const d = m._meta;
+              const matchesGroup = !grp || grp==='__none__' || groupKey(d.group)===grp;
+              const farmer = String(d.farmer || '').toLowerCase();
+              const place = String(d.place || '').toLowerCase();
+              const matchesQuery = !q || farmer.includes(q) || place.includes(q);
+              return matchesGroup && matchesQuery;
+            })
+            .map(m=>m._meta)
+        : currentData;
+      renderDynamicKPI(visible);
+    }catch(e){
+      console.warn('P2O5 KPI governorate filter:',e);
+    }
+  });
 
   /* =======================================================
      EVENTS
