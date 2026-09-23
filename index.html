@@ -4618,6 +4618,11 @@ const I18N = {
   function fieldLabel(rawHeader){
     const h = String(rawHeader || '').trim();
     if(!h) return h;
+    if(/gouvernorat|governorate|wilaya|الولاية/i.test(h)){
+      return currentLang === 'ar' ? 'الولاية المصرح بها'
+           : currentLang === 'en' ? 'Declared governorate'
+           : 'Gouvernorat déclaré';
+    }
     const schemaLang = currentConfig && currentConfig.schemaLang;
     if(schemaLang && I18N[schemaLang] && I18N[schemaLang].requiredHeader){
       const src = I18N[schemaLang].requiredHeader.map(x => x.trim());
