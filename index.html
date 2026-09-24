@@ -5591,6 +5591,7 @@ const I18N = {
       };
     }
 
+    { const gs=document.getElementById('p2o5KpiGovSelect'); if(gs) gs.value='__all__'; }
     renderCharts(data);
     try{ renderDynamicKPI(data); }catch(e){ console.warn("KPI",e); }
 
@@ -6239,7 +6240,36 @@ const I18N = {
         : '');
   }
 
+  /* Filtre par gouvernorat partagé : applique la valeur choisie dans la liste
+     « Gouvernorat » du bloc P2O5 aux graphiques (histogrammes, camemberts,
+     indicateurs et qualité des données). */
+  function getKpiGovSelection(){
+    const v = document.getElementById('p2o5KpiGovSelect')?.value;
+    return (!v || v === '__all__') ? '__all__' : v;
+  }
+
+  function filterRowsByKpiGov(data){
+    const sel = getKpiGovSelection();
+    if(sel === '__all__' || !Array.isArray(data) || !data.length) return data;
+    const headers = data[0]?.headers || Object.keys(data[0]?.row || {});
+    const govCol = headers.find(h => /gouvernorat|governorate|\bgouv\b|ولاية/i.test(String(h)));
+    if(!govCol) return data;
+    const getGov = d => {
+      const raw = String(d.row?.[govCol] ?? '').trim();
+      if(!raw) return t().unspecified;
+      try{
+        if(typeof normalizeGovName === 'function'){
+          const n = normalizeGovName(raw);
+          if(n) return n;
+        }
+      }catch(e){}
+      return raw;
+    };
+    return data.filter(d => getGov(d) === sel);
+  }
+
   function renderCharts(data){
+    data = filterRowsByKpiGov(data);
     destroyCharts();
     const empty = document.getElementById('chartsEmpty');
     const content = document.getElementById('chartsContent');
@@ -6315,7 +6345,8 @@ const I18N = {
       '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🌾</span>'+escapeHtml(kpiLabels.area)+(areaCol?' — '+escapeHtml(fieldLabel(areaCol)):'')+'</div><div class="kpi-value">'+(areaCol?areaTotal.toLocaleString(undefined,{maximumFractionDigits:2}):'—')+'</div><div class="kpi-sub">'+(areaVals.length?(escapeHtml(kpiAverageLabel)+' : '+areaAvg.toLocaleString(undefined,{maximumFractionDigits:2})):'')+'</div></div>'+
       '<div class="kpi-card"><div class="kpi-label"><span class="kpi-icon">🗺️</span>'+escapeHtml(kpiLabels.groups)+'</div><div class="kpi-value">'+groupCount.toLocaleString()+'</div><div class="kpi-sub">'+escapeHtml(kpiLabels.groupsSub)+'</div></div>';
 
-    document.getElementById('areaNote').textContent=category?(t().chartCategoryLabel+': '+fieldLabel(category)):'';
+    document.getElementById('areaNote').textContent=(category?(t().chartCategoryLabel+': '+fieldLabel(category)):'') +
+      (getKpiGovSelection()!=='__all__' ? ' · ' + (currentLang==='ar'?'الولاية':currentLang==='en'?'Governorate':'Gouvernorat') + ' : ' + localizeGovernorateName(getKpiGovSelection()) : '');
     if(grid) grid.innerHTML='';
 
     function addChart(title, chartLabels, values, type='bar', datasetLabel=title){
@@ -9209,9 +9240,8 @@ const I18N = {
   });
 
 
-  /* Le sélecteur de gouvernorat du KPI est volontairement indépendant
-     du filtre de la carte : il permet de comparer les classes P2O5
-     sans modifier la carte ni les autres graphiques. */
+  /* Le sélecteur de gouvernorat du KPI est indépendant du filtre de la carte,
+     mais il filtre aussi les graphiques et la qualité des données. */
   document.getElementById('p2o5KpiGovSelect')?.addEventListener('change', function(){
     try{
       const visible = allMarkers && allMarkers.length
@@ -9231,6 +9261,8 @@ const I18N = {
             .map(m=>m._meta)
         : currentData;
       renderDynamicKPI(visible);
+      /* Le même filtre s'applique aux graphiques situés en dessous. */
+      renderCharts(currentData);
     }catch(e){
       console.warn('P2O5 KPI governorate filter:',e);
     }
