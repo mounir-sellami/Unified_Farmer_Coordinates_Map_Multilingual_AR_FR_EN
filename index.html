@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="local-mode" content="double-clic-autonome">
 
 <title>Carte unifiée des coordonnées des agriculteurs / Unified Farmer Coordinates Map / خريطة إحداثيات الفلاحين الموحدة</title>
@@ -2476,7 +2477,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
       <div class="p2o5-control-group">
         <label id="p2o5BasemapLabelText" for="p2o5BasemapSelect">Fond de carte :</label>
 	<select id="p2o5BasemapSelect">
-  	  <option value="satellite" selected>Satellite (Esri)</option>
+  	  <option value="google" selected>Google Satellite</option>
+  	  <option value="satellite">Satellite (Esri)</option>
   	  <option value="osm">OpenStreetMap</option>
   	  <option value="relief">Relief (OpenTopoMap)</option>
   	  <option value="clair">Fond clair</option>
@@ -4055,6 +4057,8 @@ const I18N = {
 
   let allMarkers = [];
   let currentData = [];
+  /* Jeu de données dédié à l'interpolation P2O5, provenant de sa propre feuille Excel. */
+  let currentP2O5Data = [];
 
   /* Vérification géographique : frontières des gouvernorats + drapeaux par point. */
   let governorateGeoJSON = null;
@@ -4254,10 +4258,10 @@ const I18N = {
     return (
       g === null ||
       g === undefined ||
-      g === ''
+      String(g).trim() === ''
     )
       ? UNSPEC
-      : g;
+      : String(g);
 
   }
 
@@ -4507,11 +4511,12 @@ const I18N = {
 
     const osm =
       L.tileLayer(
-        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
         {
           attribution:
-            '&copy; OpenStreetMap contributors',
-          maxZoom:19
+            'Données &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a> — rendu <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener noreferrer">OpenStreetMap France</a>',
+          subdomains:'abc',
+          maxZoom:20
         }
       );
 
@@ -4538,6 +4543,18 @@ const I18N = {
       );
 
 
+    const googleSatellite =
+      L.tileLayer(
+        'https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',
+        {
+          attribution:
+            '&copy; Google',
+          subdomains:['mt0','mt1','mt2','mt3'],
+          maxZoom:20
+        }
+      );
+
+
     const clair =
       L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
@@ -4549,7 +4566,7 @@ const I18N = {
       );
 
 
-    satellite.addTo(map);
+    googleSatellite.addTo(map);
 
     addMapExtras(map);
 
@@ -4564,6 +4581,7 @@ const I18N = {
     window._layerCtrl =
       L.control.layers(
         {
+          "Google Satellite":googleSatellite,
           "OpenStreetMap":osm,
           "Relief (OpenTopoMap)":relief,
           "Satellite (Esri)":satellite,
@@ -6899,6 +6917,7 @@ const I18N = {
       powerLabel: 'Puissance IDW (p) :',
       opacityLabel: 'Transparence :',
       basemapLabel: 'Fond de carte :',
+      basemapGoogle: 'Google Satellite',
       basemapSatellite: 'Satellite (Esri)',
       basemapClair: 'Fond clair',
       basemapOsm: 'OpenStreetMap',
@@ -6951,6 +6970,7 @@ const I18N = {
       powerLabel: 'IDW power (p):',
       opacityLabel: 'Opacity:',
       basemapLabel: 'Basemap:',
+      basemapGoogle: 'Google Satellite',
       basemapSatellite: 'Satellite (Esri)',
       basemapClair: 'Light basemap',
       basemapOsm: 'OpenStreetMap',
@@ -7003,6 +7023,7 @@ const I18N = {
       powerLabel: 'قوة IDW (p):',
       opacityLabel: 'الشفافية:',
       basemapLabel: 'الخريطة الأساسية:',
+      basemapGoogle: 'قمر صناعي Google',
       basemapSatellite: 'قمر صناعي (Esri)',
       basemapClair: 'خريطة فاتحة',
       basemapOsm: 'OpenStreetMap',
@@ -7108,7 +7129,7 @@ const I18N = {
     governorate:null,
     power:4,
     opacity:0.85,
-    basemap:'satellite',
+    basemap:'google',
     lastStatusKind:null,
     lastStatusArg:null,
     hoverDataA:null,
@@ -7122,6 +7143,10 @@ const I18N = {
      Esri, OpenStreetMap, relief OpenTopoMap), déclinés en usines de calques
      puisqu'un même calque Leaflet ne peut pas être ajouté à deux cartes. */
   const P2O5_BASEMAP_DEFS={
+    google:{
+      url:'https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',
+      options:{attribution:'&copy; Google', subdomains:['mt0','mt1','mt2','mt3'], maxZoom:20}
+    },
     satellite:{
       url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       options:{attribution:'Tiles &copy; Esri', maxZoom:19}
@@ -7131,8 +7156,8 @@ const I18N = {
       options:{attribution:'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom:16}
     },
     osm:{
-      url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      options:{attribution:'&copy; OpenStreetMap contributors', maxZoom:19}
+      url:'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+      options:{attribution:'Données &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a> — rendu <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener noreferrer">OpenStreetMap France</a>', subdomains:'abc', maxZoom:20}
     },
     relief:{
       url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
@@ -7226,13 +7251,9 @@ const I18N = {
     if(p2o5MapA && p2o5MapB) return;
     p2o5MapA=L.map('p2o5MapA',{zoomControl:true});
     p2o5MapB=L.map('p2o5MapB',{zoomControl:true});
-    // NB : tile.openstreetmap.org bloque desormais cet usage ("Access
-    // blocked" - politique d'usage des serveurs benevoles OSM), et les
-    // tuiles CartoDB (basemaps.cartocdn.com) affichent maintenant un
-    // filigrane "API KEY REQUIRED" pour les usages sans compte/API key.
-    // Le fond par defaut utilise donc les tuiles Esri (World_Light_Gray_Base),
-    // mais l'utilisateur peut choisir un autre fond via le selecteur dedie
-    // (satellite, OSM, relief), comme dans l'onglet "Carte".
+    // Fond OpenStreetMap fourni par OpenStreetMap France. Ce fournisseur
+    // utilise un service de tuiles distinct de tile.openstreetmap.org,
+    // dont les requêtes étaient bloquées dans certains contextes (file://).
     setP2O5Basemap(p2o5State.basemap);
     addMapExtras(p2o5MapA);
     addMapExtras(p2o5MapB);
@@ -7510,9 +7531,9 @@ const I18N = {
   function getP2O5PointsForGovernorate(govName){
     const target=normalizeGovName(govName);
     const pts=[];
-    (currentData||[]).forEach(d=>{
+    (currentP2O5Data||[]).forEach(d=>{
       if(!isCoordinateValid(d)) return;
-      const gov=normalizeGovName(d.declaredGovernorate);
+      const gov=normalizeGovName(declaredGovernorate(d));
       if(gov!==target) return;
       const v=getP2O5Value(d);
       if(!Number.isFinite(v)) return;
@@ -8632,9 +8653,11 @@ const I18N = {
     XS.writeFile(wb,'Coordonnees_a_verifier_2026_2027.xlsx');
   }
 
-  function parseWorkbook(workbook){
-    let sheet=null;
-    for(const lang of ['fr','en','ar']){ if(workbook.Sheets[I18N[lang].sheetName]){sheet=I18N[lang].sheetName;break;} }
+  function parseWorkbook(workbook, preferredSheet=null){
+    let sheet=preferredSheet && workbook.Sheets[preferredSheet] ? preferredSheet : null;
+    if(!sheet){
+      for(const lang of ['fr','en','ar']){ if(workbook.Sheets[I18N[lang].sheetName]){sheet=I18N[lang].sheetName;break;} }
+    }
     if(!sheet) sheet=workbook.SheetNames[0];
     const ws=workbook.Sheets[sheet];
     const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
@@ -8791,6 +8814,7 @@ const I18N = {
   async function applyExcelConfig(){
     if(!currentPendingImport) return;
     const {parsed,isInitial}=currentPendingImport;
+    currentP2O5Data = Array.isArray(parsed.p2o5Data) ? parsed.p2o5Data : [];
     const popupColumns=Array.from(document.querySelectorAll('.popup-col:checked')).map(x=>x.value);
     const chartNumericColumns=Array.from(document.querySelectorAll('.chart-num:checked')).map(x=>x.value);
     const chartCategory=document.getElementById('chartCategorySelect').value;
@@ -8873,7 +8897,7 @@ const I18N = {
   function handleFile(file,isInitial){
     if(isInitial && !logoReady) return;
     const reader=new FileReader();
-    reader.onload=function(e){try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});const parsed=parseWorkbook(wb);openExcelConfig(parsed,isInitial,file);}catch(err){if(isInitial) document.getElementById('startError').textContent='⚠️ '+err.message;else showToast('⚠️ '+err.message,'error');}};
+    reader.onload=function(e){try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});const parsed=parseWorkbook(wb,'P2O5_Carto_Stats');const parsedInterpolation=parseWorkbook(wb,'P2O5-Interpolation');parsed.p2o5Data=parsedInterpolation.data;openExcelConfig(parsed,isInitial,file);}catch(err){if(isInitial) document.getElementById('startError').textContent='⚠️ '+err.message;else showToast('⚠️ '+err.message,'error');}};
     reader.onerror=function(){const msg=t().errCannotRead;if(isInitial) document.getElementById('startError').textContent='⚠️ '+msg;else showToast('⚠️ '+msg,'error');};
     reader.readAsArrayBuffer(file);
   }
