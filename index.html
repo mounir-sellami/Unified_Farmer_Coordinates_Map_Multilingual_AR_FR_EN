@@ -4266,6 +4266,27 @@ const I18N = {
   }
 
 
+  /* Clé de gouvernorat (nom canonique français, ex. "Kasserine") utilisée
+     pour peupler la liste « Sélectionner un groupe » et pour filtrer la
+     carte. S'appuie sur declaredGovernorate(d), qui lit la colonne
+     Gouvernorat si elle existe, sinon le Groupe/Délégation. Renvoie UNSPEC
+     lorsqu'aucun gouvernorat n'a pu être déterminé. */
+  function govKeyOf(d){
+
+    const g =
+      declaredGovernorate(d);
+
+    return (
+      g === null ||
+      g === undefined ||
+      String(g).trim() === ''
+    )
+      ? UNSPEC
+      : g;
+
+  }
+
+
   function groupLabel(g){
 
     return (
@@ -5176,7 +5197,7 @@ const I18N = {
       [
         ...new Set(
           data.map(
-            d => groupKey(d.group)
+            d => govKeyOf(d)
           )
         )
       ];
@@ -5188,12 +5209,12 @@ const I18N = {
         const A =
           a === UNSPEC
             ? t().unspecified
-            : a;
+            : localizeGovernorateName(a);
 
         const B =
           b === UNSPEC
             ? t().unspecified
-            : b;
+            : localizeGovernorateName(b);
 
         return A.localeCompare(
           B,
@@ -5219,7 +5240,7 @@ const I18N = {
           const label =
             k === UNSPEC
               ? t().unspecified
-              : k;
+              : localizeGovernorateName(k);
 
           return (
 
@@ -5375,7 +5396,7 @@ const I18N = {
         const matchesGroup =
           !grp ||
           grp === '__none__' ||
-          groupKey(d.group) === grp;
+          govKeyOf(d) === grp;
 
 
         const farmer =
@@ -5416,6 +5437,17 @@ const I18N = {
       renderDynamicKPI(visibleMarkers.map(m => m._meta));
     }catch(e){
       console.warn('P2O5 KPI filter refresh:',e);
+    }
+
+    /* La légende affiche désormais le détail des groupes/délégations
+       (المجموعة/المعتمدية) du sous-ensemble actuellement filtré : tous les
+       points lorsqu'aucun gouvernorat n'est sélectionné (état neutre ou
+       « Tous les groupes »), ou uniquement les délégations du gouvernorat
+       choisi dans la liste « Sélectionner un groupe ». */
+    try{
+      updateLegend(visibleMarkers.map(m => m._meta));
+    }catch(e){
+      console.warn('Legend filter refresh:',e);
     }
 
     if(!zoomToResults) return;
@@ -9276,7 +9308,7 @@ const I18N = {
               const q = String(input?.value || '').trim().toLowerCase();
               const grp = select?.value || '__none__';
               const d = m._meta;
-              const matchesGroup = !grp || grp==='__none__' || groupKey(d.group)===grp;
+              const matchesGroup = !grp || grp==='__none__' || govKeyOf(d)===grp;
               const farmer = String(d.farmer || '').toLowerCase();
               const place = String(d.place || '').toLowerCase();
               const matchesQuery = !q || farmer.includes(q) || place.includes(q);
