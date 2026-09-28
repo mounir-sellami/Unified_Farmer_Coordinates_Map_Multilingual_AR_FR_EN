@@ -690,6 +690,15 @@ header::after{
   border-radius:999px;
 }
 
+/* Gouvernorats disposant des limites de parcelles (onglet Cartes P2O5) :
+   surlignage en vert (avec parcelles, en tête de liste) ou en rouge clair (sans parcelles). */
+/* Fond explicite pour TOUTES les options (rouge clair par défaut = sans parcelles) :
+   sinon elles hériteraient de la teinte du select dans la liste déroulante. */
+#p2o5GovSelect option{background-color:#f7c6c1;color:#5c1f19;font-weight:400;}
+#p2o5GovSelect option.p2o5-gov-has-parcels{background-color:#a9d99b;color:#1f3d17;font-weight:700;}
+#p2o5GovSelect.p2o5-gov-has-parcels{background-color:#a9d99b;color:#1f3d17;font-weight:700;}
+#p2o5GovSelect.p2o5-gov-no-parcels{background-color:#f7c6c1;color:#5c1f19;}
+
 .map-legend{
   position:absolute;
   z-index:25;
@@ -4226,20 +4235,40 @@ const I18N = {
 
   const colorCache = {};
 
+  /* Palette à contraste maximal : les couleurs sont attribuées dans l'ordre,
+     et deux couleurs consécutives sont volontairement très éloignées (teinte
+     ET luminosité). Au-delà de la palette, de nouvelles teintes sont générées
+     par pas de « l'angle d'or » pour rester le plus distinctes possible. */
   const PALETTE = [
-    "#4c6b3f",
-    "#b3822e",
-    "#7a5230",
-    "#2b6e7a",
-    "#8a3f6e",
-    "#4f6ea8",
-    "#a0522d",
-    "#3f8a5a",
-    "#c0392b",
-    "#6b4f8a",
-    "#2f8f7a",
-    "#a67c00"
+    "#e6194b", /* rouge vif */
+    "#4363d8", /* bleu */
+    "#3cb44b", /* vert */
+    "#f58231", /* orange */
+    "#911eb4", /* violet */
+    "#12a5c9", /* cyan */
+    "#ffb300", /* ambre */
+    "#f032e6", /* magenta */
+    "#008080", /* sarcelle */
+    "#9a6324", /* brun */
+    "#9bb800", /* vert-jaune */
+    "#000075", /* bleu marine */
+    "#ff7f9e", /* rose */
+    "#800000", /* bordeaux */
+    "#00a86b", /* vert jade */
+    "#7c5cff"  /* indigo clair */
   ];
+
+  /* Couleur neutre réservée à « Non spécifié / غير محدد ». */
+  const UNSPEC_COLOR = "#8c8c8c";
+  let colorSeq = 0;
+
+  function generatedColor(i){
+    const n = i - PALETTE.length;
+    const hue = (n * 137.508 + 15) % 360;
+    const sat = [78, 62, 90][n % 3];
+    const lig = [42, 56, 33][Math.floor(n / 3) % 3];
+    return 'hsl(' + hue.toFixed(1) + ',' + sat + '%,' + lig + '%)';
+  }
 
   const UNSPEC =
     "__UNSPECIFIED__";
@@ -4311,12 +4340,22 @@ const I18N = {
 
     }
 
-    const idx =
-      Object.keys(colorCache).length %
-      PALETTE.length;
+    /* « Non spécifié » : gris neutre, identique sur la carte et les graphiques,
+       sans consommer de couleur de la palette. */
+    if(isUnspecifiedKey(gKey)){
+
+      colorCache[gKey] = UNSPEC_COLOR;
+
+      return UNSPEC_COLOR;
+
+    }
+
+    const idx = colorSeq++;
 
     colorCache[gKey] =
-      PALETTE[idx];
+      idx < PALETTE.length
+        ? PALETTE[idx]
+        : generatedColor(idx);
 
     return colorCache[gKey];
 
@@ -5113,6 +5152,16 @@ const I18N = {
      LEGEND
      ======================================================= */
 
+  /* Vrai si la clé de groupe désigne « Non spécifié » : soit la valeur interne
+     (cellule vide), soit le texte saisi tel quel dans le fichier Excel, dans
+     n'importe quelle langue (« غير محدد », « Non spécifié », « Unspecified »). */
+  function isUnspecifiedKey(k){
+    if(k === UNSPEC) return true;
+    const v = String(k ?? '').trim();
+    if(!v) return true;
+    return Object.keys(I18N).some(l => I18N[l] && String(I18N[l].unspecified || '').trim() === v);
+  }
+
   function updateLegend(data){
 
     const groups = {};
@@ -5137,7 +5186,12 @@ const I18N = {
     const sorted =
       Object.entries(groups)
         .sort(
-          (a,b) => (b[1] - a[1]) || a[0].localeCompare(b[0], undefined, {numeric:true, sensitivity:'base'})
+          (a,b) => {
+            /* « Non spécifié / غير محدد » toujours en bas de la légende. */
+            const ua = isUnspecifiedKey(a[0]) ? 1 : 0, ub = isUnspecifiedKey(b[0]) ? 1 : 0;
+            if(ua !== ub) return ua - ub;
+            return (b[1] - a[1]) || a[0].localeCompare(b[0], undefined, {numeric:true, sensitivity:'base'});
+          }
         );
 
 
@@ -5943,7 +5997,8 @@ const I18N = {
       )
       .sort(
         (a,b) =>
-          b.count - a.count
+          ((a.key === UNSPEC) - (b.key === UNSPEC)) ||
+          (b.count - a.count)
       );
 
   }
@@ -6397,10 +6452,33 @@ const I18N = {
       (getKpiGovSelection()!=='__all__' ? ' · ' + (currentLang==='ar'?'الولاية':currentLang==='en'?'Governorate':'Gouvernorat') + ' : ' + localizeGovernorateName(getKpiGovSelection()) : '');
     if(grid) grid.innerHTML='';
 
+    /* Ordre des éléments d'un graphique : « Non spécifié / غير محدد » est placé
+       en fin de liste, mais AVANT les valeurs nulles (0 / vide). Si sortDesc est
+       vrai, le reste est trié par valeur décroissante ; sinon l'ordre d'origine
+       est conservé. */
+    function orderWithUnspecifiedLast(chartLabels, values, sortDesc){
+      const unspecLabels=new Set([UNSPEC]);
+      Object.keys(I18N).forEach(l=>{ if(I18N[l] && I18N[l].unspecified) unspecLabels.add(I18N[l].unspecified); });
+      const rank=i=>{
+        const v=Number(values[i])||0;
+        if(v<=0) return 2;
+        return unspecLabels.has(chartLabels[i]) ? 1 : 0;
+      };
+      return chartLabels.map((_,i)=>i).sort((a,b)=>{
+        const ra=rank(a), rb=rank(b);
+        if(ra!==rb) return ra-rb;
+        if(sortDesc && ra===0) return (Number(values[b])||0)-(Number(values[a])||0);
+        if(sortDesc && ra===2) return 0;
+        return a-b;
+      });
+    }
+
     function addChart(title, chartLabels, values, type='bar', datasetLabel=title){
-      /* Histogrammes : tri décroissant (du plus important au moins important). */
-      if(type==='bar'){
-        const order=chartLabels.map((_,i)=>i).sort((a,b)=>(Number(values[b])||0)-(Number(values[a])||0));
+      /* Histogrammes : tri décroissant (du plus important au moins important) ;
+         camemberts : ordre d'origine. Dans les deux cas « Non spécifié » est en
+         fin de liste, avant les valeurs nulles. */
+      {
+        const order=orderWithUnspecifiedLast(chartLabels, values, type==='bar');
         chartLabels=order.map(i=>chartLabels[i]);
         values=order.map(i=>values[i]);
       }
@@ -6504,6 +6582,12 @@ const I18N = {
     }
 
     function addSingleMetricDoughnut(title, chartLabels, pointValues, areaValues, metricNames){
+      {
+        const order=orderWithUnspecifiedLast(chartLabels, pointValues, false);
+        chartLabels=order.map(i=>chartLabels[i]);
+        pointValues=order.map(i=>pointValues[i]);
+        areaValues=order.map(i=>areaValues[i]);
+      }
       const card=document.createElement('div');
       card.className='chart-card';
 
@@ -7904,8 +7988,26 @@ const I18N = {
   function populateP2O5GovSelect(){
     const sel=document.getElementById('p2o5GovSelect');
     if(!sel) return;
-    const govs=getGovernoratesWithP2O5();
+    /* Les gouvernorats dont les limites de parcelles sont disponibles
+       (GeoJSON parcellaire intégré) sont placés en premier, puis les autres,
+       chacun des deux groupes restant trié par ordre alphabétique. */
+    const hasParcels=name=>{
+      const key=normalizeGovName(name)||String(name||'').trim();
+      return !!(typeof EMBEDDED_P2O5_PARCELS!=='undefined' && EMBEDDED_P2O5_PARCELS[key]);
+    };
+    const govs=getGovernoratesWithP2O5().sort((a,b)=>{
+      const pa=hasParcels(a.name)?0:1, pb=hasParcels(b.name)?0:1;
+      if(pa!==pb) return pa-pb;
+      return a.name.localeCompare(b.name);
+    });
     const previous=p2o5State.governorate;
+    const tintSelect=()=>{
+      const cur=sel.options[sel.selectedIndex];
+      const ok=!!(cur && cur.classList.contains('p2o5-gov-has-parcels'));
+      sel.classList.toggle('p2o5-gov-has-parcels',ok);
+      sel.classList.toggle('p2o5-gov-no-parcels',!!cur && !ok);
+    };
+    if(!sel.dataset.tintBound){sel.addEventListener('change',tintSelect);sel.dataset.tintBound='1';}
     sel.innerHTML='';
     if(govs.length===0){
       const opt=document.createElement('option');
@@ -7921,12 +8023,22 @@ const I18N = {
       const opt=document.createElement('option');
       opt.value=g.name;
       opt.textContent=localizeGovernorateName(g.name)+' ('+g.count+')';
+      /* Couleurs posées aussi en ligne pour qu'aucune autre règle CSS ne
+         puisse les écraser : vert = limites disponibles, rouge clair = non. */
+      if(hasParcels(g.name)){
+        opt.classList.add('p2o5-gov-has-parcels');
+        opt.style.backgroundColor='#a9d99b'; opt.style.color='#1f3d17'; opt.style.fontWeight='700';
+      }else{
+        opt.classList.add('p2o5-gov-no-parcels');
+        opt.style.backgroundColor='#f7c6c1'; opt.style.color='#5c1f19';
+      }
       sel.appendChild(opt);
     });
     if(!previous || !govs.some(g=>g.name===previous)){
       p2o5State.governorate=govs[0].name;
     }
     sel.value=p2o5State.governorate;
+    tintSelect();
   }
 
   function setP2O5Status(msg){
@@ -8712,7 +8824,7 @@ const I18N = {
       data.push({id,source:r[idx(required[1])],group:r[idx(required[2])],ref:r[idx(required[3])],farmer:r[idx(required[4])],place:r[idx(required[5])],code:r[idx(required[6])],lat:parseStrictCoordinate(r[idx(required[7])]),lon:parseStrictCoordinate(r[idx(required[8])]),orig_system:r[idx(required[9])],orig_coords:r[idx(required[10])],area:r[idx(required[11])],crop:r[idx(required[12])],phone:r[idx(required[13])],notes:r[idx(required[14])],row,headers:header,schemaLang:schema.lang});
     }
     if(!data.length) throw new Error(t().errNoValidRows);
-    return {data,headers:header,schemaLang:schema.lang};
+    return {data,headers:header,schemaLang:schema.lang,sheet};
   }
 
   function openExcelConfig(parsed,isInitial,file){
@@ -8927,7 +9039,7 @@ const I18N = {
   function handleFile(file,isInitial){
     if(isInitial && !logoReady) return;
     const reader=new FileReader();
-    reader.onload=function(e){try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});const parsed=parseWorkbook(wb,'P2O5_Carto_Stats');const parsedInterpolation=parseWorkbook(wb,'P2O5-Interpolation');parsed.p2o5Data=parsedInterpolation.data;openExcelConfig(parsed,isInitial,file);}catch(err){if(isInitial) document.getElementById('startError').textContent='⚠️ '+err.message;else showToast('⚠️ '+err.message,'error');}};
+    reader.onload=function(e){try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});const parsed=parseWorkbook(wb,'P2O5_Carto_Stats');if(parsed.sheet!=='P2O5_Carto_Stats'){showToast('⚠️ Feuille « P2O5_Carto_Stats » introuvable : le contrôle des points à vérifier est fait sur la feuille « '+parsed.sheet+' ».','error');}const parsedInterpolation=parseWorkbook(wb,'P2O5-Interpolation');parsed.p2o5Data=parsedInterpolation.data;openExcelConfig(parsed,isInitial,file);}catch(err){if(isInitial) document.getElementById('startError').textContent='⚠️ '+err.message;else showToast('⚠️ '+err.message,'error');}};
     reader.onerror=function(){const msg=t().errCannotRead;if(isInitial) document.getElementById('startError').textContent='⚠️ '+msg;else showToast('⚠️ '+msg,'error');};
     reader.readAsArrayBuffer(file);
   }
