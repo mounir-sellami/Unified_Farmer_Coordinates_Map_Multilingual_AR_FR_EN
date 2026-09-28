@@ -698,11 +698,14 @@ header::after{
   background:rgba(255,253,248,.95);
   border:1px solid var(--line);
   border-radius:10px;
-  padding:10px 12px;
+  padding:10px 14px 8px;
   font-size:.75rem;
-  max-width:180px;
-  height:min(45vh,320px);
-  min-height:110px;
+  /* La légende s'adapte à son contenu (largeur et hauteur) ;
+     l'ascenseur n'apparaît que si la liste dépasse la hauteur max. */
+  width:max-content;
+  max-width:min(240px,calc(100% - 24px));
+  height:auto;
+  max-height:min(60vh,420px);
   display:flex;
   flex-direction:column;
   box-shadow:0 4px 14px rgba(44,38,32,.18);
@@ -721,7 +724,7 @@ header::after{
    dépasse la hauteur disponible, pour ne pas déborder de la carte
    quand il y a beaucoup de groupes/délégations. */
 #legendItems{
-  flex:1 1 auto;
+  flex:0 1 auto;
   overflow-y:auto;
   overflow-x:hidden;
   min-height:0;
@@ -5430,14 +5433,9 @@ const I18N = {
     );
 
 
-    /* Le KPI P2O5 suit le même sous-ensemble que le filtre de la carte.
-       On le met à jour même lorsque zoomToResults=false (changement de
-       langue, synchronisation ou simple rafraîchissement). */
-    try{
-      renderDynamicKPI(visibleMarkers.map(m => m._meta));
-    }catch(e){
-      console.warn('P2O5 KPI filter refresh:',e);
-    }
+    /* Le filtre de la carte (onglet « Répartition spatiale des échantillons »)
+       est désormais INDÉPENDANT du sélecteur de gouvernorat de l'onglet
+       « Graphiques » : le KPI P2O5 n'est donc plus recalculé ici. */
 
     /* La légende affiche désormais le détail des groupes/délégations
        (المجموعة/المعتمدية) du sous-ensemble actuellement filtré : tous les
@@ -9296,28 +9294,12 @@ const I18N = {
   });
 
 
-  /* Le sélecteur de gouvernorat du KPI est indépendant du filtre de la carte,
-     mais il filtre aussi les graphiques et la qualité des données. */
+  /* Le sélecteur de gouvernorat de l'onglet « Graphiques » est totalement
+     indépendant du filtre de la carte (groupFilter / searchInput) : il
+     travaille toujours sur l'ensemble des données importées. */
   document.getElementById('p2o5KpiGovSelect')?.addEventListener('change', function(){
     try{
-      const visible = allMarkers && allMarkers.length
-        ? allMarkers
-            .filter(m => {
-              const input = document.getElementById('searchInput');
-              const select = document.getElementById('groupFilter');
-              const q = String(input?.value || '').trim().toLowerCase();
-              const grp = select?.value || '__none__';
-              const d = m._meta;
-              const matchesGroup = !grp || grp==='__none__' || govKeyOf(d)===grp;
-              const farmer = String(d.farmer || '').toLowerCase();
-              const place = String(d.place || '').toLowerCase();
-              const matchesQuery = !q || farmer.includes(q) || place.includes(q);
-              return matchesGroup && matchesQuery;
-            })
-            .map(m=>m._meta)
-        : currentData;
-      renderDynamicKPI(visible);
-      /* Le même filtre s'applique aux graphiques situés en dessous. */
+      renderDynamicKPI(currentData);
       renderCharts(currentData);
     }catch(e){
       console.warn('P2O5 KPI governorate filter:',e);
