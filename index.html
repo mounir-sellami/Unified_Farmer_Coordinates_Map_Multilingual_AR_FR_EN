@@ -625,6 +625,87 @@ header::after{
 @media(max-width:720px){.tab-bar-credit{font-size:.56rem;padding:4px 6px;}.verify-coords-card{width:98vw;max-height:94vh;}.verify-actions{flex-direction:column;align-items:stretch;}}
 
 /* =========================================================
+   MODE DOUBLE ÉCRAN
+   ========================================================= */
+#dualScreenBtn{
+  margin-left:26px;
+  background:#4b5563;
+  color:#fff;
+  border:1px solid #374151;
+  padding:6px 12px;
+  font-size:.72rem;
+  box-shadow:0 2px 0 #374151;
+}
+[dir="rtl"] #dualScreenBtn{margin-left:0;margin-right:26px;}
+#dualScreenBtn:hover{filter:brightness(1.06);transform:translateY(-1px);}
+
+/* Bouton Double écrans placé juste à droite du sélecteur de groupe */
+.dual-header-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  height:36px;
+  padding:7px 13px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.35);
+  background:#4b5563;
+  color:#fff;
+  font-family:'Cairo',sans-serif;
+  font-size:.78rem;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  box-shadow:0 2px 0 #374151;
+  transition:.15s;
+}
+.dual-header-btn svg{
+  width:17px;
+  height:17px;
+  flex-shrink:0;
+}
+.dual-header-btn:hover{
+  filter:brightness(1.08);
+  transform:translateY(-1px);
+}
+[dir="rtl"] .dual-header-btn{
+  margin-left:0;
+  margin-right:8px;
+}
+#dualScreenOverlay{
+  position:fixed;inset:0;z-index:120000;background:rgba(44,38,32,.62);
+  backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;
+}
+#dualScreenOverlay.show{display:flex;}
+.dual-screen-card{
+  width:min(760px,96vw);max-height:90vh;overflow:auto;background:var(--paper);
+  border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.30);padding:20px;
+}
+.dual-screen-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;}
+.dual-screen-head h2{margin:0;font-family:'Cairo',sans-serif;font-size:1.05rem;color:var(--olive-dark);}
+.dual-screen-head p{margin:5px 0 0;font-size:.76rem;color:var(--ink-soft);line-height:1.5;}
+.dual-close{border:0;background:#eee6d7;color:var(--ink);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.2rem;line-height:1;flex-shrink:0;}
+.dual-status{padding:10px 12px;border-radius:9px;background:#f7f3e9;border:1px solid var(--line);font-size:.76rem;font-weight:700;color:var(--olive-dark);margin-bottom:14px;}
+.dual-status.error{background:#fff0ee;border-color:#efb0aa;color:#a51f16;}
+.dual-screen-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.dual-screen-section{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fffdf8;}
+.dual-screen-section h3{margin:0 0 10px;font-family:'Cairo',sans-serif;font-size:.82rem;color:var(--olive-dark);}
+.dual-field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.dual-field label{font-size:.72rem;color:var(--ink-soft);font-weight:700;}
+.dual-field select{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;background:#fff;color:var(--ink);font-family:'Tajawal',sans-serif;}
+.dual-screen-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+.dual-cancel{background:#eee6d7;color:var(--ink);padding:9px 16px;}
+.dual-open{background:var(--olive);color:#fff;padding:9px 17px;box-shadow:0 2px 0 var(--olive-dark);}
+body.dual-window{overflow:hidden;background:var(--cream);}
+body.dual-window header,body.dual-window .tab-bar,body.dual-window footer{display:none!important;}
+body.dual-window #app{height:100vh;height:100dvh;}
+body.dual-window #tabContent{height:100%;}
+body.dual-window #mapWrap,body.dual-window #chartsWrap,body.dual-window #p2o5Wrap,body.dual-window #excelGenWrap{height:100%;}
+body.dual-window .dual-screen-overlay{display:none!important;}
+@media(max-width:720px){.dual-screen-grid{grid-template-columns:1fr;}#dualScreenBtn{margin-left:0;}}
+
+
+/* =========================================================
    VISIONNEUSE PDF INTÉGRÉE (Guide COMIFER, etc.)
    ========================================================= */
 #pdfViewerOverlay{position:fixed;inset:0;z-index:9000;background:rgba(44,38,32,.60);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;}
@@ -2250,6 +2331,25 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 
             </select>
 
+            <button class="dual-header-btn"
+                    id="dualScreenBtn"
+                    type="button"
+                    title="Mode double écran">
+
+              <svg viewBox="0 0 24 24"
+                   fill="none"
+                   stroke="currentColor"
+                   stroke-width="2"
+                   stroke-linecap="round"
+                   stroke-linejoin="round">
+                <rect x="2" y="4" width="9" height="15" rx="1"/>
+                <rect x="13" y="4" width="9" height="15" rx="1"/>
+              </svg>
+
+              <span id="dualScreenBtnLabel">Double écrans</span>
+
+            </button>
+
           </div>
 
         </div>
@@ -2435,6 +2535,54 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   <!-- =====================================================
        MAP
        ===================================================== -->
+
+
+
+  <!-- =====================================================
+       MODE DOUBLE ÉCRAN : choix des vues et des écrans
+       ===================================================== -->
+  <div id="dualScreenOverlay" aria-hidden="true">
+    <div class="dual-screen-card" role="dialog" aria-modal="true" aria-labelledby="dualScreenTitle">
+      <div class="dual-screen-head">
+        <div>
+          <h2 id="dualScreenTitle">Mode double écran</h2>
+          <p id="dualScreenSubtitle">Choisissez la vue à afficher sur chacun des écrans détectés.</p>
+        </div>
+        <button class="dual-close" id="dualScreenClose" type="button" aria-label="Fermer">×</button>
+      </div>
+      <div class="dual-status" id="dualScreenStatus">Deux fenêtres vont être ouvertes. Si nécessaire, déplacez la seconde vers le deuxième écran.</div>
+      <div class="dual-screen-grid">
+        <section class="dual-screen-section">
+          <h3 id="dualScreenAHeading">Écran 1</h3>
+          <div class="dual-field">
+            <label for="dualScreenA">Vue à afficher</label>
+            <select id="dualScreenA">
+              <option value="map">Répartition spatiale des échantillons</option>
+              <option value="charts">Graphiques</option>
+              <option value="p2o5">Carte P2O5</option>
+              <option value="excel">Générateur de graphiques Excel</option>
+            </select>
+          </div>
+        </section>
+        <section class="dual-screen-section">
+          <h3 id="dualScreenBHeading">Écran 2</h3>
+          <div class="dual-field">
+            <label for="dualScreenB">Vue à afficher</label>
+            <select id="dualScreenB">
+              <option value="charts">Graphiques</option>
+              <option value="map">Répartition spatiale des échantillons</option>
+              <option value="p2o5">Carte P2O5</option>
+              <option value="excel">Générateur de graphiques Excel</option>
+            </select>
+          </div>
+        </section>
+      </div>
+      <div class="dual-screen-actions">
+        <button class="btn dual-cancel" id="dualScreenCancel" type="button">Annuler</button>
+        <button class="btn dual-open" id="dualScreenOpen" type="button">Ouvrir sur les deux écrans</button>
+      </div>
+    </div>
+  </div>
 
   <div id="tabContent">
 
@@ -9354,6 +9502,9 @@ const I18N = {
       /* Synchronisation finale obligatoire des deux groupes de boutons. */
       renderLanguageButtons();
 
+      /* Mode double écran : signaler le changement de langue aux autres fenêtres. */
+      try{ if(!isFirstLoad && typeof window.__UFM_onLangChange === 'function') window.__UFM_onLangChange(currentLang); }catch(e){}
+
       if(notify && !isFirstLoad){
         showToast(
           LANGUAGE_SWITCH_MESSAGES[currentLang],
@@ -9546,6 +9697,9 @@ const I18N = {
         if(selectedValue === '__none__'){
           return;
         }
+
+        /* Mode double écran uniquement : relayer le choix vers « Graphiques ». */
+        try{ if(typeof window.__UFM_onGroupChange === 'function') window.__UFM_onGroupChange(selectedValue); }catch(e){}
 
         /*
            On mémorise exactement la vue actuelle.
@@ -9812,6 +9966,47 @@ const I18N = {
     if(applyBtn) applyBtn.addEventListener('click', enterFullscreen, true);
   })();
 
+  /* Pont vers les scripts séparés (mode double écran) : les variables
+     `let` de ce script ne sont pas visibles depuis un autre <script>. */
+  window.__UFM = {
+    get currentData(){ return currentData; },
+    get currentP2O5Data(){ return currentP2O5Data; },
+    set currentP2O5Data(v){ currentP2O5Data = v; },
+    get currentConfig(){ return currentConfig; },
+    set currentConfig(v){ currentConfig = v; },
+    get currentLang(){ return currentLang; },
+    get map(){ return map; },
+    applyMapGovToCharts: function(key){
+      /* key = valeur du sélecteur de la carte (govKeyOf). '' = tous. */
+      const sel = document.getElementById('p2o5KpiGovSelect');
+      if(!sel) return;
+      let target = '__all__';
+      if(key){
+        const row = (currentData||[]).find(d => govKeyOf(d) === key);
+        const headers = row ? (row.headers || Object.keys(row.row || {})) : [];
+        const govCol = headers.find(h => /gouvernorat|governorate|\bgouv\b|ولاية/i.test(String(h)));
+        if(row && govCol){
+          const raw = String(row.row?.[govCol] ?? '').trim();
+          target = raw || '__all__';
+          try{
+            if(raw && typeof normalizeGovName === 'function'){
+              const n = normalizeGovName(raw); if(n) target = n;
+            }
+          }catch(e){}
+        }
+      }
+      const exists = Array.from(sel.options).some(o => o.value === target);
+      sel.value = exists ? target : '__all__';
+      try{ renderDynamicKPI(currentData); renderCharts(currentData); }
+      catch(e){ console.warn('applyMapGovToCharts:', e); }
+    },
+    loadData: loadData,
+    setLanguage: setLanguage,
+    initP2O5Tab: initP2O5Tab,
+    loadExcelGenTab: loadExcelGenTab,
+    showToast: showToast
+  };
+
   /* Rendu initial garanti après le chargement complet du DOM. */
   setLanguage(currentLang, {first:true, notify:false});
 
@@ -9990,9 +10185,658 @@ document.addEventListener('keydown', function(e){
     el.classList.toggle('show');
   }, { passive: true });
 
+
+
+  /* =======================================================
+     MODE DOUBLE ÉCRAN — fenêtres synchronisées
+     -------------------------------------------------------
+     La page principale reste inchangée. Deux fenêtres enfants
+     sont ouvertes et reçoivent le même jeu de données déjà chargé.
+     L'API Window Management est utilisée lorsqu'elle est disponible
+     afin de connaître les positions réelles des écrans.
+     ======================================================= */
+  (function initDualScreenMode(){
+    const overlay = document.getElementById('dualScreenOverlay');
+    const btn = document.getElementById('dualScreenBtn');
+    const closeBtn = document.getElementById('dualScreenClose');
+    const cancelBtn = document.getElementById('dualScreenCancel');
+    const openBtn = document.getElementById('dualScreenOpen');
+    const status = document.getElementById('dualScreenStatus');
+    const selectA = document.getElementById('dualScreenA');
+    const selectB = document.getElementById('dualScreenB');
+    if(!overlay || !btn) return;
+
+    let detectedScreens = [];
+    let dualWindows = {a:null,b:null};
+
+    const VIEW_TO_TAB = {
+      map:'mapWrap', charts:'chartsWrap', p2o5:'p2o5Wrap', excel:'excelGenWrap'
+    };
+
+    function dualTexts(){
+      if(typeof currentLang === 'undefined' || currentLang === 'fr') return {
+        button:'Double écrans', title:'Mode double écran', subtitle:'Choisissez la vue à afficher sur chacun des écrans détectés.',
+        detect:'Détection des écrans…', one:'Un seul écran est détecté. Branchez/activez le deuxième écran puis réessayez.',
+        unsupported:'La détection précise des écrans n’est pas disponible. Le mode secours va ouvrir deux fenêtres et tenter de placer la seconde sur l’écran voisin.',
+        open:'Ouvrir sur les deux écrans', cancel:'Annuler', view:'Vue à afficher', screen:'Écran'
+      };
+      if(currentLang === 'ar') return {
+        button:'شاشتان', title:'وضع الشاشتين', subtitle:'اختر العرض الذي سيظهر على كل شاشة.',
+        detect:'جارٍ اكتشاف الشاشات…', one:'تم اكتشاف شاشة واحدة فقط. يرجى تفعيل الشاشة الثانية ثم إعادة المحاولة.',
+        unsupported:'لا تتوفر معلومات دقيقة عن الشاشات. سيتم استخدام وضع احتياطي لفتح نافذتين ومحاولة وضع الثانية على الشاشة المجاورة.',
+        open:'فتح على الشاشتين', cancel:'إلغاء', view:'العرض', screen:'الشاشة'
+      };
+      return {
+        button:'Dual screen', title:'Dual-screen mode', subtitle:'Choose the view to display on each detected screen.',
+        detect:'Detecting screens…', one:'Only one screen was detected. Connect/enable the second screen and try again.',
+        unsupported:'Precise screen detection is unavailable. Fallback mode will open two windows and try to place the second on the adjacent screen.',
+        open:'Open on both screens', cancel:'Cancel', view:'View', screen:'Screen'
+      };
+    }
+
+    function updateDualLabels(){
+      const T=dualTexts();
+      const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+      set('dualScreenBtnLabel',T.button); set('dualScreenTitle',T.title); set('dualScreenSubtitle',T.subtitle);
+      set('dualScreenOpen',T.open); set('dualScreenCancel',T.cancel);
+      document.querySelectorAll('#dualScreenOverlay .dual-field label').forEach(e=>e.textContent=T.view);
+    }
+
+    function showOverlay(){
+      updateDualLabels();
+      overlay.classList.add('show'); overlay.setAttribute('aria-hidden','false');
+      status.classList.remove('error');
+      // En ouverture locale (file://), ne jamais afficher/attendre la détection :
+      // le navigateur ne fournit généralement pas l'API multi-écran dans ce contexte.
+      if(window.location.protocol === 'file:'){
+        createFallbackScreens();
+      } else {
+        status.textContent=dualTexts().detect;
+        detectScreens();
+      }
+    }
+    function hideOverlay(){ overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); }
+
+    async function detectScreens(){
+      // En local (file://), l'API de détection multi-écran peut être absente,
+      // refusée ou rester en attente : utiliser immédiatement le mode secours.
+      // Cela évite de laisser le dialogue sur « Détection des écrans… ».
+      if(window.location.protocol === 'file:') return createFallbackScreens();
+
+      const timeoutMs = 1200;
+      let timeoutId;
+      try{
+        if(typeof window.getScreenDetails === 'function'){
+          const details = await Promise.race([
+            window.getScreenDetails(),
+            new Promise((_, reject) => {
+              timeoutId = setTimeout(() => reject(new Error('Screen detection timeout')), timeoutMs);
+            })
+          ]);
+          const screens=Array.from(details && details.screens || []);
+          if(screens.length>=2){
+            screens.sort((a,b)=>(b.isPrimary?1:0)-(a.isPrimary?1:0));
+            detectedScreens=screens;
+            status.classList.remove('error');
+            status.textContent=(currentLang==='ar'
+              ? 'تم اكتشاف '+screens.length+' شاشات.'
+              : currentLang==='en'
+                ? screens.length+' screens detected.'
+                : screens.length+' écrans détectés.');
+            openBtn.disabled=false;
+            return detectedScreens;
+          }
+        }
+      }catch(err){
+        console.warn('Double-screen detection; fallback used:',err);
+      }finally{
+        if(timeoutId) clearTimeout(timeoutId);
+      }
+      return createFallbackScreens();
+    }
+
+    function createFallbackScreens(){
+      const sc=window.screen||{};
+      const w=Math.max(600, sc.availWidth || window.innerWidth || 1200);
+      const h=Math.max(500, sc.availHeight || window.innerHeight || 800);
+      const left=(typeof sc.availLeft==='number' ? sc.availLeft : (window.screenX||0));
+      const top=(typeof sc.availTop==='number' ? sc.availTop : (window.screenY||0));
+
+      detectedScreens=[
+        {left:left, top:top, width:w, height:h, isPrimary:true, fallback:true},
+        {left:left+w, top:top, width:w, height:h, isPrimary:false, fallback:true}
+      ];
+
+      status.classList.remove('error');
+      status.textContent=(currentLang==='ar'
+        ? 'سيتم فتح نافذتين. في وضع double-clic، قد يمنع المتصفح معرفة الشاشة الثانية أو نقل النافذة تلقائياً؛ إذا لزم الأمر انقل النافذة الثانية إلى الشاشة الثانية.'
+        : currentLang==='en'
+          ? 'Two windows will open. With double-click/file mode, the browser may not expose the second screen or allow automatic positioning; if necessary, move the second window to the second screen.'
+          : 'Deux fenêtres vont être ouvertes. En mode double-clic/fichier, le navigateur peut ne pas exposer le deuxième écran ou autoriser son déplacement automatique ; si nécessaire, déplacez la seconde fenêtre vers le deuxième écran.');
+
+      openBtn.disabled=false;
+      return detectedScreens;
+    }
+
+    function buildDualUrl(view,screenIndex){
+      const u=new URL(window.location.href);
+      u.searchParams.set('dualWindow','1');
+      u.searchParams.set('dualView',view);
+      u.searchParams.set('dualScreenIndex',String(screenIndex));
+      return u.href;
+    }
+
+    function sendState(win,view,screen){
+      if(!win || win.closed) return;
+      const payload={
+        source:'unifiedFarmerMap', type:'dualState', view,
+        lang:currentLang,
+        data:Array.isArray(currentData)?currentData:null,
+        p2o5Data:Array.isArray(currentP2O5Data)?currentP2O5Data:null,
+        config:currentConfig||null,
+        screen:screen?{left:screen.left,top:screen.top,width:screen.width,height:screen.height}:null
+      };
+      try{win.postMessage(payload,'*');}catch(e){console.warn(e);}
+    }
+
+    function openDualWindow(view,screen,index){
+      if(!screen) return null;
+
+      const width=Math.max(900,Math.floor(screen.width || window.innerWidth || 1200));
+      const height=Math.max(650,Math.floor(screen.height || window.innerHeight || 800));
+      const left=Number.isFinite(screen.left) ? Math.round(screen.left) : (index ? window.screenX + window.outerWidth : window.screenX);
+      const top=Number.isFinite(screen.top) ? Math.round(screen.top) : window.screenY;
+
+      // IMPORTANT:
+      // Ne pas utiliser popup=yes : certains Chromium bloquent/transformaient
+      // alors la deuxième ouverture en onglet. Une fenêtre normale est beaucoup
+      // plus fiable pour un fichier HTML ouvert par double-clic.
+      const features=[
+        'width='+width,
+        'height='+height,
+        'left='+left,
+        'top='+top,
+        'resizable=yes',
+        'scrollbars=yes'
+      ].join(',');
+
+      let win=null;
+      try{
+        win=window.open(buildDualUrl(view,index),'UnifiedFarmerDual_'+index,features);
+      }catch(e){
+        console.error('Dual window open:',e);
+      }
+
+      if(!win) return null;
+
+      const deliver=()=>{
+        if(!win || win.closed) return;
+        sendState(win,view,screen);
+        // Le déplacement est autorisé sur certains navigateurs seulement.
+        // On le tente, mais le fonctionnement ne doit pas en dépendre.
+        try{
+          win.moveTo(left,top);
+          win.resizeTo(width,height);
+        }catch(e){}
+      };
+
+      try{ win.addEventListener('load',deliver,{once:false}); }catch(e){}
+      setTimeout(deliver,700);
+      setTimeout(deliver,1600);
+      setTimeout(deliver,3000);
+      return win;
+    }
+
+    function openBoth(){
+      // IMPORTANT : tout doit être lancé directement depuis le clic utilisateur.
+      // Aucun await/promise avant window.open afin d'éviter le blocage popup.
+      if(detectedScreens.length<2) createFallbackScreens();
+
+      if(!Array.isArray(currentData) || !currentData.length){
+        showToast(
+          currentLang==='ar'?'حمّل ملف Excel أولاً.':
+          currentLang==='en'?'Load an Excel file first.':
+          'Chargez d’abord un fichier Excel.',
+          'error'
+        );
+        return;
+      }
+
+      const s0=detectedScreens[0], s1=detectedScreens[1];
+
+      // Ouverture immédiate des deux fenêtres, sans temporisation entre elles.
+      dualWindows.a=openDualWindow(selectA.value,s0,0);
+      dualWindows.b=openDualWindow(selectB.value,s1,1);
+
+      if(!dualWindows.a || !dualWindows.b){
+        const msg =
+          currentLang==='ar'
+            ? 'تم حظر إحدى النوافذ. اسمح بالنوافذ المنبثقة لهذا الملف ثم أعد المحاولة.'
+            : currentLang==='en'
+              ? 'One of the windows was blocked. Allow pop-up windows for this file and try again.'
+              : 'Une des fenêtres a été bloquée. Autorisez les fenêtres pop-up pour ce fichier puis réessayez.';
+        showToast(msg,'error');
+        return;
+      }
+
+      hideOverlay();
+    }
+
+    function applyDualView(view){
+      const target=VIEW_TO_TAB[view]||'mapWrap';
+      document.body.classList.add('dual-window');
+      document.querySelectorAll('#mapWrap,#chartsWrap,#excelGenWrap,#p2o5Wrap').forEach(v=>v.classList.add('hidden-view'));
+      const el=document.getElementById(target); if(el) el.classList.remove('hidden-view');
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      const tab=document.querySelector('.tab-btn[data-tab="'+target+'"]'); if(tab) tab.classList.add('active');
+      if(view==='map' && map) setTimeout(()=>map.invalidateSize(),150);
+      if(view==='p2o5') setTimeout(()=>{try{initP2O5Tab();}catch(e){}},150);
+      if(view==='excel') setTimeout(()=>{try{loadExcelGenTab();}catch(e){}},150);
+      document.title=(currentLang==='ar'?'الشاشة — ':currentLang==='en'?'Screen — ':'Écran — ')+(view==='map'?'Répartition spatiale des échantillons':view==='charts'?'Graphiques':view==='p2o5'?'Carte P2O5':'Graphiques Excel');
+    }
+
+    window.addEventListener('message',async function(e){
+      const d=e&&e.data;
+      if(!d || d.source!=='unifiedFarmerMap') return;
+      if(d.type==='dualState' && new URLSearchParams(window.location.search).get('dualWindow')==='1'){
+        try{
+          if(d.lang && typeof setLanguage==='function' && d.lang!==currentLang) setLanguage(d.lang,{notify:false});
+          if(Array.isArray(d.data)){
+            if(d.config) currentConfig=d.config;
+            if(Array.isArray(d.p2o5Data)) currentP2O5Data=d.p2o5Data;
+            const ov=document.getElementById('startOverlay'); if(ov) ov.classList.add('hidden');
+            await loadData(d.data);
+          }
+          applyDualView(d.view||'map');
+          if(d.screen){try{window.moveTo(d.screen.left,d.screen.top);window.resizeTo(d.screen.width,d.screen.height);}catch(err){}}
+        }catch(err){console.error('Dual state:',err);}
+      }
+      if(d.type==='dualRefresh'){
+        sendState(window,d.view||'map',null);
+      }
+    });
+
+    btn.addEventListener('click',showOverlay);
+    closeBtn && closeBtn.addEventListener('click',hideOverlay);
+    cancelBtn && cancelBtn.addEventListener('click',hideOverlay);
+    openBtn && openBtn.addEventListener('click',openBoth);
+    overlay.addEventListener('click',e=>{if(e.target===overlay)hideOverlay();});
+
+    /* Si la page est ouverte directement comme fenêtre secondaire. */
+    if(new URLSearchParams(window.location.search).get('dualWindow')==='1'){
+      document.body.classList.add('dual-window');
+      setTimeout(()=>{try{window.opener && window.opener.postMessage({source:'unifiedFarmerMap',type:'dualReady'},'*');}catch(e){}},300);
+    }
+  })();
+
 })();
 </script>
 
+
+
+
+<!-- ===============================================================
+     DOUBLE ÉCRAN — CONTRÔLEUR AUTONOME DE SECOURS
+     Ce bloc est volontairement indépendant du gros script principal.
+     Il garantit que le bouton et les deux fenêtres fonctionnent même
+     si une autre partie du JavaScript a rencontré une erreur.
+     =============================================================== -->
+<script>
+(function(){
+  'use strict';
+
+  function ready(fn){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',fn,{once:true});
+    else fn();
+  }
+
+  ready(function(){
+    const overlay=document.getElementById('dualScreenOverlay');
+    const btn0=document.getElementById('dualScreenBtn');
+    if(!overlay || !btn0) return;
+
+    // Retirer les anciens listeners éventuels en remplaçant les boutons.
+    const btn=btn0.cloneNode(true); btn0.replaceWith(btn);
+    const open0=document.getElementById('dualScreenOpen');
+    const close0=document.getElementById('dualScreenClose');
+    const cancel0=document.getElementById('dualScreenCancel');
+    const openBtn=open0 ? open0.cloneNode(true) : null;
+    const closeBtn=close0 ? close0.cloneNode(true) : null;
+    const cancelBtn=cancel0 ? cancel0.cloneNode(true) : null;
+    if(open0 && openBtn) open0.replaceWith(openBtn);
+    if(close0 && closeBtn) close0.replaceWith(closeBtn);
+    if(cancel0 && cancelBtn) cancel0.replaceWith(cancelBtn);
+
+    const status=document.getElementById('dualScreenStatus');
+    const selectA=document.getElementById('dualScreenA');
+    const selectB=document.getElementById('dualScreenB');
+
+    const labels={
+      fr:{title:'Mode double écran',sub:'Choisissez la vue à afficher sur chacun des écrans.',open:'Ouvrir sur les deux écrans',cancel:'Annuler',status:'Deux fenêtres seront ouvertes. Autorisez les fenêtres contextuelles si Chrome les bloque.'},
+      en:{title:'Dual-screen mode',sub:'Choose the view to display on each screen.',open:'Open on both screens',cancel:'Cancel',status:'Two windows will open. Allow pop-ups if Chrome blocks them.'},
+      ar:{title:'وضع الشاشتين',sub:'اختر العرض الذي سيظهر على كل شاشة.',open:'فتح على الشاشتين',cancel:'إلغاء',status:'سيتم فتح نافذتين. اسمح بالنوافذ المنبثقة إذا قام Chrome بحظرها.'}
+    };
+
+    function lang(){
+      try{
+        const U=window.__UFM; if(U && labels[U.currentLang]) return U.currentLang;
+      }catch(e){}
+      const x=document.documentElement.getAttribute('data-current-lang');
+      return labels[x] ? x : 'fr';
+    }
+
+    function setText(id,value){const e=document.getElementById(id);if(e)e.textContent=value;}
+    function updateText(){
+      const L=labels[lang()];
+      setText('dualScreenBtnLabel', lang()==='ar' ? 'شاشتان' : lang()==='en' ? 'Dual screen' : 'Double écrans');
+      setText('dualScreenTitle',L.title);
+      setText('dualScreenSubtitle',L.sub);
+      setText('dualScreenOpen',L.open);
+      setText('dualScreenCancel',L.cancel);
+      if(status) status.textContent=L.status;
+    }
+
+    function show(){
+      updateText();
+      detectRealScreens();
+      ensureSwapBox();
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden','false');
+    }
+    function ensureSwapBox(){
+      if(document.getElementById('dualSwapWrap')) return;
+      const actions=overlay.querySelector('.dual-screen-actions'); if(!actions) return;
+      const w=document.createElement('label');
+      w.id='dualSwapWrap';
+      w.style.cssText='margin-right:auto;display:flex;align-items:center;gap:6px;font-size:.74rem;font-weight:700;color:var(--ink-soft);cursor:pointer;';
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.id='dualSwapChk';
+      cb.addEventListener('change',()=>{swapScreens=cb.checked;});
+      const t=document.createElement('span');
+      t.textContent=lang()==='ar'?'عكس الشاشتين':lang()==='en'?'Swap screens':'Inverser les écrans';
+      w.appendChild(cb); w.appendChild(t); actions.insertBefore(w,actions.firstChild);
+    }
+    function hide(){
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden','true');
+    }
+
+    let realScreens=null, screenDetailsObj=null, swapScreens=false;
+
+    function norm(sc){
+      const g=(a,b)=>Number.isFinite(sc[a])?sc[a]:sc[b];
+      return {left:g('availLeft','left'),top:g('availTop','top'),width:g('availWidth','width'),height:g('availHeight','height')};
+    }
+
+    async function detectRealScreens(){
+      try{
+        if(typeof window.getScreenDetails!=='function') return;
+        if(!screenDetailsObj){
+          screenDetailsObj=await Promise.race([
+            window.getScreenDetails(),
+            new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),15000))
+          ]);
+        }
+        const all=Array.from(screenDetailsObj.screens||[]);
+        if(all.length<2){ realScreens=null; return; }
+        const cur=screenDetailsObj.currentScreen||all[0];
+        const other=all.find(x=>x!==cur)||all[1];
+        realScreens=[norm(cur),norm(other)];
+        if(status){
+          status.classList.remove('error');
+          status.textContent=(lang()==='ar'?'تم اكتشاف '+all.length+' شاشات.':lang()==='en'?all.length+' screens detected.':all.length+' écrans détectés : Écran 1 = écran actuel, Écran 2 = l’autre écran.');
+        }
+      }catch(e){ console.warn('Détection écrans:',e); realScreens=null; }
+    }
+
+    function fallbackScreens(){
+      if(realScreens && realScreens.length>=2){
+        return realScreens;
+      }
+      const sc=window.screen||{};
+      const w=Math.max(900, Number(sc.availWidth)||window.innerWidth||1400);
+      const h=Math.max(650, Number(sc.availHeight)||window.innerHeight||800);
+      const left=Number.isFinite(sc.availLeft) ? sc.availLeft : (window.screenX||0);
+      const top=Number.isFinite(sc.availTop) ? sc.availTop : (window.screenY||0);
+      return [
+        {left:left,top:top,width:w,height:h},
+        {left:left+w,top:top,width:w,height:h}
+      ];
+    }
+
+    function makeUrl(view,index){
+      try{
+        const u=new URL(window.location.href);
+        u.searchParams.set('dualWindow','1');
+        u.searchParams.set('dualView',view);
+        u.searchParams.set('dualScreenIndex',String(index));
+        return u.href;
+      }catch(e){
+        return window.location.href + (window.location.href.indexOf('?')>=0?'&':'?') + 'dualWindow=1&dualView='+encodeURIComponent(view)+'&dualScreenIndex='+index;
+      }
+    }
+
+    function getData(){
+      try{const U=window.__UFM; return U && Array.isArray(U.currentData) ? U.currentData : [];}catch(e){return [];}
+    }
+
+    function sendState(win,view,screen){
+      if(!win || win.closed) return;
+      let data=[],p2o5Data=null,config=null,current='fr';
+      try{data=getData();}catch(e){}
+      const U=window.__UFM||{};
+      try{p2o5Data=Array.isArray(U.currentP2O5Data)?U.currentP2O5Data:null;}catch(e){}
+      try{config=U.currentConfig||null;}catch(e){}
+      try{current=U.currentLang||'fr';}catch(e){}
+      const payload={source:'unifiedFarmerMap',type:'dualStateStandalone',view:view,lang:current,data:data,p2o5Data:p2o5Data,config:config,screen:screen};
+      try{win.postMessage(payload,'*');}catch(e){console.error(e);}
+    }
+
+    const childWins=[];
+    const isChildWin=new URLSearchParams(window.location.search).get('dualWindow')==='1';
+    let langGuard=false;
+
+    /* ---- Synchronisation de la langue (bidirectionnelle, sans boucle) ---- */
+    function broadcastLang(lang,except){
+      childWins.forEach(c=>{
+        if(c && c.win && !c.win.closed && c.win!==except){
+          try{c.win.postMessage({source:'unifiedFarmerMap',type:'dualLang',lang:lang},'*');}catch(e){}
+        }
+      });
+    }
+    window.__UFM_onLangChange=function(lang){
+      if(langGuard) return;
+      if(isChildWin){
+        try{window.opener && window.opener.postMessage({source:'unifiedFarmerMap',type:'dualLang',lang:lang},'*');}catch(e){}
+      }else{
+        broadcastLang(lang,null);
+      }
+    };
+    window.addEventListener('message',function(e){
+      const d=e && e.data;
+      if(!d || d.source!=='unifiedFarmerMap' || d.type!=='dualLang' || !d.lang) return;
+      const U=window.__UFM; if(!U) return;
+      const trusted=isChildWin ? (e.source===window.opener) : childWins.some(c=>c && c.win===e.source);
+      if(!trusted) return;
+      if(d.lang!==U.currentLang){
+        langGuard=true;
+        try{U.setLanguage(d.lang,{notify:false});}catch(err){console.error(err);}
+        finally{langGuard=false;}
+      }
+      if(!isChildWin) broadcastLang(d.lang,e.source);
+      if(isChildWin && typeof window.__dualRefreshLabels==='function') window.__dualRefreshLabels();
+    });
+    window.__UFM_onGroupChange=function(key){
+      const active=childWins.filter(c=>c&&c.win&&!c.win.closed);
+      if(!active.length) return;              // pas en mode double écran : rien à faire
+      active.forEach(c=>{
+        try{c.win.postMessage({source:'unifiedFarmerMap',type:'dualGov',key:key},'*');}catch(e){}
+      });
+      // Si la vue « Graphiques » est affichée dans CETTE fenêtre, l'appliquer aussi ici.
+      const mainCharts=document.querySelector('.tab-btn.active[data-tab="chartsWrap"]');
+      if(mainCharts && window.__UFM) window.__UFM.applyMapGovToCharts(key);
+    };
+    window.addEventListener('message',function(e){
+      const d=e&&e.data;
+      if(!d||d.source!=='unifiedFarmerMap'||d.type!=='dualReady') return;
+      const c=childWins.find(x=>x.win===e.source);
+      if(c) sendState(c.win,c.view,c.screen);
+    });
+
+    function openOne(view,screen,index){
+      const width=Math.max(900,Math.floor(screen.width));
+      const height=Math.max(650,Math.floor(screen.height));
+      const left=Math.round(screen.left);
+      const top=Math.round(screen.top);
+      // Ouverture strictement synchrone au clic utilisateur.
+      const features='width='+width+',height='+height+',left='+left+',top='+top+',resizable=yes,scrollbars=yes';
+      let win=null;
+      try{win=window.open(makeUrl(view,index),'UnifiedFarmerStandalone_'+index,features);}catch(e){console.error(e);}
+      if(!win) return null;
+      childWins[index]={win:win,view:view,screen:screen};
+      const deliver=function(){
+        sendState(win,view,screen);
+        try{win.moveTo(left,top);win.resizeTo(width,height);}catch(e){}
+      };
+      try{win.addEventListener('load',deliver);}catch(e){}
+      setTimeout(deliver,500);
+      setTimeout(deliver,1400);
+      setTimeout(deliver,2500);
+      return win;
+    }
+
+    function openBoth(){
+      const data=getData();
+      if(!data.length){
+        const m=lang()==='ar'?'يرجى تحميل ملف Excel أولاً.':lang()==='en'?'Please load an Excel file first.':'Chargez d’abord le fichier Excel.';
+        if(window.__UFM) window.__UFM.showToast(m,'error'); else if(status) status.textContent=m;
+        return;
+      }
+
+      const screens=fallbackScreens();
+      let viewA=selectA && selectA.value ? selectA.value : 'map';
+      let viewB=selectB && selectB.value ? selectB.value : 'charts';
+      if(swapScreens){const t=viewA;viewA=viewB;viewB=t;}
+
+      // Écran 1 = cette fenêtre (déjà sur l'écran courant) : on y affiche la vue A.
+      // Écran 2 = une SEULE nouvelle fenêtre, ouverte sur l'autre écran (vue B).
+      const w2=openOne(viewB,screens[1],1);
+      if(!w2){
+        const m=lang()==='ar'
+          ?'Chrome حظر النافذة الثانية. اسمح بالنوافذ المنبثقة لهذا الملف ثم أعد المحاولة.'
+          :lang()==='en'
+            ?'Chrome blocked the second window. Allow pop-ups for this file and try again.'
+            :'Chrome a bloqué la seconde fenêtre. Autorisez les fenêtres pop-up pour ce fichier puis réessayez.';
+        if(window.__UFM) window.__UFM.showToast(m,'error'); else if(status){status.classList.add('error');status.textContent=m;}
+        return;
+      }
+      const tabA=document.querySelector('.tab-btn[data-tab="'+({map:'mapWrap',charts:'chartsWrap',p2o5:'p2o5Wrap',excel:'excelGenWrap'}[viewA]||'mapWrap')+'"]');
+      if(tabA) tabA.click();
+      hide();
+    }
+
+    btn.addEventListener('click',show);
+    if(openBtn) openBtn.addEventListener('click',openBoth);
+    if(closeBtn) closeBtn.addEventListener('click',hide);
+    if(cancelBtn) cancelBtn.addEventListener('click',hide);
+    overlay.addEventListener('click',e=>{if(e.target===overlay)hide();});
+
+    // Réception dans les fenêtres enfants.
+    const params=new URLSearchParams(window.location.search);
+    if(params.get('dualWindow')==='1'){
+      document.body.classList.add('dual-window');
+      const TABS={map:'mapWrap',charts:'chartsWrap',p2o5:'p2o5Wrap',excel:'excelGenWrap'};
+      const NAMES={
+        fr:{map:'Répartition spatiale',charts:'Graphiques',p2o5:'Carte P2O5',excel:'Générateur Excel'},
+        en:{map:'Spatial distribution',charts:'Charts',p2o5:'P2O5 map',excel:'Excel generator'},
+        ar:{map:'التوزيع المكاني',charts:'الرسوم البيانية',p2o5:'خريطة P2O5',excel:'مولّد Excel'}
+      };
+      let myView=TABS[params.get('dualView')]?params.get('dualView'):'map';
+      let dataLoaded=false;
+      let govKey; // dernier choix de gouvernorat reçu depuis la carte
+      function applyGovIfCharts(){
+        if(myView==='charts' && govKey!==undefined && window.__UFM) window.__UFM.applyMapGovToCharts(govKey);
+      }
+
+      function applyView(view){
+        myView=TABS[view]?view:'map';
+        const U=window.__UFM;
+        const target=TABS[myView];
+        document.querySelectorAll('#mapWrap,#chartsWrap,#excelGenWrap,#p2o5Wrap').forEach(v=>v.classList.add('hidden-view'));
+        const el=document.getElementById(target); if(el) el.classList.remove('hidden-view');
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        const tab=document.querySelector('.tab-btn[data-tab="'+target+'"]'); if(tab) tab.classList.add('active');
+        if(U){
+          if(myView==='map' && U.map) setTimeout(()=>U.map.invalidateSize(),200);
+          if(myView==='p2o5') setTimeout(()=>{try{U.initP2O5Tab();}catch(err){}},200);
+          if(myView==='excel') setTimeout(()=>{try{U.loadExcelGenTab();}catch(err){}},200);
+        }
+        if(myView==='charts'){ applyGovIfCharts(); setTimeout(()=>window.dispatchEvent(new Event('resize')),300); }
+        const L=NAMES[lang()]||NAMES.fr;
+        document.title=L[myView];
+        const sel=document.getElementById('dualViewPicker'); if(sel) sel.value=myView;
+      }
+
+      window.__dualRefreshLabels=function(){
+        const L=NAMES[lang()]||NAMES.fr;
+        const sel=document.getElementById('dualViewPicker');
+        if(sel) Array.from(sel.options).forEach(o=>{o.textContent=L[o.value]||o.textContent;});
+        document.title=L[myView];
+      };
+
+      function addPicker(){
+        if(document.getElementById('dualViewPicker')) return;
+        const L=NAMES[lang()]||NAMES.fr;
+        const sel=document.createElement('select');
+        sel.id='dualViewPicker';
+        sel.style.cssText='position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:99999;padding:4px 8px;border-radius:8px;border:1px solid #c9bfa6;background:rgba(255,253,248,.92);font:700 12px Tajawal,sans-serif;opacity:.55;cursor:pointer;';
+        sel.onmouseenter=()=>{sel.style.opacity='1';}; sel.onmouseleave=()=>{sel.style.opacity='.55';};
+        Object.keys(TABS).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=L[k];sel.appendChild(o);});
+        sel.value=myView;
+        sel.addEventListener('change',()=>applyView(sel.value));
+        document.body.appendChild(sel);
+      }
+
+      // Appliquer immédiatement la vue demandée dans l'URL, sans attendre les données.
+      applyView(myView); addPicker();
+
+      window.addEventListener('message',function(e){
+        const d=e && e.data;
+        if(!d || d.source!=='unifiedFarmerMap' || d.type!=='dualGov') return;
+        govKey=d.key; applyGovIfCharts();
+      });
+
+      window.addEventListener('message',async function(e){
+        const d=e && e.data;
+        if(!d || d.source!=='unifiedFarmerMap' || d.type!=='dualStateStandalone') return;
+        try{
+          const U=window.__UFM;
+          if(!U) return;
+          if(!dataLoaded && Array.isArray(d.data) && d.data.length){
+            dataLoaded=true;
+            if(d.lang && d.lang!==U.currentLang) U.setLanguage(d.lang,{notify:false});
+            if(d.config) U.currentConfig=d.config;
+            if(Array.isArray(d.p2o5Data)) U.currentP2O5Data=d.p2o5Data;
+            const ov=document.getElementById('startOverlay'); if(ov) ov.classList.add('hidden');
+            await U.loadData(d.data);
+          }
+          if(window.__dualRefreshLabels) window.__dualRefreshLabels();
+          // La vue choisie par l'utilisateur (URL ou liste) fait foi.
+          applyView(myView);
+          setTimeout(()=>applyView(myView),600);
+          if(d.screen){try{window.moveTo(d.screen.left,d.screen.top);window.resizeTo(d.screen.width,d.screen.height);}catch(err){}}
+        }catch(err){console.error('Dual-screen standalone:',err);}
+      });
+
+      // Handshake : l'enfant demande les données au parent jusqu'à les recevoir.
+      let tries=0;
+      const ask=setInterval(function(){
+        if(dataLoaded || ++tries>60){clearInterval(ask);return;}
+        try{window.opener && window.opener.postMessage({source:'unifiedFarmerMap',type:'dualReady'},'*');}catch(e){}
+      },400);
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
