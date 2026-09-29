@@ -10000,6 +10000,25 @@ const I18N = {
       try{ renderDynamicKPI(currentData); renderCharts(currentData); }
       catch(e){ console.warn('applyMapGovToCharts:', e); }
     },
+    refreshTexts: function(){
+      try{ applyStaticText(); }catch(e){ console.warn('applyStaticText', e); }
+      try{ if(typeof initP2O5TabTexts==='function') initP2O5TabTexts(); }catch(e){ console.warn('P2O5 i18n', e); }
+      try{
+        if(map && currentData && currentData.length){
+          updateLegend(currentData);
+          updateGroupFilter(currentData, true);
+          renderCharts(currentData);
+          try{ renderDynamicKPI(currentData); }catch(e){}
+        }
+      }catch(e){ console.warn('refreshTexts', e); }
+      try{
+        const frame=document.getElementById('excelGenFrame');
+        if(frame && frame.contentWindow){
+          frame.contentWindow.postMessage({source:'unifiedFarmerMap',type:'setLang',lang:currentLang},'*');
+        }
+      }catch(e){}
+      try{ renderLanguageButtons(); }catch(e){}
+    },
     loadData: loadData,
     setLanguage: setLanguage,
     initP2O5Tab: initP2O5Tab,
@@ -10526,7 +10545,21 @@ document.addEventListener('keydown', function(e){
     }
 
     function setText(id,value){const e=document.getElementById(id);if(e)e.textContent=value;}
+    function updateBtnLabel(){
+      const t=lang()==='ar' ? 'شاشتان' : lang()==='en' ? 'Dual screen' : 'Double écrans';
+      const l=document.getElementById('dualScreenBtnLabel'); if(l) l.textContent=t;
+      const b=document.getElementById('dualScreenBtn');
+      if(b){ b.title=t; b.setAttribute('aria-label',t); }
+    }
+    /* Le libellé du bouton suit TOUT changement de langue de l'application. */
+    try{
+      new MutationObserver(updateBtnLabel).observe(document.documentElement,{attributes:true,attributeFilter:['lang','data-current-lang']});
+    }catch(e){}
+    updateBtnLabel();
+    setTimeout(updateBtnLabel,300);
+
     function updateText(){
+      updateBtnLabel();
       const L=labels[lang()];
       setText('dualScreenBtnLabel', lang()==='ar' ? 'شاشتان' : lang()==='en' ? 'Dual screen' : 'Double écrans');
       setText('dualScreenTitle',L.title);
@@ -10534,16 +10567,49 @@ document.addEventListener('keydown', function(e){
       setText('dualScreenOpen',L.open);
       setText('dualScreenCancel',L.cancel);
       if(status) status.textContent=L.status;
+
+      /* Libellés internes du dialogue (écrans, champs, options, case à cocher). */
+      const X={
+        fr:{s1:'Écran 1',s2:'Écran 2',view:'Vue à afficher',swap:'Inverser les écrans',close:'Fermer',
+            map:'Répartition spatiale des échantillons',charts:'Graphiques',p2o5:'Carte P2O5',excel:'Générateur de graphiques Excel'},
+        en:{s1:'Screen 1',s2:'Screen 2',view:'View to display',swap:'Swap screens',close:'Close',
+            map:'Spatial distribution of samples',charts:'Charts',p2o5:'P2O5 map',excel:'Excel Chart Generator'},
+        ar:{s1:'الشاشة 1',s2:'الشاشة 2',view:'العرض المطلوب',swap:'عكس الشاشتين',close:'إغلاق',
+            map:'التوزيع المكاني للعينات',charts:'الرسوم البيانية',p2o5:'خريطة P2O5',excel:'مولّد رسوم Excel'}
+      }[lang()]||{};
+      setText('dualScreenAHeading',X.s1);
+      setText('dualScreenBHeading',X.s2);
+      overlay.querySelectorAll('.dual-field label').forEach(e=>{e.textContent=X.view;});
+      [selectA,selectB].forEach(sel=>{
+        if(!sel) return;
+        Array.from(sel.options).forEach(o=>{ if(X[o.value]) o.textContent=X[o.value]; });
+      });
+      const swapSpan=document.querySelector('#dualSwapWrap span'); if(swapSpan) swapSpan.textContent=X.swap;
+      const cl=document.getElementById('dualScreenClose'); if(cl) cl.setAttribute('aria-label',X.close);
     }
 
     function show(){
-      updateText();
-      detectRealScreens();
       ensureSwapBox();
+      updateText();
+      const _db=document.getElementById('dualDetectBtn'); if(_db) _db.textContent=DETECT_LABEL[lang()]||DETECT_LABEL.fr;
+      autoDetectIfGranted();
       overlay.classList.add('show');
       overlay.setAttribute('aria-hidden','false');
     }
+    function ensureDetectBtn(){
+      if(document.getElementById('dualDetectBtn') || !status) return;
+      const b=document.createElement('button');
+      b.id='dualDetectBtn'; b.type='button'; b.style.display='none';
+      b.style.cssText='display:none;margin-top:8px;background:none;border:0;padding:0;color:#374151;font:700 .72rem Tajawal,sans-serif;text-decoration:underline;cursor:pointer;';
+      b.textContent=DETECT_LABEL[lang()]||DETECT_LABEL.fr;
+      b.addEventListener('click',async function(){
+        await detectRealScreens();
+        if(realScreens) b.style.display='none';
+      });
+      status.insertAdjacentElement('afterend',b);
+    }
     function ensureSwapBox(){
+      ensureDetectBtn();
       if(document.getElementById('dualSwapWrap')) return;
       const actions=overlay.querySelector('.dual-screen-actions'); if(!actions) return;
       const w=document.createElement('label');
@@ -10588,6 +10654,30 @@ document.addEventListener('keydown', function(e){
       }catch(e){ console.warn('Détection écrans:',e); realScreens=null; }
     }
 
+    const HINT={
+      fr:'Sans détection, la 2ᵉ fenêtre s’ouvre à côté. Si elle reste sur le même écran, déplacez-la (Windows : Win+Maj+→) puis cliquez sur ⛶ pour le plein écran.',
+      en:'Without detection, the 2nd window opens next to this one. If it stays on the same screen, move it (Windows: Win+Shift+→) then click ⛶ for full screen.',
+      ar:'من دون الكشف عن الشاشات ستُفتح النافذة الثانية بجانب هذه. إذا بقيت على الشاشة نفسها فانقلها (Windows: Win+Shift+→) ثم انقر ⛶ لملء الشاشة.'
+    };
+    const DETECT_LABEL={fr:'Détecter mes écrans (Chrome demandera une autorisation)',en:'Detect my screens (Chrome will ask for permission)',ar:'اكتشاف الشاشات (سيطلب Chrome إذناً)'};
+
+    async function autoDetectIfGranted(){
+      let state='unknown';
+      try{
+        if(navigator.permissions && navigator.permissions.query){
+          for(const n of ['window-management','window-placement']){
+            try{ state=(await navigator.permissions.query({name:n})).state; break; }catch(e){}
+          }
+        }
+      }catch(e){}
+      if(state==='granted') await detectRealScreens();
+      const det=document.getElementById('dualDetectBtn');
+      if(!realScreens){
+        if(status){ status.classList.remove('error'); status.textContent=HINT[lang()]||HINT.fr; }
+        if(det) det.style.display=(typeof window.getScreenDetails==='function' && state!=='denied') ? '' : 'none';
+      }else if(det){ det.style.display='none'; }
+    }
+
     function fallbackScreens(){
       if(realScreens && realScreens.length>=2){
         return realScreens;
@@ -10609,6 +10699,7 @@ document.addEventListener('keydown', function(e){
         u.searchParams.set('dualWindow','1');
         u.searchParams.set('dualView',view);
         u.searchParams.set('dualScreenIndex',String(index));
+        try{ u.searchParams.set('dualLang',(window.__UFM&&window.__UFM.currentLang)||'fr'); }catch(e){}
         return u.href;
       }catch(e){
         return window.location.href + (window.location.href.indexOf('?')>=0?'&':'?') + 'dualWindow=1&dualView='+encodeURIComponent(view)+'&dualScreenIndex='+index;
@@ -10663,7 +10754,10 @@ document.addEventListener('keydown', function(e){
         finally{langGuard=false;}
       }
       if(!isChildWin) broadcastLang(d.lang,e.source);
-      if(isChildWin && typeof window.__dualRefreshLabels==='function') window.__dualRefreshLabels();
+      if(isChildWin){
+        if(typeof window.__dualRefreshLabels==='function') window.__dualRefreshLabels();
+        if(typeof window.__dualRefreshTexts==='function') window.__dualRefreshTexts();
+      }
     });
     window.__UFM_onGroupChange=function(key){
       const active=childWins.filter(c=>c&&c.win&&!c.win.closed);
@@ -10678,8 +10772,11 @@ document.addEventListener('keydown', function(e){
     window.addEventListener('message',function(e){
       const d=e&&e.data;
       if(!d||d.source!=='unifiedFarmerMap'||d.type!=='dualReady') return;
-      const c=childWins.find(x=>x.win===e.source);
-      if(c) sendState(c.win,c.view,c.screen);
+      const c=childWins.find(x=>x && x.win===e.source);
+      if(!c) return;
+      if(c.sid===d.sid) return;          // déjà servi : ne pas renvoyer les données
+      c.sid=d.sid;
+      sendState(c.win,c.view,c.screen);
     });
 
     function openOne(view,screen,index){
@@ -10693,14 +10790,8 @@ document.addEventListener('keydown', function(e){
       try{win=window.open(makeUrl(view,index),'UnifiedFarmerStandalone_'+index,features);}catch(e){console.error(e);}
       if(!win) return null;
       childWins[index]={win:win,view:view,screen:screen};
-      const deliver=function(){
-        sendState(win,view,screen);
-        try{win.moveTo(left,top);win.resizeTo(width,height);}catch(e){}
-      };
-      try{win.addEventListener('load',deliver);}catch(e){}
-      setTimeout(deliver,500);
-      setTimeout(deliver,1400);
-      setTimeout(deliver,2500);
+      // Positionnement une seule fois ; les données sont envoyées à la demande de l'enfant.
+      try{win.moveTo(left,top);win.resizeTo(width,height);}catch(e){}
       return win;
     }
 
@@ -10752,6 +10843,20 @@ document.addEventListener('keydown', function(e){
       };
       let myView=TABS[params.get('dualView')]?params.get('dualView'):'map';
       let dataLoaded=false;
+      let sid=Math.random().toString(36).slice(2);
+      let renderedLang=null;
+      const viewInit={};
+      let refreshTimer=null;
+
+      // Écran de chargement : masque les rendus intermédiaires.
+      const LOAD_TXT={fr:'Chargement…',en:'Loading…',ar:'جارٍ التحميل…'};
+      const loader=document.createElement('div');
+      loader.id='dualLoader';
+      loader.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:#f7f3ea;color:#4b5563;font:700 16px Tajawal,sans-serif;';
+      loader.textContent=LOAD_TXT[params.get('dualLang')]||LOAD_TXT.fr;
+      document.body.appendChild(loader);
+      setTimeout(()=>{ if(document.getElementById('dualLoader')) hideLoader(); },20000);
+      function hideLoader(){ setTimeout(()=>{ loader.style.transition='opacity .25s'; loader.style.opacity='0'; setTimeout(()=>loader.remove(),300); },500); }
       let govKey; // dernier choix de gouvernorat reçu depuis la carte
       function applyGovIfCharts(){
         if(myView==='charts' && govKey!==undefined && window.__UFM) window.__UFM.applyMapGovToCharts(govKey);
@@ -10767,15 +10872,28 @@ document.addEventListener('keydown', function(e){
         const tab=document.querySelector('.tab-btn[data-tab="'+target+'"]'); if(tab) tab.classList.add('active');
         if(U){
           if(myView==='map' && U.map) setTimeout(()=>U.map.invalidateSize(),200);
-          if(myView==='p2o5') setTimeout(()=>{try{U.initP2O5Tab();}catch(err){}},200);
-          if(myView==='excel') setTimeout(()=>{try{U.loadExcelGenTab();}catch(err){}},200);
+          if(dataLoaded && !viewInit[myView]){
+            if(myView==='p2o5'){ viewInit.p2o5=true; setTimeout(()=>{try{U.initP2O5Tab();}catch(err){}},200); }
+            if(myView==='excel'){ viewInit.excel=true; setTimeout(()=>{try{U.loadExcelGenTab();}catch(err){}},200); }
+          }
         }
         if(myView==='charts'){ applyGovIfCharts(); setTimeout(()=>window.dispatchEvent(new Event('resize')),300); }
         const L=NAMES[lang()]||NAMES.fr;
         document.title=L[myView];
         const sel=document.getElementById('dualViewPicker'); if(sel) sel.value=myView;
+        // Rafraîchir les textes seulement si la langue a changé depuis le dernier rendu.
+        if(U && dataLoaded && renderedLang!==null && renderedLang!==U.currentLang && window.__dualRefreshTexts) window.__dualRefreshTexts();
       }
 
+      window.__dualRefreshTexts=function(){
+        const U=window.__UFM; if(!U) return;
+        clearTimeout(refreshTimer);
+        refreshTimer=setTimeout(()=>{
+          try{U.refreshTexts();}catch(e){}
+          renderedLang=U.currentLang;
+          if(window.__dualRefreshLabels) window.__dualRefreshLabels();
+        },150);
+      };
       window.__dualRefreshLabels=function(){
         const L=NAMES[lang()]||NAMES.fr;
         const sel=document.getElementById('dualViewPicker');
@@ -10794,6 +10912,17 @@ document.addEventListener('keydown', function(e){
         sel.value=myView;
         sel.addEventListener('change',()=>applyView(sel.value));
         document.body.appendChild(sel);
+        const fs=document.createElement('button');
+        fs.id='dualFsBtn'; fs.type='button'; fs.textContent='⛶'; fs.title='Plein écran / Full screen';
+        fs.style.cssText='position:fixed;top:6px;left:calc(50% + 110px);z-index:99999;padding:3px 8px;border-radius:8px;border:1px solid #c9bfa6;background:rgba(255,253,248,.92);font:700 14px sans-serif;opacity:.55;cursor:pointer;';
+        fs.onmouseenter=()=>{fs.style.opacity='1';}; fs.onmouseleave=()=>{fs.style.opacity='.55';};
+        fs.addEventListener('click',()=>{
+          try{
+            if(document.fullscreenElement) document.exitFullscreen();
+            else document.documentElement.requestFullscreen();
+          }catch(e){}
+        });
+        document.body.appendChild(fs);
       }
 
       // Appliquer immédiatement la vue demandée dans l'URL, sans attendre les données.
@@ -10813,6 +10942,7 @@ document.addEventListener('keydown', function(e){
           if(!U) return;
           if(!dataLoaded && Array.isArray(d.data) && d.data.length){
             dataLoaded=true;
+            if(d.lang) renderedLang=d.lang;
             if(d.lang && d.lang!==U.currentLang) U.setLanguage(d.lang,{notify:false});
             if(d.config) U.currentConfig=d.config;
             if(Array.isArray(d.p2o5Data)) U.currentP2O5Data=d.p2o5Data;
@@ -10822,16 +10952,18 @@ document.addEventListener('keydown', function(e){
           if(window.__dualRefreshLabels) window.__dualRefreshLabels();
           // La vue choisie par l'utilisateur (URL ou liste) fait foi.
           applyView(myView);
-          setTimeout(()=>applyView(myView),600);
-          if(d.screen){try{window.moveTo(d.screen.left,d.screen.top);window.resizeTo(d.screen.width,d.screen.height);}catch(err){}}
-        }catch(err){console.error('Dual-screen standalone:',err);}
+          if(!viewInit.__done){ viewInit.__done=true; window.__dualRefreshTexts(); hideLoader(); }
+        }catch(err){
+          console.error('Dual-screen standalone:',err);
+          dataLoaded=false; sid=Math.random().toString(36).slice(2); // permettre une nouvelle demande
+        }
       });
 
       // Handshake : l'enfant demande les données au parent jusqu'à les recevoir.
       let tries=0;
       const ask=setInterval(function(){
-        if(dataLoaded || ++tries>60){clearInterval(ask);return;}
-        try{window.opener && window.opener.postMessage({source:'unifiedFarmerMap',type:'dualReady'},'*');}catch(e){}
+        if(viewInit.__done || ++tries>60){clearInterval(ask);return;}
+        try{window.opener && window.opener.postMessage({source:'unifiedFarmerMap',type:'dualReady',sid:sid},'*');}catch(e){}
       },400);
     }
   });
