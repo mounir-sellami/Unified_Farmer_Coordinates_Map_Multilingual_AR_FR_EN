@@ -1982,6 +1982,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   overflow:hidden;
   text-overflow:ellipsis;
 }
+.p2o5-kpi-metric-value small{font-size:.62rem;font-weight:700;color:var(--ink-soft);}
+.p2o5-kpi-metric-dose .p2o5-kpi-metric-value{color:var(--olive-dark);}
 .p2o5-kpi-metric-sub{
   font-size:.58rem;
   color:var(--ink-soft);
@@ -3090,6 +3092,24 @@ if(window.__XLSX_BASE) window.XLSX=window.__XLSX_BASE;
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+/* Format numérique unifié : espace (insécable) comme séparateur des milliers
+   dans TOUS les nombres affichés via toLocaleString(). Séparateur décimal :
+   virgule (fr/ar) ou point (en). */
+(function(){
+  var orig = Number.prototype.toLocaleString;
+  var NB = '\u00A0';
+  Number.prototype.toLocaleString = function(loc, opts){
+    var n = Number(this);
+    var lang = 'fr';
+    try{ if(typeof currentLang !== 'undefined') lang = currentLang; }catch(e){}
+    if(!isFinite(n)) return orig.call(n, 'fr-FR', opts);
+    if(lang === 'en') return orig.call(n, 'en-US', opts).replace(/,/g, NB);
+    return orig.call(n, 'fr-FR', opts).replace(/[\u202F\u00A0]/g, NB);
+  };
+  window.fmtNum = function(n, opts){ return Number(n).toLocaleString(undefined, opts); };
+})();
+</script>
 
 
 
@@ -6372,6 +6392,8 @@ const I18N = {
     box.innerHTML = '<svg viewBox="0 0 100 100" role="img" aria-label="P2O5">' + shapes.join('') + '</svg>';
 
     const fmtInt = n => n.toLocaleString();
+    const fmtKg = kg => Number.isFinite(kg) ? Math.round(kg).toLocaleString() : '—';
+    const fmtT  = kg => Number.isFinite(kg) ? (kg/1000).toLocaleString(undefined,{maximumFractionDigits:2}) : '—';
     const fmtArea = b => b.areaCount ? b.area.toLocaleString(undefined,{maximumFractionDigits:2}) : '—';
     const unitPpm = 'ppm';
 
@@ -6394,7 +6416,9 @@ const I18N = {
         tip.innerHTML =
           '<div><b style="color:'+colors[b.key]+'">'+escapeHtml(b.label)+'</b> '+unitPpm+'</div>' +
           '<div>'+escapeHtml(labels.count)+' : <b>'+fmtInt(b.count)+'</b> ('+countPct.toFixed(1)+'%)</div>' +
-          '<div>'+escapeHtml(labels.area)+' (ha) : <b>'+fmtArea(b)+'</b> ('+areaPct.toFixed(1)+'%)</div>';
+          '<div>'+escapeHtml(labels.area)+' (ha) : <b>'+fmtArea(b)+'</b> ('+areaPct.toFixed(1)+'%)</div>' +
+          '<div>'+escapeHtml(labels.dose)+' : <b>'+b.dose.toLocaleString()+'</b></div>' +
+          '<div>'+escapeHtml(labels.totalQty)+' : <b>'+(b.areaCount ? fmtKg(b.totalKg)+' '+escapeHtml(labels.kg)+'</b> (= '+fmtT(b.totalKg)+' '+escapeHtml(labels.t)+')' : '—</b>')+'</div>';
         tip.classList.add('show');
         move(e);
       });
@@ -6545,11 +6569,23 @@ const I18N = {
     const countTotal = buckets.reduce((s,b)=>s+b.count,0);
     const areaTotal = buckets.reduce((s,b)=>s+b.area,0);
 
+    /* Dose de P2O5 à apporter (kg/ha) par classe : mêmes valeurs que la carte
+       des apports nécessaires (P2O5_DOSE_BY_CLASS = 150 / 100 / 50). La
+       quantité totale d'une classe = superficie de la classe (ha) × dose. */
+    let doseTable = [150,100,50];
+    try{ if(Array.isArray(P2O5_DOSE_BY_CLASS) && P2O5_DOSE_BY_CLASS.length>=3) doseTable = P2O5_DOSE_BY_CLASS; }catch(e){}
+    buckets.forEach((b,i)=>{
+      b.dose = doseTable[i];
+      b.totalKg = b.area * b.dose;
+    });
+    const fmtKg = kg => Number.isFinite(kg) ? Math.round(kg).toLocaleString() : '—';
+    const fmtT  = kg => Number.isFinite(kg) ? (kg/1000).toLocaleString(undefined,{maximumFractionDigits:2}) : '—';
+
     const labels = currentLang==='ar'
-      ? {count:'عدد القطع', area:'المساحة الإجمالية', pctCount:'من عدد القطع', pctArea:'من المساحة', ppm:'ppm — طريقة Olsen'}
+      ? {count:'عدد القطع', area:'المساحة الإجمالية', pctCount:'من عدد القطع', pctArea:'من المساحة', ppm:'ppm — طريقة Olsen', dose:'الجرعة الموصى بها (كغ P2O5/هك)', totalQty:'الكمية الإجمالية للإضافة', perHa:'كغ/هك', kg:'كغ', t:'طن', doseNote:'الجرعات إرشادية'}
       : currentLang==='en'
-        ? {count:'Number of parcels', area:'Total area', pctCount:'of parcels', pctArea:'of area', ppm:'ppm — Olsen method'}
-        : {count:'Nombre de parcelles', area:'Superficie totale', pctCount:'du nombre de parcelles', pctArea:'de la superficie', ppm:'ppm — Olsen'};
+        ? {count:'Number of parcels', area:'Total area', pctCount:'of parcels', pctArea:'of area', ppm:'ppm — Olsen method', dose:'Recommended rate (kg P2O5/ha)', totalQty:'Total P2O5 to apply', perHa:'kg/ha', kg:'kg', t:'t', doseNote:'Indicative rates'}
+        : {count:'Nombre de parcelles', area:'Superficie totale', pctCount:'du nombre de parcelles', pctArea:'de la superficie', ppm:'ppm — Olsen', dose:'Dose à apporter (kg P2O5/ha)', totalQty:'Quantité totale de P2O5', perHa:'kg/ha', kg:'kg', t:'t', doseNote:'Doses indicatives'};
 
     const pieBox = document.getElementById('p2o5KpiPie');
     if(!p2o5Col && pieBox) pieBox.innerHTML = '';
@@ -6588,6 +6624,15 @@ const I18N = {
             '<div class="p2o5-kpi-metric-value">'+areaText+'</div>' +
             '<div class="p2o5-kpi-metric-sub">'+areaPct.toFixed(1)+'% '+escapeHtml(labels.pctArea)+'</div>' +
           '</div>' +
+          '<div class="p2o5-kpi-metric p2o5-kpi-metric-dose">' +
+            '<div class="p2o5-kpi-metric-label">'+escapeHtml(labels.dose)+'</div>' +
+            '<div class="p2o5-kpi-metric-value">'+b.dose.toLocaleString()+'</div>' +
+          '</div>' +
+          '<div class="p2o5-kpi-metric p2o5-kpi-metric-dose">' +
+            '<div class="p2o5-kpi-metric-label">'+escapeHtml(labels.totalQty)+'</div>' +
+            '<div class="p2o5-kpi-metric-value">'+(b.areaCount ? fmtKg(b.totalKg)+' <small>'+escapeHtml(labels.kg)+'</small>' : '—')+'</div>' +
+            '<div class="p2o5-kpi-metric-sub">'+(b.areaCount ? '= '+fmtT(b.totalKg)+' '+escapeHtml(labels.t) : '')+'</div>' +
+          '</div>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -6601,7 +6646,10 @@ const I18N = {
     const areaMissing = validP2O5 - areaCount;
     const colText = p2o5Col ? 'P2O5 : '+p2o5Col : '';
 
-    foot.textContent =
+    const doseNoteTxt = ' ' + labels.doseNote + ' : ' +
+      buckets.map(b => b.label+' → '+b.dose).join(' ; ') + ' ' + labels.perHa + ' P2O5. ';
+
+    foot.textContent = doseNoteTxt +
       (currentLang==='ar'
         ? 'النطاق: '+govText+' — '+validP2O5+' قيمة P2O5 صالحة. '
         : currentLang==='en'
@@ -6856,7 +6904,8 @@ const I18N = {
                 display:true,
                 precision:0,
                 autoSkip:false,
-                padding:6
+                padding:6,
+                callback:function(v){ return (typeof v==='number') ? v.toLocaleString() : v; }
               }
             }
           }
@@ -7532,6 +7581,7 @@ const I18N = {
     lastStatusArg:null,
     hoverDataA:null,
     hoverDataB:null,
+    hoverParcels:null,
     lastQuality:null,
     parcelSource:null,
     lastDoseClassifier:null
@@ -7596,6 +7646,58 @@ const I18N = {
     return box;
   }
 
+  /* Parcelle sous le curseur : test point-dans-polygone sur les entités du
+     GeoJSON parcellaire affiché (p2o5State.hoverParcels). La superficie (ha)
+     est lue dans la propriété SUP (ou équivalent). */
+  function p2o5PointInRing(lon,lat,ring){
+    let inside=false;
+    for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const xi=ring[i][0], yi=ring[i][1], xj=ring[j][0], yj=ring[j][1];
+      if(((yi>lat)!==(yj>lat)) && (lon<(xj-xi)*(lat-yi)/(yj-yi)+xi)) inside=!inside;
+    }
+    return inside;
+  }
+  function p2o5PointInPolygon(lon,lat,poly){
+    if(!poly || !poly.length || !p2o5PointInRing(lon,lat,poly[0])) return false;
+    for(let h=1;h<poly.length;h++) if(p2o5PointInRing(lon,lat,poly[h])) return false;
+    return true;
+  }
+  function p2o5ParcelAt(lon,lat){
+    const feats=p2o5State.hoverParcels;
+    if(!feats) return null;
+    for(const ft of feats){
+      const b=ft._bb;
+      if(b && (lon<b[0]||lon>b[2]||lat<b[1]||lat>b[3])) continue;
+      for(const poly of ft._polys){
+        if(p2o5PointInPolygon(lon,lat,poly)) return ft;
+      }
+    }
+    return null;
+  }
+  function p2o5PrepareHoverParcels(geojson){
+    const out=[];
+    ((geojson&&geojson.features)||[]).forEach(f=>{
+      const polys=[];
+      polygonGeometryParts(f.geometry,polys);
+      if(!polys.length) return;
+      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+      polys.forEach(p=>p[0].forEach(c=>{
+        if(c[0]<minX)minX=c[0]; if(c[0]>maxX)maxX=c[0];
+        if(c[1]<minY)minY=c[1]; if(c[1]>maxY)maxY=c[1];
+      }));
+      const pr=f.properties||{};
+      let sup=NaN;
+      for(const k of Object.keys(pr)){
+        if(/^(sup|superficie|surface|area|sup_ha|surf_ha)$/i.test(k)){
+          const n=Number(String(pr[k]).replace(',','.'));
+          if(Number.isFinite(n)){ sup=n; break; }
+        }
+      }
+      out.push({_polys:polys,_bb:[minX,minY,maxX,maxY],sup,props:pr});
+    });
+    return out;
+  }
+
   function updateP2O5Hover(map, e, data, kind){
     const box=ensureP2O5HoverBox(map);
     const container=map ? map.getContainer() : null;
@@ -7624,7 +7726,23 @@ const I18N = {
       ? {x:'X (Longitude)',y:'Y (Latitude)',value:kind==='p2o5'?'P2O5 value':'Input value',unit:kind==='p2o5'?'ppm':'kg/ha'}
       : {x:'X (Longitude)',y:'Y (Latitude)',value:kind==='p2o5'?'Valeur P2O5':'Valeur apport',unit:kind==='p2o5'?'ppm':'kg/ha'};
     const valueHtml=inMask ? `<strong>${labels.value} :</strong> ${Number(v).toFixed(2)} ${labels.unit}` : `<strong>${labels.value} :</strong> —`;
-    box.innerHTML=`<div><strong>${labels.x} :</strong> ${lon.toFixed(6)}</div><div><strong>${labels.y} :</strong> ${lat.toFixed(6)}</div><div>${valueHtml}</div>`;
+    /* Apport/ha et apport total de la parcelle survolée (superficie × dose). */
+    const lx=lang==='ar'
+      ? {sup:'مساحة القطعة (هك)',dose:'الإضافة (كغ/هك)',tot:'الإضافة الإجمالية للقطعة',kg:'كغ',t:'طن'}
+      : lang==='en'
+      ? {sup:'Parcel area (ha)',dose:'Input (kg/ha)',tot:'Total input for the parcel',kg:'kg',t:'t'}
+      : {sup:'Superficie parcelle (ha)',dose:'Apport (kg/ha)',tot:'Apport total de la parcelle',kg:'kg',t:'t'};
+    let extraHtml='';
+    if(inMask){
+      const doseHa = kind==='dose' ? Number(v) : doseFromP2O5(Number(v));
+      const parcel=p2o5ParcelAt(lon,lat);
+      const sup=parcel ? parcel.sup : NaN;
+      const total=(Number.isFinite(doseHa)&&Number.isFinite(sup)) ? doseHa*sup : NaN;
+      extraHtml=`<div><strong>${lx.dose} :</strong> ${Number.isFinite(doseHa)?doseHa.toLocaleString():'—'}</div>`+
+        `<div><strong>${lx.sup} :</strong> ${Number.isFinite(sup)?sup.toLocaleString(undefined,{maximumFractionDigits:3}):'—'}</div>`+
+        `<div><strong>${lx.tot} :</strong> ${Number.isFinite(total)?Math.round(total).toLocaleString()+' '+lx.kg+' (= '+(total/1000).toLocaleString(undefined,{maximumFractionDigits:3})+' '+lx.t+')':'—'}</div>`;
+    }
+    box.innerHTML=`<div><strong>${labels.x} :</strong> ${lon.toFixed(6)}</div><div><strong>${labels.y} :</strong> ${lat.toFixed(6)}</div><div>${valueHtml}</div>${extraHtml}`;
     const pt=map.latLngToContainerPoint(e.latlng);
     const left=Math.min(pt.x+12, Math.max(4, container.clientWidth-box.offsetWidth-4));
     const top=Math.min(pt.y+12, Math.max(4, container.clientHeight-box.offsetHeight-4));
@@ -8412,6 +8530,7 @@ const I18N = {
       }
 
       p2o5State.parcelSource=parcelData ? parcelData.path : null;
+      p2o5State.hoverParcels=p2o5PrepareHoverParcels(displayGeoJSON);
 
       const width=bbox.maxLon-bbox.minLon, height=bbox.maxLat-bbox.minLat;
       const maxDim=130;
@@ -9961,13 +10080,13 @@ const I18N = {
         elOnline.textContent = '—';
         return;
       }
-      elOnline.textContent = Math.max(1, joinCount - leaveCount);
+      elOnline.textContent = Math.max(1, joinCount - leaveCount).toLocaleString();
     }
 
     function setTotal(v){
       if(elTotal){
         elTotal.textContent =
-          (typeof v === 'number' && !isNaN(v)) ? v : '—';
+          (typeof v === 'number' && !isNaN(v)) ? v.toLocaleString() : '—';
       }
     }
 
