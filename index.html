@@ -3527,6 +3527,8 @@ const I18N = {
       "Colonnes à afficher dans le popup",
     popupColumnsNote:
       "Les coordonnées restent disponibles pour la carte même si elles ne sont pas affichées dans le popup.",
+    popupAnomaliesOption:
+      "⚠️ Anomalies de coordonnées (cause de l'anomalie)",
     chartsColumnsTitle:
       "Informations à transformer en graphiques",
     chartCategoryLabel:
@@ -3797,6 +3799,8 @@ const I18N = {
       "Columns to display in the popup",
     popupColumnsNote:
       "Coordinates remain available for the map even if they are not displayed in the popup.",
+    popupAnomaliesOption:
+      "⚠️ Coordinate anomalies (cause of the anomaly)",
     chartsColumnsTitle:
       "Information to turn into charts",
     chartCategoryLabel:
@@ -4067,6 +4071,8 @@ const I18N = {
       "الأعمدة التي ستظهر في النافذة المنبثقة",
     popupColumnsNote:
       "تبقى الإحداثيات متاحة للخريطة حتى إذا لم يتم عرضها في النافذة المنبثقة.",
+    popupAnomaliesOption:
+      "⚠️ شذوذات الإحداثيات (سبب الشذوذ)",
     chartsColumnsTitle:
       "المعلومات التي سيتم تحويلها إلى رسوم بيانية",
     chartCategoryLabel:
@@ -5129,7 +5135,7 @@ const I18N = {
       if(d.flagOutsideTunisia) anomalies.push(['outcountry',L.verifyLegendOutCountry,L.verifyReasonOutsideTunisia]);
       if(d.flagWrongGov) anomalies.push(['outgov',L.verifyLegendOutGov,L.verifyReasonWrongGovernorate(localizeGovernorateName(d.declaredGovernorate),localizeGovernorateName(d.actualGovernorate))]);
       if(d.isDuplicateCoord) anomalies.push(['duplicate',L.verifyLegendDuplicate,L.verifyReasonDuplicate((d.duplicateGroupSize||2)-1)]);
-      if(anomalies.length){
+      if(anomalies.length && currentConfig.showAnomalies!==false){
         html += '<div class="popup-anomalies">' + anomalies.map(a =>
           '<div class="popup-anomaly '+a[0]+'"><b>'+escapeHtml(a[1])+'</b>'+escapeHtml(a[2])+'</div>').join('') + '</div>';
       }
@@ -6196,7 +6202,7 @@ const I18N = {
       });
     }
   };
-  let currentConfig = {popupColumns:[],chartCategory:'',chartNumericColumns:[],titleColumn:null,schemaLang:null};
+  let currentConfig = {showAnomalies:true,popupColumns:[],chartCategory:'',chartNumericColumns:[],titleColumn:null,schemaLang:null};
   let currentPendingImport = null;
 
 
@@ -9663,7 +9669,8 @@ const I18N = {
     const numeric=headers.filter(h=>{ if(/(^|\s)(latitude|longitude|lat|lon)(\s|$)/i.test(String(h).trim()) || /coordonn[ée]e?s?|coordinates?|إحداثيات|خط العرض|خط الطول/i.test(String(h))) return false; return parsed.data.slice(0,100).some(d=>{const v=String(d.row?.[h]??'').replace(/\s/g,'').replace(',','.');return v!==''&&Number.isFinite(parseFloat(v));}); });
     const popupDefault=headers.filter(h=>[/groupe|group|المجموعة/i,/nom de l.?agriculteur|farmer name|اسم الفلاح/i,/lieu|location|plot|مكان|قطعة/i,/superficie|area|مساحة/i,/culture|crop|زراعة|محصول/i,/téléphone|phone|هاتف/i].some(rx=>rx.test(h)));
     currentPendingImport={parsed,isInitial,file};
-    document.getElementById('popupColumnsList').innerHTML=headers.map(h=>'<label class="excel-col-item"><input type="checkbox" class="popup-col" value="'+escapeHtml(h)+'" '+(popupDefault.includes(h)?'checked':'')+'><span>'+escapeHtml(h)+'</span></label>').join('');
+    document.getElementById('popupColumnsList').innerHTML=headers.map(h=>'<label class="excel-col-item"><input type="checkbox" class="popup-col" value="'+escapeHtml(h)+'" '+(popupDefault.includes(h)?'checked':'')+'><span>'+escapeHtml(h)+'</span></label>').join('')
+      + '<label class="excel-col-item"><input type="checkbox" id="popupAnomaliesToggle" checked><span data-i18n="popupAnomaliesOption">'+escapeHtml(t().popupAnomaliesOption)+'</span></label>';
     const groupCol=headers.find(h=>/groupe|group|المجموعة/i.test(h))||'';
     document.getElementById('chartCategorySelect').innerHTML='<option value="">'+escapeHtml(t().unspecified)+'</option>'+headers.map(h=>'<option value="'+escapeHtml(h)+'" '+(h===groupCol?'selected':'')+'>'+escapeHtml(h)+'</option>').join('');
     document.getElementById('chartNumericList').innerHTML=numeric.map(h=>'<label class="excel-col-item"><input type="checkbox" class="chart-num" value="'+escapeHtml(h)+'" '+(/superficie|area|مساحة/i.test(h)?'checked':'')+'><span>'+escapeHtml(h)+'</span></label>').join('');
@@ -9793,7 +9800,7 @@ const I18N = {
     const chartCategory=document.getElementById('chartCategorySelect').value;
     if(!popupColumns.length){showToast('⚠️ '+t().popupColumnsTitle,'error');return;}
     if(!chartNumericColumns.length){showToast('⚠️ '+t().chartNumericLabel,'error');return;}
-    currentConfig={popupColumns,chartCategory,chartNumericColumns,titleColumn:popupColumns.find(h=>/nom de l.?agriculteur|farmer name|اسم الفلاح/i.test(h))||popupColumns[0],schemaLang:parsed.schemaLang};
+    currentConfig={popupColumns,chartCategory,chartNumericColumns,titleColumn:popupColumns.find(h=>/nom de l.?agriculteur|farmer name|اسم الفلاح/i.test(h))||popupColumns[0],schemaLang:parsed.schemaLang,showAnomalies:document.getElementById('popupAnomaliesToggle')?.checked!==false};
     closeExcelConfig();
 
     /* L'écran de démarrage est masqué tout de suite (sinon il réapparaît
