@@ -1822,8 +1822,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   background:var(--paper);
   border:1px solid var(--line);
   border-radius:14px;
-  padding:15px 16px 13px;
-  margin:8px 0 18px;
+  padding:10px 12px 8px;
+  margin:6px 0 12px;
   box-shadow:0 2px 8px rgba(44,38,32,.06);
 }
 .p2o5-kpi-head{
@@ -1832,18 +1832,18 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   justify-content:space-between;
   gap:16px;
   flex-wrap:wrap;
-  margin-bottom:13px;
+  margin-bottom:8px;
 }
 .p2o5-kpi-head h3{
   margin:0;
   font-family:'Cairo',sans-serif;
-  font-size:.92rem;
+  font-size:.86rem;
   color:var(--olive-dark);
 }
 .p2o5-kpi-head p{
-  margin:3px 0 0;
+  margin:2px 0 0;
   color:var(--ink-soft);
-  font-size:.72rem;
+  font-size:.68rem;
 }
 .p2o5-kpi-filter{
   display:flex;
@@ -1861,24 +1861,73 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   min-width:190px;
   border:1px solid var(--line);
   border-radius:8px;
-  padding:7px 9px;
+  padding:5px 8px;
   background:#fff;
   color:var(--ink);
   font-family:'Tajawal',sans-serif;
-  font-size:.76rem;
+  font-size:.74rem;
 }
-.p2o5-kpi-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+/* Corps : cartes + camembert. En LTR (fr/en) le camembert est à droite ;
+   en RTL (ar) le sens du flex s'inverse et il passe automatiquement à gauche. */
+.p2o5-kpi-body{
+  display:flex;
+  align-items:stretch;
   gap:12px;
 }
+.p2o5-kpi-grid{
+  flex:1 1 auto;
+  min-width:0;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+}
+.p2o5-kpi-pie{
+  flex:0 0 138px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:linear-gradient(145deg,#fffdf8,#fffaf1);
+  padding:6px;
+}
+.p2o5-kpi-pie:empty{display:none;}
+.p2o5-kpi-pie svg{width:124px;height:124px;display:block;overflow:visible;}
+.p2o5-kpi-pie path,.p2o5-kpi-pie circle{
+  cursor:pointer;
+  stroke:#fff;
+  stroke-width:1.5;
+  transition:transform .15s ease, filter .15s ease;
+  transform-origin:50% 50%;
+}
+.p2o5-kpi-pie path:hover,.p2o5-kpi-pie circle:hover{
+  transform:scale(1.07);
+  filter:brightness(1.07) drop-shadow(0 1px 3px rgba(0,0,0,.35));
+}
+.p2o5-pie-tip{
+  position:fixed;
+  z-index:100000;
+  display:none;
+  pointer-events:none;
+  background:rgba(255,255,255,.98);
+  border:1px solid #777;
+  border-left-width:5px;
+  border-radius:6px;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+  padding:6px 9px;
+  font:12px/1.5 'Tajawal',Arial,sans-serif;
+  color:#222;
+  white-space:nowrap;
+}
+.p2o5-pie-tip.show{display:block;}
+.p2o5-pie-tip b{font-family:'Cairo',sans-serif;font-size:.92rem;}
 .p2o5-kpi-card{
   position:relative;
   overflow:hidden;
   background:linear-gradient(145deg,#fffdf8,#fffaf1);
   border:1px solid var(--line);
   border-radius:12px;
-  padding:13px 14px 12px;
+  padding:8px 11px 7px;
   min-width:0;
 }
 .p2o5-kpi-card::before{
@@ -1894,55 +1943,57 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 .p2o5-kpi-class{
   font-family:'Cairo',sans-serif;
   font-weight:800;
-  font-size:1.15rem;
+  font-size:1rem;
+  line-height:1.2;
   color:var(--olive-dark);
 }
 .p2o5-kpi-card.class-low .p2o5-kpi-class{color:var(--red-dark);}
 .p2o5-kpi-card.class-medium .p2o5-kpi-class{color:var(--yellow-dark);}
 .p2o5-kpi-card.class-high .p2o5-kpi-class{color:var(--green_dark);}
 .p2o5-kpi-unit{
-  font-size:.75rem;
+  font-size:.68rem;
   color:var(--ink-soft);
-  margin-top:1px;
+  margin-top:0;
 }
 .p2o5-kpi-metrics{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:10px;
+  gap:8px;
+  margin-top:6px;
 }
 .p2o5-kpi-metric{
   border-top:1px dashed var(--line);
-  padding-top:7px;
+  padding-top:4px;
   min-width:0;
 }
 .p2o5-kpi-metric-label{
-  font-size:.67rem;
+  font-size:.63rem;
   color:var(--ink-soft);
   font-weight:700;
 }
 .p2o5-kpi-metric-value{
   font-family:'Cairo',sans-serif;
-  font-size:1.28rem;
+  font-size:1.05rem;
   font-weight:900;
+  line-height:1.25;
   color:var(--ink);
-  margin-top:2px;
+  margin-top:1px;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
 .p2o5-kpi-metric-sub{
-  font-size:.62rem;
+  font-size:.58rem;
   color:var(--ink-soft);
-  margin-top:1px;
+  margin-top:0;
 }
 .p2o5-kpi-foot{
-  margin-top:10px;
-  padding-top:8px;
+  margin-top:7px;
+  padding-top:5px;
   border-top:1px solid var(--line);
   color:var(--ink-soft);
-  font-size:.68rem;
-  line-height:1.45;
+  font-size:.63rem;
+  line-height:1.4;
 }
 .p2o5-kpi-empty{
   grid-column:1/-1;
@@ -1955,6 +2006,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   inset:0 0 0 auto;
 }
 @media(max-width:900px){
+  .p2o5-kpi-body{flex-direction:column;}
+  .p2o5-kpi-pie{flex:0 0 auto;}
   .p2o5-kpi-grid{grid-template-columns:1fr;}
   .p2o5-kpi-filter{width:100%;}
   .p2o5-kpi-filter select{flex:1;min-width:0;}
@@ -2747,7 +2800,10 @@ footer .contact-link [data-i18n="footerWaLabel"]{
           </div>
         </div>
 
-        <div class="p2o5-kpi-grid" id="p2o5KpiGrid"></div>
+        <div class="p2o5-kpi-body">
+          <div class="p2o5-kpi-grid" id="p2o5KpiGrid"></div>
+          <div class="p2o5-kpi-pie" id="p2o5KpiPie"></div>
+        </div>
         <div class="p2o5-kpi-foot" id="p2o5KpiFoot"></div>
       </section>
 
@@ -6272,6 +6328,81 @@ const I18N = {
      Le 7 est donc compté dans la classe <= 7 et le 14
      dans la classe 7–14, afin d'éviter tout chevauchement.
      ======================================================= */
+  /* Camembert des classes P2O5 : infobulle au survol de chaque secteur
+     (nombre de parcelles, % du total, superficie en ha, % de la superficie). */
+  function renderP2O5KpiPie(box, buckets, countTotal, areaTotal, labels){
+    if(!box) return;
+    const colors = {low:'#d32f2f', medium:'#f2b36b', high:'#2e9b3f'};
+    const useCount = countTotal > 0;
+    const total = useCount ? countTotal : areaTotal;
+    if(!(total > 0)){ box.innerHTML = ''; return; }
+
+    let tip = document.getElementById('p2o5PieTip');
+    if(!tip){
+      tip = document.createElement('div');
+      tip.id = 'p2o5PieTip';
+      tip.className = 'p2o5-pie-tip';
+      document.body.appendChild(tip);
+    }
+    const isRtl = currentLang === 'ar';
+    tip.dir = isRtl ? 'rtl' : 'ltr';
+    tip.style.textAlign = isRtl ? 'right' : 'left';
+
+    const cx = 50, cy = 50, r = 46;
+    const slices = buckets
+      .map(b => ({b, v: useCount ? b.count : b.area}))
+      .filter(x => x.v > 0);
+
+    let angle = -Math.PI/2;
+    const shapes = slices.map((x, i) => {
+      const frac = x.v / total;
+      const fill = colors[x.b.key] || '#999';
+      const data = ' data-k="' + escapeHtml(x.b.key) + '" fill="' + fill + '"';
+      if(frac >= 0.9999){
+        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'"'+data+'/>';
+      }
+      const a0 = angle, a1 = angle + frac * 2 * Math.PI;
+      angle = a1;
+      const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+      const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+      const large = frac > 0.5 ? 1 : 0;
+      return '<path d="M'+cx+' '+cy+' L'+x0.toFixed(3)+' '+y0.toFixed(3)+
+             ' A'+r+' '+r+' 0 '+large+' 1 '+x1.toFixed(3)+' '+y1.toFixed(3)+' Z"'+data+'/>';
+    });
+    box.innerHTML = '<svg viewBox="0 0 100 100" role="img" aria-label="P2O5">' + shapes.join('') + '</svg>';
+
+    const fmtInt = n => n.toLocaleString();
+    const fmtArea = b => b.areaCount ? b.area.toLocaleString(undefined,{maximumFractionDigits:2}) : '—';
+    const unitPpm = 'ppm';
+
+    const move = e => {
+      const w = tip.offsetWidth, h = tip.offsetHeight;
+      let x = e.clientX + 14, y = e.clientY + 14;
+      if(x + w > window.innerWidth - 6)  x = e.clientX - w - 14;
+      if(y + h > window.innerHeight - 6) y = e.clientY - h - 14;
+      tip.style.left = Math.max(4, x) + 'px';
+      tip.style.top  = Math.max(4, y) + 'px';
+    };
+
+    box.querySelectorAll('[data-k]').forEach(el => {
+      const b = buckets.find(q => q.key === el.getAttribute('data-k'));
+      if(!b) return;
+      const countPct = countTotal ? b.count / countTotal * 100 : 0;
+      const areaPct  = areaTotal  ? b.area  / areaTotal  * 100 : 0;
+      el.addEventListener('mouseenter', e => {
+        tip.style.borderColor = colors[b.key];
+        tip.innerHTML =
+          '<div><b style="color:'+colors[b.key]+'">'+escapeHtml(b.label)+'</b> '+unitPpm+'</div>' +
+          '<div>'+escapeHtml(labels.count)+' : <b>'+fmtInt(b.count)+'</b> ('+countPct.toFixed(1)+'%)</div>' +
+          '<div>'+escapeHtml(labels.area)+' (ha) : <b>'+fmtArea(b)+'</b> ('+areaPct.toFixed(1)+'%)</div>';
+        tip.classList.add('show');
+        move(e);
+      });
+      el.addEventListener('mousemove', move);
+      el.addEventListener('mouseleave', () => tip.classList.remove('show'));
+    });
+  }
+
   function renderDynamicKPI(data, options){
     const section = document.getElementById('p2o5KpiSection');
     const grid = document.getElementById('p2o5KpiGrid');
@@ -6420,6 +6551,9 @@ const I18N = {
         ? {count:'Number of parcels', area:'Total area', pctCount:'of parcels', pctArea:'of area', ppm:'ppm — Olsen method'}
         : {count:'Nombre de parcelles', area:'Superficie totale', pctCount:'du nombre de parcelles', pctArea:'de la superficie', ppm:'ppm — Olsen'};
 
+    const pieBox = document.getElementById('p2o5KpiPie');
+    if(!p2o5Col && pieBox) pieBox.innerHTML = '';
+
     if(!p2o5Col){
       grid.innerHTML =
         '<div class="p2o5-kpi-empty">' +
@@ -6457,6 +6591,8 @@ const I18N = {
         '</div>' +
       '</div>';
     }).join('');
+
+    renderP2O5KpiPie(pieBox, buckets, countTotal, areaTotal, labels);
 
     const govText = selectedGov && selectedGov !== '__all__'
       ? selectedGov
@@ -9683,8 +9819,8 @@ const I18N = {
        1. Un clic/ouverture de la liste ne modifie JAMAIS le zoom.
        2. Le choix d'un groupe filtre les marqueurs ET zoome sur
           les résultats sélectionnés.
-       3. Après le zoom, la liste revient immédiatement à l'état
-          neutre « Sélectionner un groupe ».
+       3. Après le zoom, la liste conserve le gouvernorat choisi (affiché à
+          la place de « Sélectionner un groupe »).
        4. Le prochain clic permet de choisir un autre groupe.
        5. « Tous les groupes » restaure tous les marqueurs et la vue globale.
     */
@@ -9725,11 +9861,12 @@ const I18N = {
         */
 
         /*
-           Désélection immédiate :
-           la liste revient à son état neutre et attend
-           le prochain clic de l'utilisateur.
+           Le gouvernorat choisi reste affiché dans la liste, à la place de
+           « Sélectionner un groupe ». On le restaure explicitement car
+           applyFilters(true) → resetToInitialMapView() (cas « Tous les
+           groupes ») remet la liste à l'état neutre.
         */
-        this.value = '__none__';
+        this.value = selectedValue;
       }
     );
 
