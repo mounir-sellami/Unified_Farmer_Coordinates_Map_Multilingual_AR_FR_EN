@@ -5112,21 +5112,35 @@ const I18N = {
     const titleHeader = currentConfig.titleColumn || null;
     const titleValue = titleHeader && d.row ? d.row[titleHeader] : d.farmer;
     let html = '<div class="popup-card"><h3>' + escapeHtml(fmt(titleValue)) + '</h3>';
-    cols.forEach(col => {
-      const value = d.row && Object.prototype.hasOwnProperty.call(d.row,col) ? d.row[col] : '';
-      html += '<div class="popup-row"><span>' + escapeHtml(fieldLabel(col)) + '</span><span>' + escapeHtml(fmt(value)) + '</span></div>';
-    });
-
     const latCol=d.headers?.find(h=>/latitude|خط العرض/i.test(h));
     const lonCol=d.headers?.find(h=>/longitude|خط الطول/i.test(h));
-    const latRaw=d.row?.[latCol], lonRaw=d.row?.[lonCol];
     const latBad=!Number.isFinite(d.lat)||d.lat<-90||d.lat>90;
     const lonBad=!Number.isFinite(d.lon)||d.lon<-180||d.lon>180;
+    const coordNeedsVerification=!!d.needsVerification;
+    const isLatCol=c=>/latitude|خط العرض/i.test(String(c));
+    const isLonCol=c=>/longitude|خط الطول/i.test(String(c));
+    const seenCols=new Set();
+    let latShown=false, lonShown=false;
+    cols.forEach(col => {
+      if(seenCols.has(col)) return;            /* colonne listée deux fois */
+      seenCols.add(col);
+      const value = d.row && Object.prototype.hasOwnProperty.call(d.row,col) ? d.row[col] : '';
+      const isLat=isLatCol(col), isLon=isLonCol(col);
+      if(isLat) latShown=true;
+      if(isLon) lonShown=true;
+      const cls=(isLat||isLon)
+        ? ' popup-coord-row'+((coordNeedsVerification||(isLat?latBad:lonBad))?' verify':'')
+        : '';
+      html += '<div class="popup-row'+cls+'"><span>' + escapeHtml(fieldLabel(col)) + '</span><span>' + escapeHtml(fmt(value)) + '</span></div>';
+    });
+
+    /* Coordonnées : ajoutées seulement si elles ne figurent pas déjà
+       dans les colonnes du popup (évite les doublons Latitude/Longitude). */
+    const latRaw=d.row?.[latCol], lonRaw=d.row?.[lonCol];
     const latLabel=currentLang==='ar'?'خط العرض (WGS84)':'Latitude (WGS84)';
     const lonLabel=currentLang==='ar'?'خط الطول (WGS84)':'Longitude (WGS84)';
-    const coordNeedsVerification=!!d.needsVerification;
-    html += '<div class="popup-row popup-coord-row'+(coordNeedsVerification||latBad?' verify':'')+'"><span>'+escapeHtml(latLabel)+'</span><span>'+escapeHtml(fmt(latRaw))+'</span></div>';
-    html += '<div class="popup-row popup-coord-row'+(coordNeedsVerification||lonBad?' verify':'')+'"><span>'+escapeHtml(lonLabel)+'</span><span>'+escapeHtml(fmt(lonRaw))+'</span></div>';
+    if(!latShown) html += '<div class="popup-row popup-coord-row'+(coordNeedsVerification||latBad?' verify':'')+'"><span>'+escapeHtml(latLabel)+'</span><span>'+escapeHtml(fmt(latRaw))+'</span></div>';
+    if(!lonShown) html += '<div class="popup-row popup-coord-row'+(coordNeedsVerification||lonBad?' verify':'')+'"><span>'+escapeHtml(lonLabel)+'</span><span>'+escapeHtml(fmt(lonRaw))+'</span></div>';
 
     /* Synthèse agrégée : groupe/délégation + type de culture.
        Les chiffres affichés dans ce popup correspondent aux données
@@ -5161,7 +5175,7 @@ const I18N = {
           escapeHtml(String(rows.length)) +
           '</span></div>';
 
-        if(areaColumn && areaCount){
+        if(areaColumn && areaCount && rows.length>1){
           html += '<div class="popup-row"><span>' +
             escapeHtml(
               currentLang==='ar'
@@ -8053,7 +8067,8 @@ const I18N = {
     return `<div style="margin-top:6px;font-weight:700;font-size:.78rem;color:var(--olive-dark)">${T.title}</div>`+
       `<div class="popup-row"><span>${T.del}</span><span>${f2(parcel.sup)} ${T.ha}</span></div>`+
       rows+
-      `<div class="popup-row"><span><b>${T.tot}</b></span><span><b>${Number.isFinite(tk)?Math.round(tk).toLocaleString()+' '+T.kg+' (= '+(tk/1000).toLocaleString(undefined,{maximumFractionDigits:3})+' '+T.t+')':'—'}</b></span></div>`;
+      (parcel.split.parts.length===1 ? '' :
+      `<div class="popup-row"><span><b>${T.tot}</b></span><span><b>${Number.isFinite(tk)?Math.round(tk).toLocaleString()+' '+T.kg+' (= '+(tk/1000).toLocaleString(undefined,{maximumFractionDigits:3})+' '+T.t+')':'—'}</b></span></div>`);
   }
 
   /* Complète le popup d'un point d'échantillon avec la répartition de sa
