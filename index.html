@@ -1707,6 +1707,35 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 .excel-config-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
 .excel-config-actions .btn{padding:9px 17px;font-size:.8rem;}
 .excel-config-cancel{background:#eee6d7;color:var(--ink);}
+/* Le bouton « Affichage » est ancré à droite de « Double écrans » sans occuper de place dans la ligne : l'agencement existant ne bouge pas. */
+.dual-btn-wrap{position:relative;display:inline-flex;align-items:center;}
+#popupConfigBtn{position:absolute;top:0;left:calc(100% + 8px);margin:0;}
+[dir="rtl"] #popupConfigBtn{left:auto;right:calc(100% + 8px);margin:0;}
+.dual-btn-wrap{flex-shrink:0;}
+#popupConfigBtn{z-index:2;}
+/* Compaction du bandeau : même disposition à 100 % qu'à 90 % de zoom. Le bouton « Affichage » reste en icône seule, hors flux. */
+#popupConfigBtnLabel{display:none;}
+#popupConfigBtn{padding:7px 10px;width:36px;}
+@media(max-width:2250px){
+  .head-stats-tools-row{gap:8px;}
+  .head-stats-inline{gap:6px;flex-wrap:nowrap;}
+  .head-stats-inline .stat-pill{padding:5px 10px;font-size:.72rem;}
+  .head-stats-inline .stat-pill b{font-size:.84rem;}
+  .head-tools-inline{margin-left:14px;gap:6px;flex-wrap:nowrap;}
+  [dir="rtl"] .head-tools-inline{margin-left:0;margin-right:14px;}
+  .head-tools-inline .search-box input{width:170px;font-size:.78rem;}
+  .head-tools-inline #groupFilter{max-width:150px;font-size:.76rem;padding:8px 10px;}
+  #dualScreenBtn{margin-left:0;padding:6px 10px;font-size:.7rem;}
+  [dir="rtl"] #dualScreenBtn{margin-right:0;}
+  #popupConfigBtn{left:calc(100% + 6px);}
+  [dir="rtl"] #popupConfigBtn{left:auto;right:calc(100% + 6px);}
+}
+@media(max-width:1750px){
+  .head-tools-inline .search-box input{width:140px;}
+  .head-tools-inline #groupFilter{max-width:125px;}
+}
+@media(max-width:1100px){.head-stats-inline,.head-tools-inline{flex-wrap:wrap;}}
+@media(max-width:720px){#popupConfigBtn{position:static;margin-left:8px;}}
 .excel-config-apply{background:var(--olive);color:#fff;box-shadow:0 2px 0 var(--olive-dark);}
 .excel-config-note{font-size:.72rem;color:var(--ink-soft);margin:8px 0 0;line-height:1.5;}
 @media (max-width:720px){.excel-cols{grid-template-columns:1fr;}.excel-chart-grid{grid-template-columns:1fr;}}
@@ -2394,6 +2423,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 
             </select>
 
+            <span class="dual-btn-wrap">
+
             <button class="dual-header-btn"
                     id="dualScreenBtn"
                     type="button"
@@ -2412,6 +2443,19 @@ footer .contact-link [data-i18n="footerWaLabel"]{
               <span id="dualScreenBtnLabel">Double écrans</span>
 
             </button>
+
+            <button class="dual-header-btn"
+                    id="popupConfigBtn"
+                    type="button"
+                    title="Configurer l'affichage et les graphiques">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+              </svg>
+              <span id="popupConfigBtnLabel">Affichage</span>
+            </button>
+
+            </span>
 
           </div>
 
@@ -2917,7 +2961,7 @@ footer .contact-link [data-i18n="footerWaLabel"]{
         <div id="popupColumnsList" class="excel-cols"></div>
         <p class="excel-config-note" data-i18n="popupColumnsNote">Les coordonnées restent disponibles pour la carte même si elles ne sont pas affichées dans le popup.</p>
       </div>
-      <div class="excel-config-section">
+      <div class="excel-config-section" id="excelChartsSection">
         <h3 data-i18n="chartsColumnsTitle">Informations à transformer en graphiques</h3>
         <div class="excel-chart-grid">
           <div>
@@ -9677,7 +9721,59 @@ const I18N = {
     document.getElementById('excelConfigOverlay').classList.add('show');
   }
 
-  function closeExcelConfig(){document.getElementById('excelConfigOverlay').classList.remove('show');currentPendingImport=null;}
+  /* ---- Accès permanent : modifier l'affichage et les graphiques sans recharger le fichier ---- */
+  let popupOnlyMode=false;
+  function popupCfgText(){
+    const l=(typeof currentLang!=='undefined'?currentLang:'fr');
+    return ({
+      fr:{pill:'Affichage',apply:'Appliquer',done:'Affichage mis à jour'},
+      en:{pill:'Display',apply:'Apply',done:'Display updated'},
+      ar:{pill:'العرض',apply:'تطبيق',done:'تم تحديث العرض'}
+    })[l]||{pill:'Display',apply:'OK',done:'OK'};
+  }
+  function syncPopupConfigBtnText(){
+    const btn=document.getElementById('popupConfigBtn'); if(!btn) return;
+    const tip=(t().excelConfigTitle)||popupCfgText().pill;
+    btn.title=tip; btn.setAttribute('aria-label',tip);
+    const l=document.getElementById('popupConfigBtnLabel'); if(l) l.textContent=popupCfgText().pill;
+  }
+  function openPopupConfig(){
+    if(!currentData||!currentData.length||!currentData[0].row){showToast('⚠️ '+(t().errNoValidRows||''),'error');return;}
+    const headers=Object.keys(currentData[0].row);
+    openExcelConfig({headers,data:currentData},false,null);
+    popupOnlyMode=true;
+    const sel=currentConfig.popupColumns||[], nums=currentConfig.chartNumericColumns||[];
+    document.querySelectorAll('.popup-col').forEach(x=>{x.checked=sel.includes(x.value);});
+    document.querySelectorAll('.chart-num').forEach(x=>{x.checked=nums.includes(x.value);});
+    const an=document.getElementById('popupAnomaliesToggle'); if(an) an.checked=currentConfig.showAnomalies!==false;
+    const cs=document.getElementById('chartCategorySelect'); if(cs) cs.value=currentConfig.chartCategory||'';
+    document.getElementById('excelConfigApply').textContent=popupCfgText().apply;
+  }
+  function applyPopupConfig(){
+    const cols=Array.from(document.querySelectorAll('.popup-col:checked')).map(x=>x.value);
+    const nums=Array.from(document.querySelectorAll('.chart-num:checked')).map(x=>x.value);
+    if(!cols.length){showToast('⚠️ '+t().popupColumnsTitle,'error');return;}
+    if(!nums.length){showToast('⚠️ '+t().chartNumericLabel,'error');return;}
+    currentConfig.popupColumns=cols;
+    currentConfig.chartNumericColumns=nums;
+    currentConfig.chartCategory=document.getElementById('chartCategorySelect').value;
+    currentConfig.showAnomalies=document.getElementById('popupAnomaliesToggle')?.checked!==false;
+    currentConfig.titleColumn=cols.find(h=>/nom de l.?agriculteur|farmer name|اسم الفلاح/i.test(h))||cols[0];
+    closeExcelConfig();
+    allMarkers.forEach(m=>{ const open=m.isPopupOpen&&m.isPopupOpen(); m.bindPopup(buildPopup(m._meta)); if(open) m.openPopup(); });
+    try{ renderCharts(currentData); }catch(e){ console.warn('charts',e); }
+    try{ renderDynamicKPI(currentData); }catch(e){}
+    try{ applyFilters(false); }catch(e){}
+    showToast(popupCfgText().done,null);
+  }
+  function closeExcelConfig(){
+    document.getElementById('excelConfigOverlay').classList.remove('show');
+    if(popupOnlyMode){
+      popupOnlyMode=false;
+      document.getElementById('excelConfigApply').textContent=t().applyBtn;
+    }
+    currentPendingImport=null;
+  }
 
   /* =======================================================
      PROTECTION : VÉRIFICATION DE L'INTÉGRITÉ DU DÉPLOIEMENT
@@ -9792,6 +9888,7 @@ const I18N = {
   }
 
   async function applyExcelConfig(){
+    if(popupOnlyMode){applyPopupConfig();return;}
     if(!currentPendingImport) return;
     const {parsed,isInitial}=currentPendingImport;
     currentP2O5Data = Array.isArray(parsed.p2o5Data) ? parsed.p2o5Data : [];
@@ -9935,6 +10032,7 @@ const I18N = {
      ======================================================= */
 
   function applyStaticText(){
+    try{ syncPopupConfigBtnText(); }catch(e){}
 
     const T =
       t();
@@ -10434,6 +10532,8 @@ const I18N = {
 
 
   document.getElementById('excelConfigApply').addEventListener('click',applyExcelConfig);
+  document.getElementById('popupConfigBtn').addEventListener('click',openPopupConfig);
+  try{ syncPopupConfigBtnText(); }catch(e){}
   document.getElementById('excelConfigCancel').addEventListener('click',function(){closeExcelConfig();});
   document.getElementById('excelConfigOverlay').addEventListener('click',function(e){if(e.target===this) closeExcelConfig();});
 
@@ -10654,7 +10754,7 @@ const I18N = {
       }catch(_){}
     }
     const applyBtn = document.getElementById('excelConfigApply');
-    if(applyBtn) applyBtn.addEventListener('click', enterFullscreen, true);
+    if(applyBtn) applyBtn.addEventListener('click', function(){ if(typeof popupOnlyMode!=='undefined' && popupOnlyMode) return; enterFullscreen(); }, true);
   })();
 
   /* Pont vers les scripts séparés (mode double écran) : les variables
