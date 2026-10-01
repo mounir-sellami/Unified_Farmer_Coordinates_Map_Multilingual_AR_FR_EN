@@ -5222,6 +5222,12 @@ const I18N = {
       console.warn('Popup summary:',e);
     }
 
+    try{
+      const govP = normalizeGovName(declaredGovernorate(d));
+      if(govP && Number.isFinite(d.lat) && Number.isFinite(d.lon)){
+        html += '<div class="popup-p2o5-split" data-gov="'+escapeHtml(govP).replace(/"/g,'&quot;')+'" data-lat="'+d.lat+'" data-lon="'+d.lon+'" style="font-size:.74rem;margin:4px 0;line-height:1.45;color:var(--ink);"></div>';
+      }
+    }catch(e){}
     html += '<span class="popup-badge">#' + escapeHtml(fmt(d.id)) + ' — ' + escapeHtml(fmt(d.source)) + '</span>';
     html += '<div class="popup-credit"><strong>' + escapeHtml(t().creditTitle) + '</strong><br><span class="popup-author mounir-credit-hoverable">© Mounir SELLAMI</span></div></div>';
     return html;
@@ -5274,6 +5280,7 @@ const I18N = {
         marker.bindPopup(
           buildPopup(d)
         );
+        marker.on('popupopen', ev => fillPopupP2O5Split(ev.popup));
 
 
         marker._meta =
@@ -6566,6 +6573,34 @@ const I18N = {
       });
     }
 
+    /* Synchronisation avec la carte P2O5 : lorsque les limites parcellaires
+       du gouvernorat sélectionné sont disponibles, la superficie de chaque
+       classe est la somme des superficies de parcelle réellement situées
+       dans cette classe (une parcelle partagée entre 2 ou 3 classes est
+       répartie entre elles), exactement comme dans les popups des cartes. */
+    let splitUsed = false;
+    try{
+      if(selectedGov && selectedGov !== '__all__'){
+        const g = normalizeGovName(selectedGov) || selectedGov;
+        const c = p2o5State.splitCache && p2o5State.splitCache[g];
+        if(c && c.power === p2o5State.power){
+          const areas=[0,0,0], nPar=[0,0,0];
+          c.parcels.forEach(p=>{
+            if(!p.split) return;
+            p.split.parts.forEach(pt=>{
+              if(Number.isFinite(pt.area)){ areas[pt.ci]+=pt.area; nPar[pt.ci]++; }
+            });
+          });
+          buckets.forEach((b,i)=>{ b.area=areas[i]; b.areaCount=nPar[i]; });
+          splitUsed = true;
+        }else if(!options.__splitAsked && EMBEDDED_P2O5_PARCELS && EMBEDDED_P2O5_PARCELS[g]){
+          p2o5EnsureSplits(g).then(r=>{
+            if(r) renderDynamicKPI(data, Object.assign({}, options, {__splitAsked:true}));
+          }).catch(()=>{});
+        }
+      }
+    }catch(err){ console.warn('KPI split', err); }
+
     const countTotal = buckets.reduce((s,b)=>s+b.count,0);
     const areaTotal = buckets.reduce((s,b)=>s+b.area,0);
 
@@ -6646,7 +6681,14 @@ const I18N = {
     const areaMissing = validP2O5 - areaCount;
     const colText = p2o5Col ? 'P2O5 : '+p2o5Col : '';
 
-    const doseNoteTxt = ' ' + labels.doseNote + ' : ' +
+    const splitNote = splitUsed
+      ? (currentLang==='ar'
+          ? ' المساحات حسب الصنف مستخرجة من حدود القطع (القطعة المشتركة بين عدة أصناف موزعة بينها) وفق خريطة P2O5. '
+          : currentLang==='en'
+            ? ' Class areas come from parcel boundaries as in the P2O5 map (parcels shared by several classes are split between them). '
+            : ' Superficies par classe issues des limites parcellaires comme dans la carte P2O5 (parcelle partagée entre plusieurs classes répartie entre elles). ')
+      : '';
+    const doseNoteTxt = splitNote + ' ' + labels.doseNote + ' : ' +
       buckets.map(b => b.label+' → '+b.dose).join(' ; ') + ' ' + labels.perHa + ' P2O5. ';
 
     foot.textContent = doseNoteTxt +
@@ -7662,8 +7704,8 @@ const I18N = {
     for(let h=1;h<poly.length;h++) if(p2o5PointInRing(lon,lat,poly[h])) return false;
     return true;
   }
-  function p2o5ParcelAt(lon,lat){
-    const feats=p2o5State.hoverParcels;
+  function p2o5ParcelAt(lon,lat,list){
+    const feats=list||p2o5State.hoverParcels;
     if(!feats) return null;
     for(const ft of feats){
       const b=ft._bb;
@@ -7673,6 +7715,31 @@ const I18N = {
       }
     }
     return null;
+  }
+  /* Intersection point/parcelle avec tolérance (décalage GPS) : si le point
+     n'est dans aucun polygone, on retient la parcelle la plus proche à moins
+     de tolMeters mètres de l'un de ses bords. */
+  function p2o5NearestParcel(lon,lat,list,tolMeters){
+    const kx=111320*Math.cos(lat*Math.PI/180), ky=110540;
+    let best=null, bestD=Infinity;
+    (list||[]).forEach(ft=>{
+      const b=ft._bb;
+      const mx=tolMeters/kx, my=tolMeters/ky;
+      if(b && (lon<b[0]-mx||lon>b[2]+mx||lat<b[1]-my||lat>b[3]+my)) return;
+      ft._polys.forEach(poly=>poly.forEach(ring=>{
+        for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+          const ax=(ring[j][0]-lon)*kx, ay=(ring[j][1]-lat)*ky;
+          const bx=(ring[i][0]-lon)*kx, by=(ring[i][1]-lat)*ky;
+          const dx=bx-ax, dy=by-ay, L2=dx*dx+dy*dy;
+          let u=L2>0 ? -(ax*dx+ay*dy)/L2 : 0;
+          u=Math.max(0,Math.min(1,u));
+          const px=ax+u*dx, py=ay+u*dy;
+          const d=Math.sqrt(px*px+py*py);
+          if(d<bestD){ bestD=d; best=ft; }
+        }
+      }));
+    });
+    return bestD<=tolMeters ? best : null;
   }
   function p2o5PrepareHoverParcels(geojson){
     const out=[];
@@ -7696,6 +7763,155 @@ const I18N = {
       out.push({_polys:polys,_bb:[minX,minY,maxX,maxY],sup,props:pr});
     });
     return out;
+  }
+
+  /* ---------- Parcelles partagées entre plusieurs classes de P2O5 ----------
+     Pour chaque parcelle, on échantillonne finement l'intérieur du polygone,
+     on interpole le P2O5 (IDW, même puissance que la carte) en chaque
+     échantillon et on classe : ≤7 / 7–14 / >14 ppm. La superficie (SUP) est
+     répartie au prorata des échantillons de chaque classe. Chaque classe
+     reçoit sa dose (kg/ha) et son apport total (superficie × dose) ; l'apport
+     total de la parcelle est la somme des apports de ses classes. */
+  function p2o5IDWAt(pts,power,lon,lat){
+    let sumW=0,sumWZ=0;
+    for(let i=0;i<pts.length;i++){
+      const p=pts[i];
+      const dLat=lat-p.lat, dLon=lon-p.lon;
+      const d=Math.sqrt(dLat*dLat+dLon*dLon);
+      if(d<1e-9) return p.value;
+      const w=Math.pow(d,-power);
+      sumW+=w; sumWZ+=w*p.value;
+    }
+    return sumW>0 ? sumWZ/sumW : NaN;
+  }
+  function p2o5SplitParcels(parcels,pts,power){
+    const N=26;
+    (parcels||[]).forEach(p=>{
+      const counts=[0,0,0]; let tot=0;
+      const [minX,minY,maxX,maxY]=p._bb;
+      for(let i=0;i<N;i++){
+        const lon=minX+(i+0.5)*(maxX-minX)/N;
+        for(let j=0;j<N;j++){
+          const lat=minY+(j+0.5)*(maxY-minY)/N;
+          let inside=false;
+          for(const poly of p._polys){ if(p2o5PointInPolygon(lon,lat,poly)){ inside=true; break; } }
+          if(!inside) continue;
+          const v=p2o5IDWAt(pts,power,lon,lat);
+          if(!Number.isFinite(v)) continue;
+          counts[classIndexForP2O5(v)]++; tot++;
+        }
+      }
+      if(!tot){
+        const v=p2o5IDWAt(pts,power,(minX+maxX)/2,(minY+maxY)/2);
+        if(Number.isFinite(v)){ counts[classIndexForP2O5(v)]=1; tot=1; }
+      }
+      if(!tot){ p.split=null; return; }
+      const parts=[]; let totalKg=0, ok=Number.isFinite(p.sup);
+      counts.forEach((n,ci)=>{
+        if(!n) return;
+        const frac=n/tot;
+        const dose=P2O5_DOSE_BY_CLASS[ci];
+        const area=ok ? p.sup*frac : NaN;
+        const kg=ok ? area*dose : NaN;
+        if(ok) totalKg+=kg;
+        parts.push({ci,frac,dose,area,kg});
+      });
+      p.split={parts,totalKg:ok?totalKg:NaN};
+    });
+    return parcels;
+  }
+  function p2o5StoreSplits(g,parcels,pts){
+    p2o5State.splitCache=p2o5State.splitCache||{};
+    p2o5State.splitCache[g]={power:p2o5State.power,nPts:pts.length,parcels};
+  }
+  /* Calcul à la demande (onglet « Graphiques ») sans passer par l'onglet
+     des cartes. */
+  async function p2o5EnsureSplits(govName){
+    const g=normalizeGovName(govName)||String(govName||'').trim();
+    if(!g) return null;
+    const pts=getP2O5PointsForGovernorate(g);
+    if(pts.length<3) return null;
+    const c=p2o5State.splitCache && p2o5State.splitCache[g];
+    if(c && c.power===p2o5State.power && c.nPts===pts.length) return c;
+    const pd=await loadP2O5ParcelsForGovernorate(g);
+    if(!pd || !pd.geojson) return null;
+    const parcels=p2o5SplitParcels(p2o5PrepareHoverParcels(pd.geojson),pts,p2o5State.power);
+    p2o5StoreSplits(g,parcels,pts);
+    return p2o5State.splitCache[g];
+  }
+
+  /* Bloc HTML commun (popups des cartes P2O5 et des points de l'onglet
+     « Répartition spatiale ») : superficie de la parcelle, détail par classe
+     de P2O5 (superficie, %, dose kg/ha, apport) et apport total. */
+  function p2o5ParcelSplitHtml(parcel,lang){
+    const lx=lang==='ar'
+      ? {sup:'مساحة القطعة (هك)',tot:'الإضافة الإجمالية للقطعة',kg:'كغ',t:'طن',ha:'هك',perHa:'كغ/هك'}
+      : lang==='en'
+      ? {sup:'Parcel area (ha)',tot:'Total input for the parcel',kg:'kg',t:'t',ha:'ha',perHa:'kg/ha'}
+      : {sup:'Superficie parcelle (ha)',tot:'Apport total de la parcelle',kg:'kg',t:'t',ha:'ha',perHa:'kg/ha'};
+    const CL=['≤ 7','7 – 14','> 14'], COL=['#d32f2f','#f2b36b','#2e9b3f'];
+    const f2=n=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:2}):'—';
+    const rows=parcel.split.parts.map(pt=>
+      `<div><span style="color:${COL[pt.ci]};font-size:14px;line-height:1">●</span> <strong>${CL[pt.ci]} ppm</strong> : ${f2(pt.area)} ${lx.ha} (${(pt.frac*100).toFixed(1)}%) × ${pt.dose.toLocaleString()} ${lx.perHa} = <strong>${Number.isFinite(pt.kg)?Math.round(pt.kg).toLocaleString()+' '+lx.kg:'—'}</strong></div>`
+    ).join('');
+    const tk=parcel.split.totalKg;
+    return `<hr style="margin:4px 0;border:0;border-top:1px solid #ccc">`+
+      `<div><strong>${lx.sup} :</strong> ${Number.isFinite(parcel.sup)?parcel.sup.toLocaleString(undefined,{maximumFractionDigits:3}):'—'}</div>`+
+      rows+
+      `<div><strong>${lx.tot} :</strong> ${Number.isFinite(tk)?Math.round(tk).toLocaleString()+' '+lx.kg+' (= '+(tk/1000).toLocaleString(undefined,{maximumFractionDigits:3})+' '+lx.t+')':'—'}</div>`;
+  }
+
+  /* Version compacte pour le popup d'un point d'échantillon : uniquement les
+     informations NOUVELLES (pas de X/Y ni de valeur P2O5, déjà affichés). */
+  function p2o5PopupRowsHtml(parcel,lang){
+    const T=lang==='ar'
+      ? {title:'الإضافة من P2O5 حسب الصنف (قطعة محددة)',tot:'الإضافة الإجمالية للقطعة',kg:'كغ',t:'طن',ha:'هك',perHa:'كغ/هك',del:'المساحة المحددة'}
+      : lang==='en'
+      ? {title:'P2O5 input by class (delineated parcel)',tot:'Total input for the parcel',kg:'kg',t:'t',ha:'ha',perHa:'kg/ha',del:'Delineated area'}
+      : {title:'Apport de P2O5 par classe (parcelle délimitée)',tot:'Apport total de la parcelle',kg:'kg',t:'t',ha:'ha',perHa:'kg/ha',del:'Superficie délimitée'};
+    const CL=['≤ 7','7 – 14','> 14'], COL=['#d32f2f','#f2b36b','#2e9b3f'];
+    const f2=n=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:2}):'—';
+    const rows=parcel.split.parts.map(pt=>
+      `<div class="popup-row"><span><span style="color:${COL[pt.ci]}">●</span> ${CL[pt.ci]} ppm — ${f2(pt.area)} ${T.ha} (${(pt.frac*100).toFixed(0)}%)</span>`+
+      `<span>${pt.dose.toLocaleString()} ${T.perHa} → <b>${Number.isFinite(pt.kg)?Math.round(pt.kg).toLocaleString()+' '+T.kg:'—'}</b></span></div>`
+    ).join('');
+    const tk=parcel.split.totalKg;
+    return `<div style="margin-top:6px;font-weight:700;font-size:.78rem;color:var(--olive-dark)">${T.title}</div>`+
+      `<div class="popup-row"><span>${T.del}</span><span>${f2(parcel.sup)} ${T.ha}</span></div>`+
+      rows+
+      `<div class="popup-row"><span><b>${T.tot}</b></span><span><b>${Number.isFinite(tk)?Math.round(tk).toLocaleString()+' '+T.kg+' (= '+(tk/1000).toLocaleString(undefined,{maximumFractionDigits:3})+' '+T.t+')':'—'}</b></span></div>`;
+  }
+
+  /* Complète le popup d'un point d'échantillon avec la répartition de sa
+     parcelle par classe de P2O5 (calcul asynchrone, mis en cache). */
+  async function fillPopupP2O5Split(popup){
+    try{
+      const el=popup && popup.getElement ? popup.getElement() : null;
+      const ph=el ? el.querySelector('.popup-p2o5-split') : null;
+      if(!ph || ph.dataset.done) return;
+      ph.dataset.done='1';
+      /* popup.update() de Leaflet réécrit le contenu d'origine et effacerait
+         le bloc injecté : on met donc à jour le contenu mémorisé du popup. */
+      const commit=()=>{
+        const cn=el.querySelector('.leaflet-popup-content');
+        if(cn) popup.setContent(cn.innerHTML);
+      };
+      const gov=ph.dataset.gov, lat=parseFloat(ph.dataset.lat), lon=parseFloat(ph.dataset.lon);
+      if(!gov || !EMBEDDED_P2O5_PARCELS[gov] || !Number.isFinite(lat) || !Number.isFinite(lon)){ ph.remove(); commit(); return; }
+      const c=await p2o5EnsureSplits(gov);
+      if(!c){ ph.remove(); commit(); return; }
+      /* Intersection spatiale point ↔ parcelle délimitée (tolérance 30 m). */
+      const parcel=p2o5ParcelAt(lon,lat,c.parcels) || p2o5NearestParcel(lon,lat,c.parcels,30);
+      if(parcel && parcel.split){
+        ph.innerHTML=p2o5PopupRowsHtml(parcel,currentLang);
+      }else{
+        const msg=currentLang==='ar' ? 'النقطة خارج حدود القطع المحددة'
+                : currentLang==='en' ? 'Point outside the delineated parcels'
+                : 'Point hors des parcelles délimitées';
+        ph.innerHTML='<div style="color:var(--ink-soft);font-style:italic;margin-top:4px">'+msg+'</div>';
+      }
+      commit();
+    }catch(err){ console.warn('Popup P2O5 split',err); }
   }
 
   function updateP2O5Hover(map, e, data, kind){
@@ -7726,21 +7942,18 @@ const I18N = {
       ? {x:'X (Longitude)',y:'Y (Latitude)',value:kind==='p2o5'?'P2O5 value':'Input value',unit:kind==='p2o5'?'ppm':'kg/ha'}
       : {x:'X (Longitude)',y:'Y (Latitude)',value:kind==='p2o5'?'Valeur P2O5':'Valeur apport',unit:kind==='p2o5'?'ppm':'kg/ha'};
     const valueHtml=inMask ? `<strong>${labels.value} :</strong> ${Number(v).toFixed(2)} ${labels.unit}` : `<strong>${labels.value} :</strong> —`;
-    /* Apport/ha et apport total de la parcelle survolée (superficie × dose). */
+    /* Parcelle survolée : superficie de chaque classe de P2O5 (parcelle
+       partagée entre 2 ou 3 classes), apport/ha et apport total par classe,
+       puis apport total de la parcelle. */
     const lx=lang==='ar'
-      ? {sup:'مساحة القطعة (هك)',dose:'الإضافة (كغ/هك)',tot:'الإضافة الإجمالية للقطعة',kg:'كغ',t:'طن'}
+      ? {sup:'مساحة القطعة (هك)',tot:'الإضافة الإجمالية للقطعة',kg:'كغ',t:'طن',ha:'هك',perHa:'كغ/هك',cls:'الأصناف'}
       : lang==='en'
-      ? {sup:'Parcel area (ha)',dose:'Input (kg/ha)',tot:'Total input for the parcel',kg:'kg',t:'t'}
-      : {sup:'Superficie parcelle (ha)',dose:'Apport (kg/ha)',tot:'Apport total de la parcelle',kg:'kg',t:'t'};
+      ? {sup:'Parcel area (ha)',tot:'Total input for the parcel',kg:'kg',t:'t',ha:'ha',perHa:'kg/ha',cls:'Classes'}
+      : {sup:'Superficie parcelle (ha)',tot:'Apport total de la parcelle',kg:'kg',t:'t',ha:'ha',perHa:'kg/ha',cls:'Classes'};
     let extraHtml='';
     if(inMask){
-      const doseHa = kind==='dose' ? Number(v) : doseFromP2O5(Number(v));
       const parcel=p2o5ParcelAt(lon,lat);
-      const sup=parcel ? parcel.sup : NaN;
-      const total=(Number.isFinite(doseHa)&&Number.isFinite(sup)) ? doseHa*sup : NaN;
-      extraHtml=`<div><strong>${lx.dose} :</strong> ${Number.isFinite(doseHa)?doseHa.toLocaleString():'—'}</div>`+
-        `<div><strong>${lx.sup} :</strong> ${Number.isFinite(sup)?sup.toLocaleString(undefined,{maximumFractionDigits:3}):'—'}</div>`+
-        `<div><strong>${lx.tot} :</strong> ${Number.isFinite(total)?Math.round(total).toLocaleString()+' '+lx.kg+' (= '+(total/1000).toLocaleString(undefined,{maximumFractionDigits:3})+' '+lx.t+')':'—'}</div>`;
+      if(parcel && parcel.split) extraHtml=p2o5ParcelSplitHtml(parcel,lang);
     }
     box.innerHTML=`<div><strong>${labels.x} :</strong> ${lon.toFixed(6)}</div><div><strong>${labels.y} :</strong> ${lat.toFixed(6)}</div><div>${valueHtml}</div>${extraHtml}`;
     const pt=map.latLngToContainerPoint(e.latlng);
@@ -8530,7 +8743,11 @@ const I18N = {
       }
 
       p2o5State.parcelSource=parcelData ? parcelData.path : null;
-      p2o5State.hoverParcels=p2o5PrepareHoverParcels(displayGeoJSON);
+      p2o5State.hoverParcels=p2o5SplitParcels(p2o5PrepareHoverParcels(displayGeoJSON),pts,p2o5State.power);
+      try{
+        p2o5StoreSplits(normalizeGovName(govName)||String(govName||'').trim(),p2o5State.hoverParcels,pts);
+        if(typeof renderDynamicKPI==='function' && typeof currentData!=='undefined') renderDynamicKPI(currentData);
+      }catch(err){ console.warn('Split parcelles',err); }
 
       const width=bbox.maxLon-bbox.minLon, height=bbox.maxLat-bbox.minLat;
       const maxDim=130;
