@@ -761,6 +761,14 @@ body.dual-window .dual-screen-overlay{display:none!important;}
   text-align:end;
 }
 
+.popup-anomalies{margin:0 0 8px;display:flex;flex-direction:column;gap:5px;}
+.popup-anomaly{padding:5px 8px;border-radius:5px;border:2px solid;border-inline-start-width:6px;font-size:.74rem;line-height:1.35;}
+.popup-anomaly b{display:block;font-family:'Cairo',sans-serif;font-weight:800;font-size:.76rem;}
+.popup-anomaly.missing{background:#dfe3e8;border-color:#6b7785;color:#2f3842;}
+.popup-anomaly.outcountry{background:#f7a8a3;border-color:#d32f2f;color:#6e1410;}
+.popup-anomaly.outgov{background:#a8cdf5;border-color:#1565c0;color:#0d3466;}
+.popup-anomaly.duplicate{background:#ffe066;border-color:#e0a800;color:#5a4300;}
+
 .popup-badge{
   display:inline-block;
   margin-top:6px;
@@ -5112,6 +5120,20 @@ const I18N = {
     const titleHeader = currentConfig.titleColumn || null;
     const titleValue = titleHeader && d.row ? d.row[titleHeader] : d.farmer;
     let html = '<div class="popup-card"><h3>' + escapeHtml(fmt(titleValue)) + '</h3>';
+    /* Causes des anomalies de coordonnées : une ligne par anomalie, avec les
+       mêmes couleurs que la légende de vérification, recalculée à chaque
+       construction du popup pour rester synchronisée avec la langue. */
+    try{
+      const L=t(), anomalies=[];
+      if(d.flagMissing) anomalies.push(['missing',L.verifyLegendMissing,L[d.missingKind||'verifyReasonMissing']]);
+      if(d.flagOutsideTunisia) anomalies.push(['outcountry',L.verifyLegendOutCountry,L.verifyReasonOutsideTunisia]);
+      if(d.flagWrongGov) anomalies.push(['outgov',L.verifyLegendOutGov,L.verifyReasonWrongGovernorate(localizeGovernorateName(d.declaredGovernorate),localizeGovernorateName(d.actualGovernorate))]);
+      if(d.isDuplicateCoord) anomalies.push(['duplicate',L.verifyLegendDuplicate,L.verifyReasonDuplicate((d.duplicateGroupSize||2)-1)]);
+      if(anomalies.length){
+        html += '<div class="popup-anomalies">' + anomalies.map(a =>
+          '<div class="popup-anomaly '+a[0]+'"><b>'+escapeHtml(a[1])+'</b>'+escapeHtml(a[2])+'</div>').join('') + '</div>';
+      }
+    }catch(e){ console.warn('Popup anomalies', e); }
     const latCol=d.headers?.find(h=>/latitude|خط العرض/i.test(h));
     const lonCol=d.headers?.find(h=>/longitude|خط الطول/i.test(h));
     const latBad=!Number.isFinite(d.lat)||d.lat<-90||d.lat>90;
@@ -9327,9 +9349,9 @@ const I18N = {
         const rawLat=d.row?.[latCol], rawLon=d.row?.[lonCol];
         const latEmpty=rawLat===null || rawLat===undefined || String(rawLat).trim()==='';
         const lonEmpty=rawLon===null || rawLon===undefined || String(rawLon).trim()==='';
-        if(latEmpty || lonEmpty) d.verificationReasons.push(t().verifyReasonMissing);
-        else if(!Number.isFinite(d.lat) || !Number.isFinite(d.lon)) d.verificationReasons.push(t().verifyReasonInvalid);
-        else d.verificationReasons.push(t().verifyReasonRange);
+        if(latEmpty || lonEmpty){ d.verificationReasons.push(t().verifyReasonMissing); d.missingKind='verifyReasonMissing'; }
+        else if(!Number.isFinite(d.lat) || !Number.isFinite(d.lon)){ d.verificationReasons.push(t().verifyReasonInvalid); d.missingKind='verifyReasonInvalid'; }
+        else{ d.verificationReasons.push(t().verifyReasonRange); d.missingKind='verifyReasonRange'; }
         d.needsVerification=true;
         d.flagMissing=true;
         return;
