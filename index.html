@@ -732,6 +732,20 @@ body.dual-window .dual-screen-overlay{display:none!important;}
   box-shadow:0 0 0 3px rgba(216,58,46,.22),0 2px 7px rgba(120,0,0,.45);
 }
 
+
+/* ===== ZOOM DES POPUPS (infobulles) =====
+   --popup-zoom (0.8 → 2.6) agrandit le texte des popups de l'onglet
+   « Répartition spatiale des échantillons » et des infobulles des cartes P2O5. */
+:root{--popup-zoom:1;}
+.popup-card{zoom:var(--popup-zoom);}
+.popup-zoom-bar{zoom:calc(1 / var(--popup-zoom));display:flex;align-items:center;justify-content:flex-end;gap:4px;margin:0 24px 6px 0;direction:ltr;}
+[dir="rtl"] .popup-zoom-bar{justify-content:flex-start;margin:0 0 6px 24px;}
+.popup-zoom-bar button{font-family:Arial,sans-serif;font-weight:800;cursor:pointer;user-select:none;-webkit-user-select:none;min-width:30px;height:28px;padding:0 7px;border:1px solid var(--line);border-radius:6px;background:var(--cream);color:var(--clay);font-size:13px;line-height:1;}
+.popup-zoom-bar button:hover{filter:brightness(.96);}
+.p2o5-hover-info .popup-zoom-bar{zoom:1;margin:0 0 6px 0;justify-content:flex-start;}
+.p2o5-hover-info .popup-zoom-bar .pz-close{margin-inline-start:auto;}
+.popup-zoom-bar .popup-zoom-val{min-width:38px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-soft);}
+.leaflet-popup-content{overflow-y:auto;max-height:70vh;}
 .popup-card{
   font-family:'Tajawal',sans-serif;
   min-width:210px;
@@ -1953,7 +1967,7 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   border-radius:6px;
   box-shadow:0 2px 8px rgba(0,0,0,.25);
   padding:6px 9px;
-  font:12px/1.5 'Tajawal',Arial,sans-serif;
+  font:calc(12px * var(--popup-zoom,1))/1.5 'Tajawal',Arial,sans-serif;
   color:#222;
   white-space:nowrap;
 }
@@ -4783,6 +4797,12 @@ const I18N = {
   let currentData = [];
   /* Jeu de données dédié à l'interpolation P2O5, provenant de sa propre feuille Excel. */
   let currentP2O5Data = [];
+  /* Échantillons affichés sur la carte « Répartition spatiale des échantillons » :
+     ceux de la feuille « P2O5-Interpolation » (repli sur la feuille principale si absente). */
+  let currentMapData = [];
+  function getMapData(){
+    return (Array.isArray(currentMapData) && currentMapData.length) ? currentMapData : currentData;
+  }
 
   /* Vérification géographique : frontières des gouvernorats + drapeaux par point. */
   let governorateGeoJSON = null;
@@ -5250,8 +5270,96 @@ const I18N = {
     }
   });
 
+  /* =======================================================
+     ZOOM DES POPUPS : boutons A− / A+ / 100 %, Ctrl + molette,
+     mémorisation du réglage. Valable pour les popups des points
+     (onglet Répartition spatiale) et les infobulles des cartes P2O5.
+     ======================================================= */
+  const POPUP_ZOOM_MIN=0.8, POPUP_ZOOM_MAX=2.6, POPUP_ZOOM_STEP=0.2;
+  let popupZoom=1;
+  try{ const v=parseFloat(localStorage.getItem('ufm_popup_zoom')); if(isFinite(v)) popupZoom=Math.min(POPUP_ZOOM_MAX,Math.max(POPUP_ZOOM_MIN,v)); }catch(e){}
+  /* Le popup doit rester ouvert pendant le zoom du texte : pendant une courte
+     fenêtre après chaque changement, toute fermeture (clic traité comme un clic
+     de carte, re-clustering après auto-pan, etc.) est annulée et le popup rouvert. */
+  let popupZoomGuardUntil=0;
+  function popupZoomGuardActive(){ return Date.now()<popupZoomGuardUntil; }
+  function applyPopupZoom(){
+    popupZoomGuardUntil=Date.now()+900;
+    document.documentElement.style.setProperty('--popup-zoom',String(popupZoom));
+    /* Leaflet limite la largeur du popup : on l'adapte au zoom. */
+    try{ L.Popup.prototype.options.maxWidth=Math.round(300*popupZoom); }catch(e){}
+    document.querySelectorAll('.p2o5-hover-info').forEach(box=>{
+      try{
+        const c=box.parentElement; if(!c||box.style.display==='none') return;
+        box.style.left=Math.max(4,Math.min(parseFloat(box.style.left)||0,c.clientWidth-box.offsetWidth-4))+'px';
+        box.style.top=Math.max(4,Math.min(parseFloat(box.style.top)||0,c.clientHeight-box.offsetHeight-4))+'px';
+      }catch(e){}
+    });
+    try{ syncPopupZoomLabels(); }catch(e){}
+    try{ if(map && map._popup){ map._popup.options.maxWidth=Math.round(300*popupZoom); map._popup.update(); } }catch(e){}
+    try{ localStorage.setItem('ufm_popup_zoom',String(popupZoom)); }catch(e){}
+  }
+  function setPopupZoom(v){
+    popupZoom=Math.min(POPUP_ZOOM_MAX,Math.max(POPUP_ZOOM_MIN,Math.round(v*100)/100));
+    applyPopupZoom();
+  }
+  window.popupZoomStep=function(dir){ setPopupZoom(dir===0 ? 1 : popupZoom+dir*POPUP_ZOOM_STEP); };
+  /* Ctrl + molette sur un popup = zoom du texte (sans zoomer la carte). */
+  document.addEventListener('wheel',function(e){
+    if(!(e.ctrlKey||e.metaKey)) return;
+    if(!(e.target && e.target.closest && e.target.closest('.leaflet-popup, .p2o5-hover-info'))) return;
+    e.preventDefault(); e.stopPropagation();
+    window.popupZoomStep(e.deltaY<0 ? 1 : -1);
+  },{passive:false,capture:true});
+  function popupZoomTitles(){
+    const l=(document.documentElement.getAttribute('data-current-lang')||'fr');
+    return l==='ar' ? {plus:'تكبير النص',minus:'تصغير النص',reset:'إعادة الحجم 100%'}
+         : l==='en' ? {plus:'Increase popup text size',minus:'Decrease popup text size',reset:'Reset to 100%'}
+         : {plus:'Agrandir le texte des popups',minus:'Réduire le texte des popups',reset:'Réinitialiser à 100 %'};
+  }
+  function popupZoomBarHtml(){
+    const T=popupZoomTitles();
+    return '<div class="popup-zoom-bar">'+
+      '<button type="button" title="'+T.minus+'" aria-label="'+T.minus+'" onclick="event.stopPropagation();popupZoomStep(-1)">A−</button>'+
+      '<span class="popup-zoom-val">'+Math.round(popupZoom*100)+'%</span>'+
+      '<button type="button" title="'+T.plus+'" aria-label="'+T.plus+'" onclick="event.stopPropagation();popupZoomStep(1)">A+</button>'+
+      '<button type="button" title="'+T.reset+'" aria-label="'+T.reset+'" onclick="event.stopPropagation();popupZoomStep(0)">↺</button>'+
+      '</div>';
+  }
+  function addPopupZoomControl(mapInstance){
+    /* Plus de boutons sur la carte : le zoom se règle dans le popup lui-même.
+       On garde seulement la protection qui maintient le popup ouvert. */
+    if(!mapInstance || mapInstance._popupZoomGuard) return;
+    mapInstance._popupZoomGuard=true;
+    mapInstance.on('popupclose',function(ev){
+      if(!popupZoomGuardActive()) return;
+      const p=ev.popup; if(!p) return;
+      setTimeout(function(){
+        try{
+          if(mapInstance.hasLayer(p)) return;
+          if(p._source && mapInstance.hasLayer(p._source)) p._source.openPopup();
+          else p.openOn(mapInstance);
+        }catch(e){ console.warn('popup reopen',e); }
+      },0);
+    });
+  }
+  /* Le pourcentage affiché dans chaque barre doit toujours refléter le zoom réel,
+     même si le contenu d'un popup est reconstruit plus tard (remplissage asynchrone,
+     changement de langue, nouveau popup...). */
+  function syncPopupZoomLabels(){
+    const txt=Math.round(popupZoom*100)+'%';
+    document.querySelectorAll('.popup-zoom-val').forEach(el=>{ if(el.textContent!==txt) el.textContent=txt; });
+  }
+  try{
+    new MutationObserver(syncPopupZoomLabels).observe(document.body||document.documentElement,{childList:true,subtree:true});
+  }catch(e){}
+  applyPopupZoom();
+  syncPopupZoomLabels();
+
   function addMapExtras(mapInstance){
     if(!mapInstance) return;
+    try{ addPopupZoomControl(mapInstance); }catch(e){ console.warn('popup zoom control',e); }
+
     new NorthArrowControl().addTo(mapInstance);
     const scaleCtrl=L.control.scale({
       position:'bottomleft',
@@ -5729,7 +5837,7 @@ const I18N = {
     const cols = currentConfig.popupColumns || [];
     const titleHeader = currentConfig.titleColumn || null;
     const titleValue = titleHeader && d.row ? d.row[titleHeader] : d.farmer;
-    let html = '<div class="popup-card"><h3>' + escapeHtml(fmt(titleValue)) + '</h3>';
+    let html = '<div class="popup-card">' + popupZoomBarHtml() + '<h3>' + escapeHtml(fmt(titleValue)) + '</h3>';
     /* Causes des anomalies de coordonnées : une ligne par anomalie, avec les
        mêmes couleurs que la légende de vérification, recalculée à chaque
        construction du popup pour rester synchronisée avec la langue. */
@@ -5829,10 +5937,10 @@ const I18N = {
 
       const groupColumn=currentConfig.chartCategory;
 
-      if(groupColumn && d.row && currentData?.length){
+      if(groupColumn && d.row && getMapData()?.length){
         const groupValue=d.row[groupColumn];
 
-        const sameGroup=currentData.filter(
+        const sameGroup=getMapData().filter(
           x=>String(x.row?.[groupColumn] ?? '') ===
              String(groupValue ?? '')
         );
@@ -5853,13 +5961,13 @@ const I18N = {
           )
         : null;
 
-      if(cultureColumn && currentData?.length){
+      if(cultureColumn && getMapData()?.length){
         const cultureValue=String(
           d.row?.[cultureColumn] ?? ''
         ).trim();
 
         if(cultureValue){
-          const sameCulture=currentData.filter(
+          const sameCulture=getMapData().filter(
             x=>String(
               x.row?.[cultureColumn] ?? ''
             ).trim() === cultureValue
@@ -6148,6 +6256,14 @@ const I18N = {
       ];
 
 
+    /* Nombre d'échantillons affichés sur la carte (coordonnées valides) par gouvernorat. */
+    const shownCount = {};
+    data.forEach(d => {
+      if(!isCoordinateValid(d)) return;
+      const k = govKeyOf(d);
+      shownCount[k] = (shownCount[k] || 0) + 1;
+    });
+
     keys.sort(
       (a,b) => {
 
@@ -6194,7 +6310,7 @@ const I18N = {
                 .replace(/"/g,'&quot;') +
             '">' +
 
-              label +
+              '(' + (shownCount[k] || 0) + ') ' + label +
 
             '</option>'
 
@@ -6520,13 +6636,22 @@ const I18N = {
     currentData =
       data;
 
+    /* La carte des échantillons utilise la feuille « P2O5-Interpolation » ;
+       graphiques, KPI et contrôle des coordonnées restent sur la feuille principale. */
+    const mapData =
+      (Array.isArray(currentP2O5Data) && currentP2O5Data.length)
+        ? currentP2O5Data
+        : data;
+    currentMapData = mapData;
+
     await ensureGovernorateBoundaries();
     updateVerificationFlags(data);
+    if(mapData !== data){ try{ updateVerificationFlags(mapData); }catch(e){ console.warn('flags map data',e); } }
 
     const valid =
-      renderMarkers(data);
+      renderMarkers(mapData);
 
-    syncSampledParcelsLayers(data);
+    syncSampledParcelsLayers(mapData);
 
 
     if(map){
@@ -8505,8 +8630,14 @@ const I18N = {
     if(box) return box;
     box=document.createElement('div');
     box.className='p2o5-hover-info';
-    box.style.cssText='position:absolute;z-index:1000;display:none;pointer-events:none;background:rgba(255,255,255,.96);border:1px solid #777;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.25);padding:7px 9px;font:12px/1.45 Arial,sans-serif;color:#222;white-space:nowrap;direction:ltr;text-align:left;';
+    box.style.cssText='position:absolute;z-index:1000;display:none;pointer-events:none;background:rgba(255,255,255,.96);border:1px solid #777;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.25);padding:calc(7px * var(--popup-zoom,1)) calc(9px * var(--popup-zoom,1));font:calc(12px * var(--popup-zoom,1))/1.45 Arial,sans-serif;color:#222;white-space:nowrap;direction:ltr;text-align:left;';
     container.appendChild(box);
+    box.addEventListener('mouseenter',function(){ box._over=true; });
+    box.addEventListener('mouseleave',function(){
+      box._over=false;
+      if(box._frozen){ box._frozen=false; box.style.pointerEvents='none'; box.style.display='none'; }
+    });
+    try{ L.DomEvent.disableClickPropagation(box); L.DomEvent.disableScrollPropagation(box); }catch(_){}
     return box;
   }
 
@@ -8767,6 +8898,14 @@ const I18N = {
     const box=ensureP2O5HoverBox(map);
     const container=map ? map.getContainer() : null;
     if(!box || !container || !e || !e.latlng) return;
+    /* Infobulle figée (curseur immobile ~0,6 s) : elle devient cliquable pour régler
+       la taille du texte ; elle se remet à suivre la souris quand on s'en éloigne. */
+    if(box._frozen){
+      if(box._over) return;
+      const cp=e.containerPoint, fp=box._fp;
+      if(cp && fp && Math.hypot(cp.x-fp.x,cp.y-fp.y)<45) return;
+      box._frozen=false; box.style.pointerEvents='none';
+    }
     const lat=e.latlng.lat, lon=e.latlng.lng;
     let inMask=false, v=null;
     /* Même avant la fin de l'interpolation, les coordonnées X/Y doivent être
@@ -8804,23 +8943,44 @@ const I18N = {
       const parcel=p2o5ParcelAt(lon,lat);
       if(parcel && parcel.split) extraHtml=p2o5ParcelSplitHtml(parcel,lang);
     }
-    box.innerHTML=`<div><strong>${labels.x} :</strong> ${lon.toFixed(6)}</div><div><strong>${labels.y} :</strong> ${lat.toFixed(6)}</div><div>${valueHtml}</div>${extraHtml}`;
+    box.innerHTML=p2o5HoverBarHtml()+`<div><strong>${labels.x} :</strong> ${lon.toFixed(6)}</div><div><strong>${labels.y} :</strong> ${lat.toFixed(6)}</div><div>${valueHtml}</div>${extraHtml}`;
     const pt=map.latLngToContainerPoint(e.latlng);
     const left=Math.min(pt.x+12, Math.max(4, container.clientWidth-box.offsetWidth-4));
     const top=Math.min(pt.y+12, Math.max(4, container.clientHeight-box.offsetHeight-4));
     box.style.left=left+'px'; box.style.top=top+'px'; box.style.display='block';
+    clearTimeout(box._ft);
+    box._ft=setTimeout(function(){
+      if(box.style.display==='none') return;
+      box._frozen=true; box._fp=pt; box.style.pointerEvents='auto';
+    },600);
   }
 
+  /* Barre de zoom du texte, affichée dans l'infobulle de survol. */
+  function p2o5HoverBarHtml(){
+    const T=popupZoomTitles();
+    return '<div class="popup-zoom-bar">'+
+      '<button type="button" title="'+T.minus+'" aria-label="'+T.minus+'" onclick="event.stopPropagation();popupZoomStep(-1)">A−</button>'+
+      '<span class="popup-zoom-val">'+Math.round(popupZoom*100)+'%</span>'+
+      '<button type="button" title="'+T.plus+'" aria-label="'+T.plus+'" onclick="event.stopPropagation();popupZoomStep(1)">A+</button>'+
+      '<button type="button" title="'+T.reset+'" aria-label="'+T.reset+'" onclick="event.stopPropagation();popupZoomStep(0)">↺</button>'+
+      '</div>';
+  }
+
+  /* L'infobulle s'affiche au SURVOL de la carte/parcelle (pas au clic). */
   function setupP2O5Hover(){
     ensureP2O5HoverBox(p2o5MapA); ensureP2O5HoverBox(p2o5MapB);
+    function hideBox(m){
+      const b=ensureP2O5HoverBox(m); if(!b||b._frozen||b._over) return;
+      clearTimeout(b._ft); b.style.display='none';
+    }
     if(p2o5MapA && !p2o5MapA._p2o5HoverBound){
       p2o5MapA.on('mousemove',e=>updateP2O5Hover(p2o5MapA,e,p2o5State.hoverDataA,'p2o5'));
-      p2o5MapA.on('mouseout',()=>{ const b=ensureP2O5HoverBox(p2o5MapA); if(b)b.style.display='none'; });
+      p2o5MapA.on('mouseout',()=>hideBox(p2o5MapA));
       p2o5MapA._p2o5HoverBound=true;
     }
     if(p2o5MapB && !p2o5MapB._p2o5HoverBound){
       p2o5MapB.on('mousemove',e=>updateP2O5Hover(p2o5MapB,e,p2o5State.hoverDataB,'dose'));
-      p2o5MapB.on('mouseout',()=>{ const b=ensureP2O5HoverBox(p2o5MapB); if(b)b.style.display='none'; });
+      p2o5MapB.on('mouseout',()=>hideBox(p2o5MapB));
       p2o5MapB._p2o5HoverBound=true;
     }
   }
@@ -9527,6 +9687,23 @@ const I18N = {
     appendP2O5LegendCredit(container);
   }
 
+  /* Détection automatique des fichiers Files/Parcels_Sampled_P2O5_<nom>.geojson
+     pour chaque gouvernorat présent dans l'Excel (nécessite un serveur local ;
+     sous file:// la détection échoue et seules les copies intégrées comptent). */
+  const p2o5FilesFound={};
+  async function p2o5ProbeParcelFiles(){
+    const names=getGovernoratesWithP2O5().map(g=>normalizeGovName(g.name)||String(g.name||'').trim());
+    await Promise.all(names.map(async key=>{
+      if(!key || p2o5FilesFound[key]) return;
+      for(const p of p2o5ParcelFileCandidates(key)){
+        try{
+          const res=await fetch(p);
+          if(res.ok){ p2o5FilesFound[key]=true; return; }
+        }catch(e){ /* absent ou bloqué (file://) */ }
+      }
+    }));
+  }
+
   function populateP2O5GovSelect(){
     const sel=document.getElementById('p2o5GovSelect');
     if(!sel) return;
@@ -9535,7 +9712,7 @@ const I18N = {
        chacun des deux groupes restant trié par ordre alphabétique. */
     const hasParcels=name=>{
       const key=normalizeGovName(name)||String(name||'').trim();
-      return !!(typeof EMBEDDED_P2O5_PARCELS!=='undefined' && EMBEDDED_P2O5_PARCELS[key]);
+      return !!(p2o5FilesFound[key] || (typeof EMBEDDED_P2O5_PARCELS!=='undefined' && EMBEDDED_P2O5_PARCELS[key]));
     };
     const govs=getGovernoratesWithP2O5().sort((a,b)=>{
       const pa=hasParcels(a.name)?0:1, pb=hasParcels(b.name)?0:1;
@@ -9576,7 +9753,7 @@ const I18N = {
       }
       sel.appendChild(opt);
     });
-    if(!previous || !govs.some(g=>g.name===previous)){
+    if(!previous || !govs.some(g=>g.name===previous) || (!hasParcels(previous) && hasParcels(govs[0].name))){
       p2o5State.governorate=govs[0].name;
     }
     sel.value=p2o5State.governorate;
@@ -10033,15 +10210,21 @@ const I18N = {
 
       p2o5Initialized=true;
     }
-    if(p2o5State.governorate){
-      refreshP2O5Maps();
-    }else if(getGovernoratesWithP2O5().length){
-      p2o5State.lastStatusKind=null;
-      p2o5State.lastStatusArg=null;
-      setP2O5Status('');
-    }else{
-      setP2O5StatusKind('noGov');
-    }
+    /* Détecte d'abord les fichiers parcellaires de Files/, met à jour la liste
+       (vert + en tête), sélectionne un gouvernorat qui a des parcelles, puis
+       génère automatiquement la carte d'interpolation. */
+    p2o5ProbeParcelFiles().catch(()=>{}).then(()=>{
+      populateP2O5GovSelect();
+      if(p2o5State.governorate){
+        refreshP2O5Maps();
+      }else if(getGovernoratesWithP2O5().length){
+        p2o5State.lastStatusKind=null;
+        p2o5State.lastStatusArg=null;
+        setP2O5Status('');
+      }else{
+        setP2O5StatusKind('noGov');
+      }
+    });
   }
 
   function updateVerificationFlags(data){
@@ -10930,10 +11113,10 @@ const I18N = {
 
       /* Actualisation des éléments dynamiques. */
       if(map){
-        updateStats(currentData.length, currentData.filter(isCoordinateValid).length);
+        updateStats(getMapData().length, getMapData().filter(isCoordinateValid).length);
         if(document.getElementById('verifyCoordsOverlay')?.classList.contains('show')) openCoordinateCheckModal();
-        updateLegend(currentData);
-        updateGroupFilter(currentData, true);
+        updateLegend(getMapData());
+        updateGroupFilter(getMapData(), true);
 
         allMarkers.forEach(m =>
           m.bindPopup(buildPopup(m._meta))
@@ -11462,8 +11645,8 @@ const I18N = {
       try{ if(typeof initP2O5TabTexts==='function') initP2O5TabTexts(); }catch(e){ console.warn('P2O5 i18n', e); }
       try{
         if(map && currentData && currentData.length){
-          updateLegend(currentData);
-          updateGroupFilter(currentData, true);
+          updateLegend(getMapData());
+          updateGroupFilter(getMapData(), true);
           renderCharts(currentData);
           try{ renderDynamicKPI(currentData); }catch(e){}
         }
