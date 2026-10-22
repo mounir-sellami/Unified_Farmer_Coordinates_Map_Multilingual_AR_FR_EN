@@ -1062,6 +1062,20 @@ body.dual-window .dual-screen-overlay{display:none!important;}
   .p2o5-map-frame{ min-height:220px; }
 }
 
+/* ===== ZOOM DES LÉGENDES =====
+   --legend-zoom (0.8 → 2.6) : même principe que le zoom des popups.
+   S'applique à la légende de la carte principale et aux légendes des cartes P2O5. */
+:root{--legend-zoom:1;}
+.map-legend > :not(.legend-zoom-bar),
+.p2o5-legend > :not(.legend-zoom-bar){zoom:var(--legend-zoom);}
+.map-legend{max-width:min(calc(240px * var(--legend-zoom)),calc(100% - 24px));}
+.legend-zoom-bar{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin:0 0 6px;direction:ltr;flex:none;}
+[dir="rtl"] .legend-zoom-bar{justify-content:flex-start;}
+.legend-zoom-bar button{font-family:Arial,sans-serif;font-weight:800;cursor:pointer;user-select:none;-webkit-user-select:none;min-width:28px;height:24px;padding:0 6px;border:1px solid var(--line);border-radius:6px;background:var(--cream);color:var(--clay);font-size:12px;line-height:1;}
+.legend-zoom-bar button:hover{filter:brightness(.96);}
+.legend-zoom-bar .legend-zoom-val{min-width:36px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-soft);}
+.map-legend.legend-collapsed .legend-zoom-bar{display:none;}
+
 .legend-dot{
   width:11px;
   height:11px;
@@ -3146,6 +3160,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
       <h4 data-i18n="legendTitle">
         Groupes/Délégations
       </h4>
+
+      <div class="legend-zoom-bar" id="mapLegendZoomBar"></div>
 
       <div id="legendItems"></div>
 
@@ -5356,6 +5372,57 @@ const I18N = {
   applyPopupZoom();
   syncPopupZoomLabels();
 
+  /* =======================================================
+     ZOOM DES LÉGENDES : même principe que le zoom des popups
+     (boutons A− / A+ / ↺, Ctrl + molette, mémorisation).
+     Valable pour la légende de la carte principale et pour les
+     légendes des deux cartes P2O5.
+     ======================================================= */
+  const LEGEND_ZOOM_MIN=0.8, LEGEND_ZOOM_MAX=2.6, LEGEND_ZOOM_STEP=0.2;
+  let legendZoom=1;
+  try{ const v=parseFloat(localStorage.getItem('ufm_legend_zoom')); if(isFinite(v)) legendZoom=Math.min(LEGEND_ZOOM_MAX,Math.max(LEGEND_ZOOM_MIN,v)); }catch(e){}
+  function legendZoomTitles(){
+    const l=(document.documentElement.getAttribute('data-current-lang')||'fr');
+    return l==='ar' ? {plus:'تكبير المفتاح',minus:'تصغير المفتاح',reset:'إعادة الحجم 100%'}
+         : l==='en' ? {plus:'Increase legend size',minus:'Decrease legend size',reset:'Reset to 100%'}
+         : {plus:'Agrandir la légende',minus:'Réduire la légende',reset:'Réinitialiser à 100 %'};
+  }
+  function legendZoomBarInnerHtml(){
+    const T=legendZoomTitles();
+    return '<button type="button" title="'+T.minus+'" aria-label="'+T.minus+'" onclick="event.stopPropagation();legendZoomStep(-1)">A−</button>'+
+      '<span class="legend-zoom-val">'+Math.round(legendZoom*100)+'%</span>'+
+      '<button type="button" title="'+T.plus+'" aria-label="'+T.plus+'" onclick="event.stopPropagation();legendZoomStep(1)">A+</button>'+
+      '<button type="button" title="'+T.reset+'" aria-label="'+T.reset+'" onclick="event.stopPropagation();legendZoomStep(0)">↺</button>';
+  }
+  function legendZoomBarHtml(){ return '<div class="legend-zoom-bar">'+legendZoomBarInnerHtml()+'</div>'; }
+  function refreshStaticLegendZoomBar(){
+    const el=document.getElementById('mapLegendZoomBar');
+    if(el) el.innerHTML=legendZoomBarInnerHtml();
+  }
+  function syncLegendZoomLabels(){
+    const txt=Math.round(legendZoom*100)+'%';
+    document.querySelectorAll('.legend-zoom-val').forEach(el=>{ if(el.textContent!==txt) el.textContent=txt; });
+  }
+  function applyLegendZoom(){
+    document.documentElement.style.setProperty('--legend-zoom',String(legendZoom));
+    try{ refreshStaticLegendZoomBar(); }catch(e){}
+    try{ syncLegendZoomLabels(); }catch(e){}
+    try{ localStorage.setItem('ufm_legend_zoom',String(legendZoom)); }catch(e){}
+  }
+  function setLegendZoom(v){
+    legendZoom=Math.min(LEGEND_ZOOM_MAX,Math.max(LEGEND_ZOOM_MIN,Math.round(v*100)/100));
+    applyLegendZoom();
+  }
+  window.legendZoomStep=function(dir){ setLegendZoom(dir===0 ? 1 : legendZoom+dir*LEGEND_ZOOM_STEP); };
+  /* Ctrl + molette sur une légende = zoom de la légende (sans zoomer la carte). */
+  document.addEventListener('wheel',function(e){
+    if(!(e.ctrlKey||e.metaKey)) return;
+    if(!(e.target && e.target.closest && e.target.closest('.map-legend, .p2o5-legend'))) return;
+    e.preventDefault(); e.stopPropagation();
+    window.legendZoomStep(e.deltaY<0 ? 1 : -1);
+  },{passive:false,capture:true});
+  applyLegendZoom();
+
   function addMapExtras(mapInstance){
     if(!mapInstance) return;
     try{ addPopupZoomControl(mapInstance); }catch(e){ console.warn('popup zoom control',e); }
@@ -6224,6 +6291,8 @@ const I18N = {
 
         )
         .join('');
+
+    try{ refreshStaticLegendZoomBar(); }catch(e){}
 
   }
 
@@ -9623,6 +9692,7 @@ const I18N = {
     title.style.marginBottom='4px';
     title.textContent=p2o5T('titleA');
     container.appendChild(title);
+    container.insertAdjacentHTML('beforeend',legendZoomBarHtml());
     for(let i=0;i<P2O5_CLASS_COLORS.length;i++){
       const row=document.createElement('div');
       row.className='legend-item';
@@ -9664,6 +9734,7 @@ const I18N = {
     title.style.marginBottom='4px';
     title.textContent=p2o5T('titleB');
     container.appendChild(title);
+    container.insertAdjacentHTML('beforeend',legendZoomBarHtml());
     for(let i=0;i<P2O5_DOSE_BY_CLASS.length;i++){
       const row=document.createElement('div');
       row.className='legend-item';
