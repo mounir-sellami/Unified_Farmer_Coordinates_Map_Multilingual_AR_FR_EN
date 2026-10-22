@@ -3595,6 +3595,7 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>window.__XLSX_BASE=window.XLSX;</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 /* xlsx-js-style (fork de SheetJS) : utilisé uniquement pour l'export coloré
    des points à vérifier. Le XLSX d'origine reste le global utilisé partout ailleurs. */
@@ -10530,12 +10531,13 @@ const I18N = {
       return 0;
     });
     const reasonColLabel=currentLang==='ar'?'سبب التحقق':currentLang==='en'?'Reason for verification':'Motif de vérification';
+    const XS=window.XLSX_STYLE||XLSX;
+    const styled=!!window.XLSX_STYLE;
+    const buildVerifyWorkbook=(rows)=>{
     const out=rows.map(d=>{const r={...(d.row||{})};r[reasonColLabel]=coordinateCheckReason(d);return r;});
     /* Mêmes couleurs que le tableau « Points à vérifier » affiché à l'écran
        (fond de ligne + zébrage clair/foncé + liseré vif à gauche). Les styles
        nécessitent le fork xlsx-js-style ; à défaut, export sans couleurs. */
-    const XS=window.XLSX_STYLE||XLSX;
-    const styled=!!window.XLSX_STYLE;
     const ws=XS.utils.json_to_sheet(out);
     const wb=XS.utils.book_new();
     const VERIFY_XLSX_COLORS={
@@ -10593,7 +10595,29 @@ const I18N = {
       wl['!cols']=[{wch:34},{wch:14}];
       XS.utils.book_append_sheet(wb,wl,'Legende');
     }
-    XS.writeFile(wb,'Coordonnees_a_verifier_2026_2027.xlsx');
+    return wb;
+    };
+    /* Export en dossier ZIP « P2O5_Data_Anomalies » : liste complète + une liste par gouvernorat (déclaré). */
+    if(typeof JSZip==='undefined'){ XS.writeFile(buildVerifyWorkbook(rows),'Coordonnees_a_verifier_2026_2027.xlsx'); return; }
+    const safeName=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\u0600-\u06FF-]+/g,'_').replace(/^_+|_+$/g,'')||'Non_renseigne';
+    const toXlsx=wb=>XS.write(wb,{bookType:'xlsx',type:'array'});
+    const zip=new JSZip(), root=zip.folder('P2O5_Data_Anomalies'), byGov=root.folder('Par_gouvernorat');
+    root.file('Anomalies_Toutes.xlsx',toXlsx(buildVerifyWorkbook(rows)));
+    const groups=new Map();
+    rows.forEach(d=>{const g=String(d.declaredGovernorate||'').trim()||'Non renseigné'; if(!groups.has(g)) groups.set(g,[]); groups.get(g).push(d);});
+    const summary=[['Gouvernorat','Nombre de points à vérifier']];
+    [...groups.keys()].sort((a,b)=>a.localeCompare(b,'fr')).forEach(g=>{
+      byGov.file('Anomalies_'+safeName(g)+'.xlsx',toXlsx(buildVerifyWorkbook(groups.get(g))));
+      summary.push([g,groups.get(g).length]);
+    });
+    summary.push(['TOTAL',rows.length]);
+    const wsS=XS.utils.aoa_to_sheet(summary), wbS=XS.utils.book_new(); wsS['!cols']=[{wch:28},{wch:28}];
+    XS.utils.book_append_sheet(wbS,wsS,'Synthese');
+    root.file('Synthese_par_gouvernorat.xlsx',toXlsx(wbS));
+    zip.generateAsync({type:'blob'}).then(blob=>{
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='P2O5_Data_Anomalies.zip';
+      document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
+    });
   }
 
   function parseWorkbook(workbook, preferredSheet=null){
