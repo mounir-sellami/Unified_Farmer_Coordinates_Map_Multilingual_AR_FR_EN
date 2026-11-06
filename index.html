@@ -565,6 +565,9 @@ header::after{
 .verify-coords-pill{background:#fff4f2!important;border:1px solid #d83a2e!important;color:#a51f16!important;cursor:pointer;font-weight:800;box-shadow:0 0 0 1px rgba(216,58,46,.08);}
 .verify-coords-pill:hover{background:#ffe8e5!important;transform:translateY(-1px);}
 .verify-coords-pill b{color:#a51f16;}
+.clean-data-pill{background:#f0f8f1!important;border:1px solid #2e7d32!important;color:#1b5e20!important;cursor:pointer;font-weight:800;}
+.clean-data-pill:hover{background:#e0f2e1!important;transform:translateY(-1px);}
+.clean-data-pill.active{background:#2e7d32!important;color:#fff!important;}
 .map-legend-credit,.popup-credit{margin-top:7px;padding-top:6px;border-top:1px solid var(--line);text-align:center;line-height:1.35;font-size:.62rem;color:var(--ink-soft);}
 .map-legend-credit strong,.popup-credit strong{color:var(--clay);font-weight:800;}
 .popup-credit .popup-author{color:#1565c0;font-weight:800;}
@@ -2333,7 +2336,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   /* Fermé : titre + recherche + groupe + boutons. Ouvert : tout le reste. */
   header:not(.mh-open) .title-block p,
   header:not(.mh-open) .head-stats-inline,
-  header:not(.mh-open) .head-right-col{display:none;}
+  header:not(.mh-open) .head-right-col,
+  header:not(.mh-open) .lang-switch-header{display:none;}
 
   header.mh-open{max-height:72dvh;overflow-y:auto;overscroll-behavior:contain;}
 
@@ -2636,7 +2640,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   .title-block h1{font-size:.82rem;}
   header:not(.mh-open) .title-block p,
   header:not(.mh-open) .head-stats-inline,
-  header:not(.mh-open) .head-right-col{display:none;}
+  header:not(.mh-open) .head-right-col,
+  header:not(.mh-open) .lang-switch-header{display:none;}
   header.mh-open{max-height:78dvh;overflow-y:auto;}
   .head-stats-tools-row{margin-top:4px;gap:6px;}
   .head-tools-inline{flex-wrap:nowrap;gap:6px;margin:0 !important;}
@@ -2699,9 +2704,94 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   .author-avatar{width:18px;height:18px;}
 }
 </style>
+
+<style id="authStyles">
+/* ===== ACCÈS SÉCURISÉ : écran de connexion + boutons de session ===== */
+html.auth-locked body > *:not(#authGate):not(script):not(style){visibility:hidden !important;pointer-events:none !important;}
+html.auth-locked body{overflow:hidden;}
+#authGate{display:none;position:fixed;inset:0;z-index:2147483000;align-items:center;justify-content:center;padding:18px;
+  background:radial-gradient(1200px 700px at 20% 10%,#6d8f58 0%,#4c6b3f 45%,#2f4524 100%);font-family:'Cairo','Tajawal',sans-serif;visibility:visible !important;pointer-events:auto !important;overflow:auto;}
+html.auth-locked #authGate,#authGate.auth-show{display:flex;}
+#authGate .auth-card{width:min(420px,100%);background:var(--paper,#fffdf8);border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.35);
+  border-top:6px solid var(--wheat,#d9a441);padding:22px 24px 18px;color:#2c2620;}
+#authGate .auth-lang{display:flex;gap:6px;justify-content:center;margin-bottom:12px;}
+#authGate .auth-lang button{border:1px solid var(--line,#e6ddc9);background:#fff;color:var(--olive-dark,#375029);font:700 .78rem 'Cairo',sans-serif;padding:5px 12px;border-radius:999px;cursor:pointer;}
+#authGate .auth-lang button.on{background:var(--wheat,#d9a441);border-color:#b98a2f;}
+#authGate .auth-icon{width:56px;height:56px;margin:0 auto 8px;border-radius:50%;background:var(--olive-dark,#375029);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+#authGate h2{margin:0 0 4px;text-align:center;font-size:1.15rem;color:var(--olive-dark,#375029);}
+#authGate .auth-sub{margin:0 0 14px;text-align:center;font-size:.8rem;color:#6b6258;}
+#authGate label{display:block;font-size:.78rem;font-weight:700;color:#4a4238;margin:10px 0 4px;}
+#authGate .auth-field{position:relative;}
+#authGate input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #cfc4ab;border-radius:10px;background:#fff;font:600 .92rem 'Cairo',sans-serif;color:#2c2620;direction:ltr;text-align:left;}
+#authGate input:focus{outline:2px solid var(--wheat,#d9a441);border-color:#b98a2f;}
+#authGate .auth-eye{position:absolute;top:50%;transform:translateY(-50%);right:8px;border:0;background:none;cursor:pointer;font-size:1rem;padding:4px;}
+#authGate[dir="rtl"] .auth-eye{right:auto;left:8px;}
+#authGate #authPwd{padding-right:38px;}
+#authGate[dir="rtl"] #authPwd{padding-right:12px;padding-left:38px;}
+#authGate .auth-msg{min-height:1.2em;margin:10px 0 2px;font-size:.8rem;font-weight:700;color:#b3261e;text-align:center;}
+#authGate .auth-msg.ok{color:#2e7d32;}
+#authGate .auth-btn{width:100%;margin-top:8px;border:0;border-radius:999px;cursor:pointer;padding:11px 16px;font:800 .92rem 'Cairo',sans-serif;}
+#authGate .auth-primary{background:var(--wheat,#d9a441);color:var(--olive-dark,#375029);box-shadow:0 2px 0 #b98a2f;}
+#authGate .auth-primary:disabled{opacity:.55;cursor:wait;}
+#authGate .auth-ghost{background:transparent;color:#7a1f18;border:1px solid #e3b5b0;}
+#authGate .auth-foot{margin-top:12px;text-align:center;font-size:.7rem;color:#8a8075;}
+#authGate .auth-bye{display:none;text-align:center;}
+#authGate.auth-bye-mode .auth-form-wrap{display:none;}
+#authGate.auth-bye-mode .auth-bye{display:block;}
+.start-auth{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.start-auth .btn-auth{padding:7px 16px;font-size:.78rem;}
+.start-auth .btn-logout{background:var(--cream,#faf6ee);color:var(--olive-dark,#375029);box-shadow:0 2px 0 #cdbf9f;border:1px solid var(--line,#e6ddc9);}
+.start-auth .btn-quit{background:#b3261e;color:#fff;box-shadow:0 2px 0 #7a1812;}
+.head-auth{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+.head-auth[hidden]{display:none;}
+.head-auth .auth-user{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font:700 .78rem 'Cairo',sans-serif;border:1px solid rgba(255,255,255,.28);max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.head-auth .btn-auth{padding:8px 16px;font-size:.8rem;}
+.head-auth .btn-logout{background:var(--cream,#faf6ee);color:var(--olive-dark,#375029);box-shadow:0 2px 0 #cdbf9f;}
+.head-auth .btn-quit{background:#b3261e;color:#fff;box-shadow:0 2px 0 #7a1812;}
+@media(max-width:700px){.head-auth{width:100%;}.head-auth .btn-auth{flex:1;justify-content:center;}}
+</style>
 </head>
 
 <body>
+<script>
+/* Verrouillage immédiat (avant tout affichage) sauf session valide. */
+(function(){
+  var ok=false;
+  try{ var r=JSON.parse(sessionStorage.getItem('ufm_auth_v1')||'null'); ok=!!(r && r.exp>Date.now() && r.email); }catch(e){}
+  if(!ok) document.documentElement.classList.add('auth-locked');
+})();
+</script>
+<div id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="auth-card">
+    <div class="auth-lang" id="authLang">
+      <button type="button" data-auth-lang="fr">Français</button>
+      <button type="button" data-auth-lang="en">English</button>
+      <button type="button" data-auth-lang="ar">العربية</button>
+    </div>
+    <div class="auth-form-wrap">
+      <div class="auth-icon">🔒</div>
+      <h2 id="authTitle"></h2>
+      <p class="auth-sub" id="authSub"></p>
+      <form id="authForm" autocomplete="on" novalidate>
+        <label id="authEmailL" for="authEmail"></label>
+        <div class="auth-field"><input type="email" id="authEmail" name="username" autocomplete="username" inputmode="email" spellcheck="false" autocapitalize="off"></div>
+        <label id="authPwdL" for="authPwd"></label>
+        <div class="auth-field"><input type="password" id="authPwd" name="password" autocomplete="current-password"><button type="button" class="auth-eye" id="authEye" tabindex="-1">👁</button></div>
+        <div class="auth-msg" id="authMsg" role="alert" aria-live="polite"></div>
+        <button type="submit" class="auth-btn auth-primary" id="authSubmit"></button>
+        <button type="button" class="auth-btn auth-ghost" id="authQuit"></button>
+      </form>
+    </div>
+    <div class="auth-bye">
+      <div class="auth-icon">👋</div>
+      <h2 id="authByeTitle"></h2>
+      <p class="auth-sub" id="authByeText"></p>
+      <button type="button" class="auth-btn auth-primary" id="authRelogin"></button>
+    </div>
+    <div class="auth-foot">© Mounir SELLAMI</div>
+  </div>
+</div>
+
 
 <div id="app">
 
@@ -2775,33 +2865,11 @@ footer .contact-link [data-i18n="footerWaLabel"]{
       <p class="start-hint"
          data-i18n="startHint"></p>
 
-      <label class="btn btn-upload start-btn start-btn-disabled"
-             aria-disabled="true"
-             for="startFileInput">
+      <p class="start-status" id="startStatus" role="status" aria-live="polite"
+         style="margin:16px 0 6px;font-weight:700;min-height:1.5em;text-align:center"></p>
 
-        <svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2"
-             stroke-linecap="round"
-             stroke-linejoin="round">
-
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-
-        </svg>
-
-        <span data-i18n="startBtn">
-          Choisir un fichier Excel
-        </span>
-
-      </label>
-
-      <input type="file"
-             id="startFileInput"
-             accept=".xlsx,.xls"
-             disabled>
+      <button type="button" class="btn btn-upload start-btn" id="startRetryBtn"
+              style="display:none;margin:0 auto"></button>
 
       <p class="start-error"
          id="startError"></p>
@@ -2914,7 +2982,30 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 
             </span>
 
+    
           </div>
+
+            <div class="lang-switch-header">
+    
+              <button type="button"
+                      class="lang-btn"
+                      data-lang="fr">
+                <img class="flag-icon" src="https://flagcdn.com/fr.svg" alt="FR">
+              </button>
+    
+              <button type="button"
+                      class="lang-btn"
+                      data-lang="en">
+                <img class="flag-icon" src="https://flagcdn.com/gb.svg" alt="EN">
+              </button>
+    
+              <button type="button"
+                      class="lang-btn"
+                      data-lang="ar">
+                <img class="flag-icon" src="https://flagcdn.com/tn.svg" alt="AR">
+              </button>
+    
+            </div>
 
         </div>
 
@@ -2922,49 +3013,32 @@ footer .contact-link [data-i18n="footerWaLabel"]{
 
       <div class="head-right-col">
 
-        <div class="lang-switch-header">
-
-          <button type="button"
-                  class="lang-btn"
-                  data-lang="fr">
-            <img class="flag-icon" src="https://flagcdn.com/fr.svg" alt="FR">
-          </button>
-
-          <button type="button"
-                  class="lang-btn"
-                  data-lang="en">
-            <img class="flag-icon" src="https://flagcdn.com/gb.svg" alt="EN">
-          </button>
-
-          <button type="button"
-                  class="lang-btn"
-                  data-lang="ar">
-            <img class="flag-icon" src="https://flagcdn.com/tn.svg" alt="AR">
-          </button>
-
-        </div>
-
-        <div class="head-stats"
-             id="headVisitorStats">
-
+        <!-- Pastilles « En ligne » et « Visites totales » désactivées (mises en commentaire)
+        <div class="head-stats" id="headVisitorStats">
           <div class="stat-pill" id="statOnlinePill">
             <span class="stat-live-dot"></span>
             <span data-i18n="statsOnline">En ligne</span>
             : <b id="statOnlineValue">—</b>
           </div>
-
           <div class="stat-pill" id="statTotalVisitsPill">
             <span data-i18n="statsTotalVisits">Visites totales</span>
             : <b id="statTotalVisitsValue">—</b>
           </div>
+        </div>
+        -->
 
+        <div class="head-actions">
+        <!-- Gestion des échantillons : ajout / modification / suppression -->
+        <div class="head-stats" id="headSamplesTools">
+          <button type="button" class="btn btn-upload" id="samplesManageBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <span data-i18n="smpBtn">Ajout / Modification / Suppression des échantillons</span>
+          </button>
         </div>
 
-        <div class="head-tools"
-             style="margin-top:15px;">
+        <div class="head-tools">
 
-          <label class="btn btn-upload"
-                 for="fileInput">
+          <button type="button" class="btn btn-upload" id="refreshDataBtn">
 
             <svg viewBox="0 0 24 24"
                  fill="none"
@@ -2973,23 +3047,25 @@ footer .contact-link [data-i18n="footerWaLabel"]{
                  stroke-linecap="round"
                  stroke-linejoin="round">
 
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
+              <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+              <polyline points="21 3 21 9 15 9"/>
 
             </svg>
 
             <span data-i18n="updateBtn">
-              Mettre à jour depuis un fichier Excel
+              Actualiser les données
             </span>
 
-          </label>
-
-          <input type="file"
-                 id="fileInput"
-                 accept=".xlsx,.xls">
+          </button>
 
         </div>
+
+        <div class="head-auth" id="headAuth" hidden>
+          <span class="auth-user" id="authUserChip"></span>
+          <button type="button" class="btn btn-auth btn-logout" id="authLogoutBtn"></button>
+          <button type="button" class="btn btn-auth btn-quit" id="authQuitBtn"></button>
+        </div>
+        </div><!-- /head-actions -->
 
       </div>
 
@@ -3293,6 +3369,9 @@ footer .contact-link [data-i18n="footerWaLabel"]{
     <div id="chartsContent"
          class="charts-content hidden-view">
 
+      <div id="chartsSourceNote"
+           style="display:inline-block;margin:0 2px 10px;padding:5px 12px;border-radius:999px;background:var(--cream);border:1px solid var(--line);color:var(--olive-dark);font-size:.78rem;font-weight:700;"></div>
+
       <div class="kpi-row"
            id="kpiRow"></div>
 
@@ -3302,8 +3381,8 @@ footer .contact-link [data-i18n="footerWaLabel"]{
       <section class="p2o5-kpi-section" id="p2o5KpiSection">
         <div class="p2o5-kpi-head">
           <div>
-            <h3 id="p2o5KpiTitle">📊 Répartition des parcelles selon le P2O5 Olsen</h3>
-            <p id="p2o5KpiSubtitle">Nombre de parcelles et superficie totale par classe de teneur.</p>
+            <h3 id="p2o5KpiTitle">📊 Répartition des échantillons selon le P2O5 Olsen</h3>
+            <p id="p2o5KpiSubtitle">Nombre d’échantillons et superficie totale par classe de teneur.</p>
           </div>
           <div class="p2o5-kpi-filter">
             <label id="p2o5KpiGovLabel" for="p2o5KpiGovSelect">Gouvernorat :</label>
@@ -3399,6 +3478,98 @@ footer .contact-link [data-i18n="footerWaLabel"]{
   <!-- Toast ancré en haut du cadre Carte/Graphiques (#tabContent) :
        il reste visible quel que soit l'onglet actif, juste sous
        l'en-tête et la barre d'onglets, au sommet du cadre de la carte. -->
+  <!-- =====================================================
+       GESTION DES ÉCHANTILLONS (ajout / modification / suppression)
+       ===================================================== -->
+  <style>
+    /* Fenêtre « Configurer l'affichage et les graphiques » : redimensionnable (coin inférieur) */
+    .excel-config-card{resize:both;overflow:auto;min-width:420px;min-height:280px;max-width:99vw !important;max-height:99vh !important;}
+    @media(max-width:700px){.excel-config-card{resize:none;min-width:0;}}
+    /* Boutons d'action de l'en-tête : une seule rangée alignée, mêmes dimensions */
+    .head-right-col{width:100%;align-items:stretch;}
+    /* Langues : dans la rangée des outils, à droite de la roue */
+    .title-block{flex:1 1 100%;min-width:0;}
+    .head-stats-tools-row{width:100%;}
+    .head-stats-tools-row>.lang-switch-header{margin-left:auto;padding-left:24px;}
+    [dir="rtl"] .head-stats-tools-row>.lang-switch-header{margin-left:0;margin-right:auto;padding-left:0;padding-right:24px;}
+    header.mh-open .head-tools-inline{flex-wrap:wrap !important;}
+    .head-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start;align-items:stretch;margin-top:4px;}
+    [dir="rtl"] .head-actions{justify-content:flex-end;}
+    .head-actions .head-stats,.head-actions .head-tools{margin:0 !important;display:flex;flex-wrap:nowrap;}
+    .head-actions .btn{min-height:42px;padding:9px 18px;font-size:.8rem;white-space:nowrap;justify-content:center;}
+    @media(max-width:700px){.head-actions{flex-direction:column;}.head-actions .head-stats,.head-actions .head-tools{width:100%;}.head-actions .btn{width:100%;white-space:normal;text-align:center;}}
+    #smpOverlay{display:none;position:fixed;inset:0;z-index:5200;background:rgba(44,38,32,.58);align-items:center;justify-content:center;padding:10px;}
+    #smpOverlay.show{display:flex;}
+    .smp-card{resize:both;min-width:560px;min-height:380px;max-width:99vw;max-height:99vh;width:min(1200px,97vw);height:min(92vh,860px);background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden;color:var(--ink);font-family:'Cairo',sans-serif;}
+    .smp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;background:var(--olive-dark);color:#fbf6e8;}
+    .smp-head h2{margin:0;font-size:1.05rem;}
+    .smp-x{background:none;border:none;color:#fbf6e8;font-size:1.6rem;cursor:pointer;line-height:1;}
+    .smp-body{flex:1;min-height:0;display:grid;grid-template-columns:var(--smp-left,minmax(300px,2fr)) 10px minmax(0,3fr);}
+    .smp-pane{min-height:0;overflow:auto;padding:12px 14px;}
+    .smp-split{cursor:col-resize;background:var(--line);position:relative;touch-action:none;}
+    .smp-split:hover,.smp-split.drag{background:var(--wheat);}
+    .smp-split::after{content:'⋮';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--ink-soft);font-weight:800;}
+    .smp-tools{display:flex;gap:8px;margin-bottom:8px;}
+    .smp-tools input{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;}
+    .smp-btn{border:none;cursor:pointer;border-radius:999px;padding:7px 14px;font:700 .8rem 'Cairo',sans-serif;background:var(--wheat);color:var(--olive-dark);box-shadow:0 2px 0 var(--wheat-dark);}
+    .smp-btn.green{background:var(--olive);color:#fff;box-shadow:0 2px 0 var(--olive-dark);}
+    .smp-btn.red{background:var(--red-dark);color:#fff;box-shadow:none;}
+    .smp-table{width:100%;border-collapse:collapse;font-size:.76rem;}
+    .smp-table th,.smp-table td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis;}
+    .smp-table th{position:sticky;top:0;background:var(--cream);}
+    .smp-table tbody tr:hover{background:#f6efdc;}
+    .smp-table tr.sel{background:#f3dc9a !important;outline:2px solid var(--wheat-dark);outline-offset:-2px;font-weight:700;}
+    .smp-table button{border:none;background:none;cursor:pointer;font-size:.95rem;}
+    .smp-form{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;}
+    .smp-form label{display:flex;flex-direction:column;font-size:.74rem;font-weight:700;color:var(--ink-soft);gap:2px;}
+    .smp-form input,.smp-form select{padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:.82rem;color:var(--ink);background:#fff;}
+    .smp-form input[readonly]{background:var(--cream);}
+    .smp-form .bad{border-color:var(--red-dark);background:#fdeceb;}
+    .smp-form .full{grid-column:1/-1;}
+    #smpMap{height:260px;min-height:140px;resize:vertical;overflow:hidden;border:1px solid var(--line);border-radius:10px;margin:10px 0;}
+    .smp-pending{border:2px solid var(--wheat-dark);background:#fff8e6;border-radius:10px;padding:8px 10px;margin-bottom:10px;}
+    .smp-pend-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:.8rem;}
+    #smpPendList{list-style:none;margin:6px 0 0;padding:0;max-height:150px;overflow:auto;font-size:.76rem;}
+    #smpPendList li{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:3px 0;border-top:1px dashed var(--line);}
+    #smpPendList li button{border:1px solid var(--line);background:#fff;border-radius:999px;cursor:pointer;font:700 .72rem 'Cairo',sans-serif;padding:2px 9px;}
+    .smp-table tr.pnd-add{background:#e3f3e4;}.smp-table tr.pnd-edit{background:#ffeccb;}
+    .smp-hint{font-size:.74rem;color:var(--ink-soft);margin:4px 0;}
+    .smp-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+    #smpStatus{font-size:.78rem;font-weight:700;color:var(--green_dark);}
+    #smpAlert{display:none;position:fixed;inset:0;z-index:5400;background:rgba(0,0,0,.45);align-items:center;justify-content:center;}
+    #smpAlert.show{display:flex;}
+    .smp-alert-box{background:#fff;border:3px solid var(--red-dark);border-radius:14px;padding:20px 24px;max-width:min(460px,92vw);text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.4);}
+    .smp-alert-box b{display:block;color:var(--red-dark);font-size:1.05rem;margin-bottom:8px;}
+    .smp-alert-box p{color:var(--red-dark);font-weight:700;margin:0 0 14px;}
+    @media(max-width:820px){.smp-card{resize:none;min-width:0}.smp-body{grid-template-columns:1fr;overflow:auto}.smp-pane{overflow:visible}.smp-split{display:none}}
+  </style>
+  <script type="application/json" id="smp-delegations">{"Tunis":["Carthage","La Médina","Bab Bhar","Bab Souika","El Omrane","El Omrane Supérieur","Ettahrir","El Menzah","Cité El Khadhra","Le Bardo","Séjoumi","Ezzouhour","El Hrairia","Sidi Hassine","El Ouardia","El Kabaria","Sidi El Béchir","Djebel Djelloud","La Goulette","Le Kram","La Marsa"],"Ariana":["Ariana Ville","La Soukra","Raoued","Kalâat El Andalous","Sidi Thabet","Cité Ettadhamen","Mnihla"],"Manouba":["Manouba","Oued Ellil","Tebourba","El Battan","Djedeida","Mornaguia","Borj El Amri","Douar Hicher"],"Ben Arous":["Ben Arous","Nouvelle Médina","El Mourouj","Hammam Lif","Hammam Chott","Bou Mhel El Bassatine","Ezzahra","Radès","Mégrine","Mohamedia","Fouchana","Mornag"],"Nabeul":["Nabeul","Dar Chaâbane El Fehri","Béni Khiar","Korba","Menzel Temime","El Mida","Kélibia","Hammam El Ghezaz","El Haouaria","Takelsa","Soliman","Menzel Bouzelfa","Béni Khalled","Grombalia","Bou Argoub","Hammamet"],"Bizerte":["Bizerte Nord","Jarzouna","Bizerte Sud","Sejnane","Joumine","Mateur","Ghezala","Menzel Bourguiba","Tinja","Utique","Ghar El Melh","Menzel Jemil","El Alia","Ras Jebel"],"Zaghouan":["Zaghouan","Zriba","Bir Mcherga","El Fahs","Ennadhour","Saouaf"],"Sousse":["Sousse Médina","Sousse Erriadh","Sousse Jaouhara","Sousse Sidi Abdelhamid","Hammam Sousse","Akouda","Kalaa Kebira","Sidi Bou Ali","Hergla","Enfidha","Bouficha","Kondar","Sidi El Heni","Msaken","Kalaa Sghira","Zaouia Ksibet Thrayet"],"Monastir":["Monastir","Ouerdanine","Sahline","Zeramdine","Beni Hassen","Jammel","Bembla","Moknine","Bekalta","Teboulba","Ksar Hellal","Ksibet El Mediouni","Sayada-Lamta-Bou Hjar"],"Mahdia":["Mahdia","Bou Merdès","Ouled Chamekh","Chorbane","Hebira","Essouassi","El Jem","Chebba","Melloulech","Sidi Alouane","Ksour Essef","Rejiche","El Bradâa"],"Sfax":["Sfax Ville","Sfax Ouest","Sakiet Ezzit","Sakiet Eddaier","Sfax Sud","Thyna","Agareb","Jebeniana","El Amra","El Hencha","Menzel Chaker","El Ghraiba","Bir Ali Ben Khalifa","Skhira","El Mahrès","Kerkennah"],"Béja":["Béja Nord","Béja Sud","Amdoun","Nefza","Teboursouk","Tibar","Testour","Goubellat","Medjez El Bab"],"Jendouba":["Jendouba Sud","Jendouba Nord","Bousalem","Tabarka","Aïn Draham","Fernana","Ghardimaou","Oued Meliz","Balta Bouawene"],"Le Kef":["Kef Ouest","Kef Est","Nebeur","Sakiet Sidi Youssef","Tajerouine","Kalaat Senan","Kalaat Khasba","Jérissa","El Ksour","Dahmani","Sers","Touiref"],"Siliana":["Siliana Nord","Siliana Sud","Bou Arada","Gaafour","El Krib","Sidi Bourouis","Makthar","Errouhia","Kesra","Bargou","Aroussa"],"Kairouan":["Kairouan Nord","Kairouan Sud","Chebika","Sbikha","El Ouslatia","Haffouz","El Alâa","Hajeb El Ayoun","Nasrallah","Echrarda","Bouhajla","Aïn Djeloula","Menzel Mehiri"],"Kasserine":["Kasserine Nord","Kasserine Sud","Ezzouhour","Hassi Ferid","Sbeitla","Sbiba","Djedeliane","El Ayoun","Thala","Hidra","Foussana","Feriana","Majel Bel Abbès"],"Sidi Bouzid":["Sidi Bouzid Ouest","Sidi Bouzid Est","Jelma","Sabbat Ouled Asker","Bir El Hfay","Sidi Ali Ben Aoun","Menzel Bouzaiane","Meknassy","Souk Jedid","Mezzouna","Regueb","Ouled Haffouz"],"Gabès":["Gabès Ville","Gabès Ouest","Gabès Sud","Ghannouch","Métouia","Menzel Habib","El Hamma","Matmata","Matmata Nouvelle","Mareth","Nouvelle Matmata","Ghanouch","El Mdou"],"Médenine":["Médenine Nord","Médenine Sud","Béni Khedache","Ben Guerdane","Zarzis","Djerba Houmt Souk","Djerba Midoun","Djerba Ajim","Sidi Makhlouf"],"Gafsa":["Gafsa Nord","Sidi Aïch","El Ksar","Gafsa Sud","Moulares","Redeyef","Métlaoui","El Mdhilla","El Guettar","Belkhir","Sned","Oum Larayes","Zannouch"],"Tozeur":["Tozeur","Degueche","Tameghza","Nefta","Hezoua","Hazoua"],"Tataouine":["Tataouine Nord","Tataouine Sud","Smar","Bir Lahmer","Ghomrassen","Dhehiba","Remada","Beni Mhira"],"Kébili":["Kébili Sud","Kébili Nord","Souk El Ahad","Douz Nord","Douz Sud","El Faouar","Jemna"]}</script>
+  <div id="smpOverlay" role="dialog" aria-modal="true">
+    <div class="smp-card">
+      <div class="smp-head"><h2 data-i18n="smpBtn">Ajout / Modification / Suppression des échantillons</h2><button type="button" class="smp-x" id="smpClose">×</button></div>
+      <div class="smp-body">
+        <div class="smp-pane">
+          <div class="smp-tools"><input type="search" id="smpSearch" data-i18n-placeholder="smpSearch" placeholder="Rechercher…"><button type="button" class="smp-btn green" id="smpNew" data-i18n="smpNew">+ Nouveau</button></div>
+          <div id="smpPending" class="smp-pending" style="display:none">
+            <div class="smp-pend-head"><b id="smpPendTitle"></b><span><button type="button" class="smp-btn green" id="smpSaveAll"></button> <button type="button" class="smp-btn" id="smpUndoAll"></button></span></div>
+            <ul id="smpPendList"></ul>
+          </div>
+          <div class="smp-hint" id="smpCount"></div>
+          <table class="smp-table"><thead id="smpThead"></thead><tbody id="smpTbody"></tbody></table>
+        </div>
+        <div class="smp-split" id="smpSplit" title="↔"></div>
+        <div class="smp-pane">
+          <h3 id="smpFormTitle" style="margin:0 0 8px;font-size:.95rem;"></h3>
+          <div class="smp-form" id="smpForm"></div>
+          <div class="smp-hint" data-i18n="smpMapHint">Cliquez sur la carte (ou déplacez le repère) pour renseigner la latitude et la longitude.</div>
+          <div id="smpMap"></div>
+          <div class="smp-actions"><button type="button" class="smp-btn green" id="smpSave" data-i18n="smpSave">Enregistrer dans le fichier Excel</button><button type="button" class="smp-btn" id="smpReset" data-i18n="smpCancel">Annuler</button><button type="button" class="smp-btn red" id="smpDelete" style="display:none" data-i18n="smpDelete">🗑️ Supprimer cet échantillon</button><span id="smpStatus"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="smpAlert"><div class="smp-alert-box"><b>⛔ <span data-i18n="smpErrTitle">Enregistrement refusé</span></b><p id="smpAlertMsg"></p><button type="button" class="smp-btn red" id="smpAlertOk">OK</button></div></div>
+
   <div id="toast"></div>
 
   </div>
@@ -4001,7 +4172,7 @@ const I18N = {
       "Sélectionner un groupe",
 
     updateBtn:
-      "Mettre à jour depuis un fichier Excel",
+      "Actualiser les données",
 
     exportPdfBtn:
       "Exporter en PDF",
@@ -4051,13 +4222,15 @@ const I18N = {
       "Groupes/Délégations",
 
     statsTotal:
-      "Total des points",
+      "Échantillons géolocalisés",
 
     statsValid:
-      "Coordonnées valides",
+      "Points géolocalisés / Valeurs P2O5",
 
     statsToVerify:
       "À vérifier",
+    cleanData:"Nettoyage des données",
+    cleanDataTitle:"Afficher uniquement les points situés en Tunisie et dans leur gouvernorat déclaré sans doublons de coordonnées (cliquer à nouveau pour tout afficher)",
     verifyTitle:
       "⚠️ Points à vérifier",
     verifySubtitle:
@@ -4165,7 +4338,7 @@ const I18N = {
       "Compilation unifiée des coordonnées des agriculteurs concernés par l'analyse du phosphore et de la fertilité des sols\nRÉPUBLIQUE TUNISIENNE",
 
     startHint:
-      "Choisissez votre langue, puis sélectionnez le fichier Excel correspondant (avec la même structure que le fichier d'origine — feuille « Compilation ») pour afficher les points sur la carte.",
+      "Choisissez votre langue : vos données sont chargées automatiquement depuis la base partagée, limitées aux gouvernorats qui vous sont autorisés.",
 
     startBtn:
       "Choisir un fichier Excel",
@@ -4273,7 +4446,7 @@ const I18N = {
       "Select a group",
 
     updateBtn:
-      "Update from an Excel file",
+      "Refresh data",
 
     exportPdfBtn:
       "Export to PDF",
@@ -4323,13 +4496,15 @@ const I18N = {
       "Groups/Delegations",
 
     statsTotal:
-      "Total points",
+      "Geolocated samples",
 
     statsValid:
-      "Valid coordinates",
+      "Geolocated points / P2O5 values",
 
     statsToVerify:
       "To verify",
+    cleanData:"Data cleaning",
+    cleanDataTitle:"Show only points located in Tunisia and inside their declared governorate, without duplicate coordinates (click again to show all)",
     verifyTitle:
       "⚠️ Points to verify",
     verifySubtitle:
@@ -4437,7 +4612,7 @@ const I18N = {
       "Unified compilation of farmer coordinates concerned by the phosphorus and soil fertility analysis\nREPUBLIC OF TUNISIA",
 
     startHint:
-      "Choose your language, then select the matching Excel file (with the same structure as the original file — “Data” sheet) to display the points on the map.",
+      "Choose your language: your data is loaded automatically from the shared database, limited to the governorates you are authorized to access.",
 
     startBtn:
       "Choose an Excel file",
@@ -4545,7 +4720,7 @@ const I18N = {
       "اختر المجموعة",
 
     updateBtn:
-      "تحديث من ملف إكسل",
+      "تحديث البيانات",
 
     exportPdfBtn:
       "تصدير بصيغة PDF",
@@ -4595,13 +4770,15 @@ const I18N = {
       "المجموعات/المعتمديات",
 
     statsTotal:
-      "إجمالي النقاط",
+      "العينات المحددة جغرافياً",
 
     statsValid:
-      "إحداثيات صحيحة",
+      "النقاط المحددة جغرافياً / قيم P2O5",
 
     statsToVerify:
       "بحاجة إلى تحقق",
+    cleanData:"تنظيف البيانات",
+    cleanDataTitle:"عرض النقاط الواقعة في تونس وضمن ولايتها المصرّح بها فقط، دون إحداثيات مكررة (انقر مرة أخرى لعرض الكل)",
     verifyTitle:
       "⚠️ نقاط تحتاج إلى التحقق",
     verifySubtitle:
@@ -4709,7 +4886,7 @@ const I18N = {
       "تجميع موحّد لإحداثيات الفلاحين المعنيين بتحليل الفسفور وخصوبة التربة\nالجمهورية التونسية",
 
     startHint:
-      "اختر لغتك، ثم حدد ملف إكسل المطابق (بنفس هيكلة الملف الأصلي — ورقة «التجميع») لعرض النقاط على الخريطة.",
+      "اختر لغتك: يتم تحميل بياناتك تلقائيًا من قاعدة البيانات المشتركة، وهي مقتصرة على الولايات المسموح لك بالوصول إليها.",
 
     startBtn:
       "اختيار ملف إكسل",
@@ -4814,6 +4991,13 @@ const I18N = {
   let currentData = [];
   /* Jeu de données dédié à l'interpolation P2O5, provenant de sa propre feuille Excel. */
   let currentP2O5Data = [];
+  /* Feuille « Graphs_Stats » (sans doublons) : utilisée par l'onglet Graphiques en mode Nettoyage. */
+  let currentGraphsData = [];   /* feuille « Geo_P2O5 » (mode Nettoyage activé) */
+  let currentGeoData = [];      /* feuille « Geo » (mode Nettoyage non activé) */
+  /* Statistiques basées sur les échantillons (feuille P2O5_Interpolation), pas sur les parcelles. */
+  const P2O5_STATS_FROM_SAMPLES = true;
+  /* Point d'échantillon exploitable = coordonnées X/Y valides ET valeur P2O5 renseignée. */
+  function isSamplePoint(d){ return isCoordinateValid(d) && Number.isFinite(getP2O5Value(d)); }
   /* Échantillons affichés sur la carte « Répartition spatiale des échantillons » :
      ceux de la feuille « P2O5-Interpolation » (repli sur la feuille principale si absente). */
   let currentMapData = [];
@@ -5542,7 +5726,7 @@ const I18N = {
       if(typeof gouvLayer!=='undefined' && gouvLayer && gouvLayer.bringToBack) gouvLayer.bringToBack();
       sampledParcelLayers[gov] = layer;
       if(window._layerCtrl && window._layerCtrl.addOverlay){
-        window._layerCtrl.addOverlay(layer,'Parcelles échantillonnées – '+localizeGovernorateName(gov));
+        window._layerCtrl.addOverlay(layer,(currentLang==='ar' ? 'القطع المأخوذة منها العينات – ' : currentLang==='en' ? 'Sampled parcels – ' : 'Parcelles échantillonnées – ')+localizeGovernorateName(gov));
       }
       console.info('Parcelles échantillonnées affichées :',gov,fc.features.length,'parcelle(s).');
     }catch(e){
@@ -5706,7 +5890,7 @@ const I18N = {
 
           childMarkers.forEach(m=>{
             const d = m._meta;
-            if(d && (d.needsVerification || !isCoordinateValid(d))) badCount++;
+            if(d && markerNeedsVerify(d)) badCount++;
           });
 
           const clusterBorder =
@@ -5801,6 +5985,15 @@ const I18N = {
   /* =======================================================
      MARKER ICON
      ======================================================= */
+
+  /* Un point est « à vérifier » sur la carte. En mode Nettoyage, le motif
+     « doublon » ne compte plus : le point conservé est l'unique exemplaire. */
+  function markerNeedsVerify(d){
+    if(!d) return false;
+    if(!isCoordinateValid(d)) return true;
+    if(cleanMode) return !!(d.flagMissing || d.flagOutsideTunisia || d.flagWrongGov);
+    return !!d.needsVerification;
+  }
 
   function makeIcon(color, needsVerification){
 
@@ -5914,7 +6107,7 @@ const I18N = {
       if(d.flagMissing) anomalies.push(['missing',L.verifyLegendMissing,L[d.missingKind||'verifyReasonMissing']]);
       if(d.flagOutsideTunisia) anomalies.push(['outcountry',L.verifyLegendOutCountry,L.verifyReasonOutsideTunisia]);
       if(d.flagWrongGov) anomalies.push(['outgov',L.verifyLegendOutGov,L.verifyReasonWrongGovernorate(localizeGovernorateName(d.declaredGovernorate),localizeGovernorateName(d.actualGovernorate))]);
-      if(d.isDuplicateCoord) anomalies.push(['duplicate',L.verifyLegendDuplicate,L.verifyReasonDuplicate((d.duplicateGroupSize||2)-1)]);
+      if(d.isDuplicateCoord && !cleanMode) anomalies.push(['duplicate',L.verifyLegendDuplicate,L.verifyReasonDuplicate((d.duplicateGroupSize||2)-1)]);
       if(anomalies.length && currentConfig.showAnomalies!==false){
         html += '<div class="popup-anomalies">' + anomalies.map(a =>
           '<div class="popup-anomaly '+a[0]+'"><b>'+escapeHtml(a[1])+'</b>'+escapeHtml(a[2])+'</div>').join('') + '</div>';
@@ -6104,14 +6297,14 @@ const I18N = {
                   colorFor(
                     groupKey(d.group)
                   ),
-                  !!d.needsVerification
+                  markerNeedsVerify(d)
                 )
             }
           );
 
 
         marker.bindPopup(
-          buildPopup(d)
+          () => buildPopup(d)
         );
         marker.on('popupopen', ev => fillPopupP2O5Split(ev.popup));
 
@@ -6155,6 +6348,22 @@ const I18N = {
      STATS
      ======================================================= */
 
+  /* Mode « Nettoyage des données » : n'affiche que les points situés en Tunisie
+     ET dans leur gouvernorat déclaré (1er clic = activé, clic suivant = tout). */
+  let cleanMode = false;
+  function isCleanPoint(d){
+    return isCoordinateValid(d) && !d.flagOutsideTunisia && !d.flagWrongGov && !!d.cleanKeep;
+  }
+  function toggleCleanMode(){
+    cleanMode = !cleanMode;
+    try{ updateStats(); }catch(e){}
+    try{ updateGroupFilter(getMapData(), true); }catch(e){ console.warn('group filter',e); }
+    try{ applyFilters(false); }catch(e){ console.warn('clean filter',e); }
+    try{ renderCharts(currentData); }catch(e){ console.warn('charts',e); }
+    try{ renderDynamicKPI(currentData); }catch(e){ console.warn('KPI',e); }
+    try{ if(p2o5MapA && p2o5MapB && p2o5State && p2o5State.governorate) refreshP2O5Maps(); }catch(e){ console.warn('P2O5 maps',e); }
+  }
+
   function updateStats(total,valid){
 
     const el =
@@ -6175,39 +6384,52 @@ const I18N = {
     const verifyCount =
       getRowsToVerify(currentData || []).length;
 
-    /*
-       Les trois indicateurs doivent rester cohérents et totaliser le
-       nombre de points. « Coordonnées valides » correspond donc ici aux
-       points qui ne nécessitent pas de vérification.
-    */
-    const verifiedValidCount =
-      Math.max(0, total - verifyCount);
+    /* Total = points avec coordonnées X/Y ; 2e pastille = points avec coordonnées X/Y ET valeur P2O5 (même règle que le KPI). */
+    const shownData = cleanMode ? (currentData || []).filter(isCleanPoint) : (currentData || []);
+    const xyCount =
+      shownData.filter(isCoordinateValid).length;
+    const validCoordCount =
+      shownData.filter(isSamplePoint).length;
+    const noCoordCount =
+      (currentData || []).length - xyCount;
+    const verifyDetail =
+      currentLang==='ar'
+        ? ' (' + noCoordCount + ' بدون إحداثيات + ' + Math.max(0, verifyCount - noCoordCount) + ' فرق(فروق) جغرافية)'
+        : currentLang==='en'
+        ? ' (' + noCoordCount + ' without coordinates + ' + Math.max(0, verifyCount - noCoordCount) + ' geographic mismatch(es))'
+        : ' (' + noCoordCount + ' sans coordonnées + ' + Math.max(0, verifyCount - noCoordCount) + ' écart(s) géographique(s))';
 
     el.innerHTML =
 
       '<div class="stat-pill">' +
         T.statsTotal +
         ' : <b>' +
-        total +
+        xyCount +
         '</b>' +
       '</div>' +
 
       '<div class="stat-pill">' +
         T.statsValid +
         ' : <b>' +
-        verifiedValidCount +
+        validCoordCount +
         '</b>' +
       '</div>' +
 
-      '<button type="button" class="stat-pill verify-coords-pill" id="verifyCoordsPill" title="'+escapeHtml(T.verifyTitle)+'">' +
+      '<button type="button" class="stat-pill verify-coords-pill" id="verifyCoordsPill" title="'+escapeHtml(T.verifyTitle+verifyDetail)+'">' +
         T.statsToVerify +
         ' : <b>' +
         verifyCount +
         '</b>' +
+      '</button>' +
+
+      '<button type="button" class="stat-pill clean-data-pill'+(cleanMode?' active':'')+'" id="cleanDataPill" aria-pressed="'+(cleanMode?'true':'false')+'" title="'+escapeHtml(T.cleanDataTitle||'')+'">' +
+        '🧹 ' + (T.cleanData||'Nettoyage des données') +
       '</button>';
 
     const verifyBtn=document.getElementById('verifyCoordsPill');
     if(verifyBtn) verifyBtn.addEventListener('click',openCoordinateCheckModal);
+    const cleanBtn=document.getElementById('cleanDataPill');
+    if(cleanBtn) cleanBtn.addEventListener('click',toggleCleanMode);
 
   }
 
@@ -6281,7 +6503,7 @@ const I18N = {
               (
                 k === UNSPEC
                   ? t().unspecified
-                  : k
+                  : localizeGovernorateName(k)
               ) +
 
               ' (' +
@@ -6316,20 +6538,23 @@ const I18N = {
       sel.value;
 
 
+    /* Mode « Nettoyage » : la liste et les effectifs ne portent que sur les points nettoyés. */
+    const srcData = cleanMode ? data.filter(isCleanPoint) : data;
+
     const keys =
       [
         ...new Set(
-          data.map(
+          srcData.filter(isSamplePoint).map(
             d => govKeyOf(d)
           )
         )
       ];
 
 
-    /* Nombre d'échantillons affichés sur la carte (coordonnées valides) par gouvernorat. */
+    /* Nombre d'échantillons par gouvernorat : coordonnées X/Y valides ET valeur P2O5. */
     const shownCount = {};
-    data.forEach(d => {
-      if(!isCoordinateValid(d)) return;
+    srcData.forEach(d => {
+      if(!isSamplePoint(d)) return;
       const k = govKeyOf(d);
       shownCount[k] = (shownCount[k] || 0) + 1;
     });
@@ -6523,6 +6748,8 @@ const I18N = {
         const d =
           m._meta;
 
+        try{ m.setIcon(makeIcon(colorFor(groupKey(d.group)), markerNeedsVerify(d))); }catch(e){}
+
 
         const matchesGroup =
           !grp ||
@@ -6548,7 +6775,8 @@ const I18N = {
 
         if(
           matchesGroup &&
-          matchesQuery
+          matchesQuery &&
+          (!cleanMode || isCleanPoint(d))
         ){
 
           cluster.addLayer(m);
@@ -6703,11 +6931,11 @@ const I18N = {
 
   async function loadData(data){
 
+    /* Source unique : feuille « P2O5_Interpolation » (échantillons). */
     currentData =
-      data;
+      (Array.isArray(currentP2O5Data) && currentP2O5Data.length) ? currentP2O5Data : data;
 
-    /* La carte des échantillons utilise la feuille « P2O5-Interpolation » ;
-       graphiques, KPI et contrôle des coordonnées restent sur la feuille principale. */
+    /* Carte, graphiques, KPI et contrôle des coordonnées utilisent tous la feuille « P2O5_Interpolation ». */
     const mapData =
       (Array.isArray(currentP2O5Data) && currentP2O5Data.length)
         ? currentP2O5Data
@@ -7289,6 +7517,7 @@ const I18N = {
   }
 
   function renderDynamicKPI(data, options){
+    data = graphsSourceForClean(data);
     const section = document.getElementById('p2o5KpiSection');
     const grid = document.getElementById('p2o5KpiGrid');
     const govSelect = document.getElementById('p2o5KpiGovSelect');
@@ -7358,17 +7587,32 @@ const I18N = {
        complet, puis conserve la sélection actuelle si elle existe. */
     const allGovs = [...new Set(
       sourceData
+        .filter(isSamplePoint)
         .map(getGov)
         .filter(v => v && v !== t().unspecified)
     )].sort((a,b)=>localizeGovernorateName(a).localeCompare(localizeGovernorateName(b), t().locale || undefined, {sensitivity:'base'}));
 
+    /* Nombre d'échantillons par gouvernorat : même base que les indicateurs
+       (coordonnées X/Y valides ET valeur P2O5 numérique ≥ 0). */
+    const govSampleCount = {};
+    let totalSampleCount = 0;
+    sourceData.filter(isSamplePoint).forEach(d => {
+      const v = p2o5Col ? parseNumber(d.row?.[p2o5Col]) : NaN;
+      if(!Number.isFinite(v) || v < 0) return;
+      const g = getGov(d);
+      govSampleCount[g] = (govSampleCount[g] || 0) + 1;
+      totalSampleCount++;
+    });
+
     const previousGov = govSelect.value || '__all__';
     govSelect.innerHTML =
       '<option value="__all__">' +
+      '(' + totalSampleCount + ') ' +
       escapeHtml(currentLang==='ar' ? 'كل الولايات' : currentLang==='en' ? 'All governorates' : 'Tous les gouvernorats') +
       '</option>' +
       allGovs.map(g =>
         '<option value="' + escapeHtml(g).replace(/"/g,'&quot;') + '">' +
+        '(' + (govSampleCount[g] || 0) + ') ' +
         escapeHtml(localizeGovernorateName(g)) +
         '</option>'
       ).join('');
@@ -7381,7 +7625,8 @@ const I18N = {
 
     /* Le filtre de gouvernorat est appliqué sur le sous-ensemble actuellement
        affiché (par exemple après un filtre groupe/recherche). */
-    let rows = sourceData.slice();
+    /* Base commune : points avec coordonnées X/Y valides ET valeur P2O5. */
+    let rows = sourceData.filter(isSamplePoint);
     const selectedGov = govSelect.value;
     if(selectedGov && selectedGov !== '__all__' && govCol){
       rows = rows.filter(d => getGov(d) === selectedGov);
@@ -7434,7 +7679,7 @@ const I18N = {
        répartie entre elles), exactement comme dans les popups des cartes. */
     let splitUsed = false;
     try{
-      if(selectedGov && selectedGov !== '__all__'){
+      if(!P2O5_STATS_FROM_SAMPLES && selectedGov && selectedGov !== '__all__'){
         const g = normalizeGovName(selectedGov) || selectedGov;
         const c = p2o5State.splitCache && p2o5State.splitCache[g];
         if(c && c.power === p2o5State.power){
@@ -7471,10 +7716,10 @@ const I18N = {
     const fmtT  = kg => Number.isFinite(kg) ? (kg/1000).toLocaleString(undefined,{maximumFractionDigits:2}) : '—';
 
     const labels = currentLang==='ar'
-      ? {count:'عدد القطع', area:'المساحة الإجمالية', pctCount:'من عدد القطع', pctArea:'من المساحة', ppm:'ppm — طريقة Olsen', dose:'الجرعة الموصى بها (كغ P2O5/هك)', totalQty:'الكمية الإجمالية للإضافة', perHa:'كغ/هك', kg:'كغ', t:'طن', doseNote:'الجرعات إرشادية'}
+      ? {count:'عدد العينات', area:'المساحة الإجمالية', pctCount:'من عدد العينات', pctArea:'من المساحة', ppm:'ppm — طريقة Olsen', dose:'الجرعة الموصى بها (كغ P2O5/هك)', totalQty:'الكمية الإجمالية للإضافة', perHa:'كغ/هك', kg:'كغ', t:'طن', doseNote:'الجرعات إرشادية'}
       : currentLang==='en'
-        ? {count:'Number of parcels', area:'Total area', pctCount:'of parcels', pctArea:'of area', ppm:'ppm — Olsen method', dose:'Recommended rate (kg P2O5/ha)', totalQty:'Total P2O5 to apply', perHa:'kg/ha', kg:'kg', t:'t', doseNote:'Indicative rates'}
-        : {count:'Nombre de parcelles', area:'Superficie totale', pctCount:'du nombre de parcelles', pctArea:'de la superficie', ppm:'ppm — Olsen', dose:'Dose à apporter (kg P2O5/ha)', totalQty:'Quantité totale de P2O5', perHa:'kg/ha', kg:'kg', t:'t', doseNote:'Doses indicatives'};
+        ? {count:'Number of samples', area:'Total area', pctCount:'of samples', pctArea:'of area', ppm:'ppm — Olsen method', dose:'Recommended rate (kg P2O5/ha)', totalQty:'Total P2O5 to apply', perHa:'kg/ha', kg:'kg', t:'t', doseNote:'Indicative rates'}
+        : {count:'Nombre d’échantillons', area:'Superficie totale', pctCount:'du nombre d’échantillons', pctArea:'de la superficie', ppm:'ppm — Olsen', dose:'Dose à apporter (kg P2O5/ha)', totalQty:'Quantité totale de P2O5', perHa:'kg/ha', kg:'kg', t:'t', doseNote:'Doses indicatives'};
 
     const pieBox = document.getElementById('p2o5KpiPie');
     if(!p2o5Col && pieBox) pieBox.innerHTML = '';
@@ -7566,8 +7811,8 @@ const I18N = {
         ? (currentLang==='ar'
             ? ' '+areaMissing+' قيمة بدون مساحة.'
             : currentLang==='en'
-              ? ' '+areaMissing+' parcel(s) without area.'
-              : ' '+areaMissing+' parcelle(s) sans superficie.')
+              ? ' '+areaMissing+' sample(s) without area.'
+              : ' '+areaMissing+' échantillon(s) sans superficie.')
         : '');
   }
 
@@ -7599,8 +7844,34 @@ const I18N = {
     return data.filter(d => getGov(d) === sel);
   }
 
+  /* Onglet Graphiques (et KPI P2O5) :
+       - bouton « Nettoyage des données » NON cliqué → feuille « Geo »
+       - bouton « Nettoyage des données » cliqué     → feuille « Geo_P2O5 »
+     Repli (feuille absente) : comportement précédent. */
+  function graphsSourceForClean(data){
+    data = Array.isArray(data) ? data : [];
+    return cleanMode ? data.filter(isCleanPoint) : data;
+  }
+
+  /* Nom de la feuille réellement utilisée par l'onglet Graphiques. */
+  function updateChartsSourceNote(){
+    const el = document.getElementById('chartsSourceNote');
+    if(!el) return;
+    const name = 'P2O5_Data';
+    el.textContent = currentLang==='ar'
+      ? '📄 مصدر الرسوم البيانية: الورقة « ' + name + ' »' + (cleanMode ? ' — وضع التنظيف مفعّل' : '')
+      : currentLang==='en'
+      ? '📄 Charts source: sheet « ' + name + ' »' + (cleanMode ? ' — Cleaning mode on' : '')
+      : '📄 Source des graphiques : feuille « ' + name + ' »' + (cleanMode ? ' — mode Nettoyage activé' : '');
+  }
+
   function renderCharts(data){
-    data = filterRowsByKpiGov(data);
+    try{ updateChartsSourceNote(); }catch(e){}
+    data = filterRowsByKpiGov(graphsSourceForClean(data));
+    /* Toutes les lignes de la feuille source (« Geo » ou « Geo_P2O5 ») sont utilisées
+       par les graphiques : le filtre « coordonnées X/Y valides ET valeur P2O5 » est retiré. */
+    data = data || [];
+    const allRows = data;
     destroyCharts();
     const empty = document.getElementById('chartsEmpty');
     const content = document.getElementById('chartsContent');
@@ -7639,12 +7910,33 @@ const I18N = {
 
     const numericColumns = (currentConfig.chartNumericColumns || []).filter(col=>!isCoordinateColumn(col));
 
+    const areaColRx = /superficie|area|surface|مساحة/i;
+    const areaCol = numericColumns.find(c=>areaColRx.test(c)) || null;
+
+    /* Superficies : pour les points partageant les mêmes coordonnées X/Y, une seule
+       valeur de superficie est retenue (la première renseignée). Seuls les points
+       ayant des coordonnées valides ET une valeur P2O5 sont ici présents (data). */
+    const parseAreaVal = d => parseFloat(String(d.row?.[areaCol] ?? '').replace(/\s/g,'').replace(',','.'));
+    const areaFirst = new Set();
+    if(areaCol){
+      const seenXY = new Set();
+      data.forEach(d=>{
+        /* Dédoublonnage par X/Y uniquement si les coordonnées sont valides. */
+        if(!isCoordinateValid(d)){ if(Number.isFinite(parseAreaVal(d))) areaFirst.add(d); return; }
+        const k = d.lon+'|'+d.lat;
+        if(seenXY.has(k)) return;
+        if(Number.isFinite(parseAreaVal(d))){ seenXY.add(k); areaFirst.add(d); }
+      });
+    }
+    const countsArea = (d,col) => !areaColRx.test(col) || areaFirst.has(d);
+
     /* Recalcul des valeurs numériques uniquement pour les variables statistiques. */
     data.forEach(d=>{
       const key = category && d.row
         ? String(d.row[category] ?? t().unspecified)
         : t().unspecified;
       numericColumns.forEach(col=>{
+        if(!countsArea(d,col)) return;
         const n=parseFloat(String(d.row?.[col] ?? '').replace(/\s/g,'').replace(',','.'));
         if(Number.isFinite(n)){
           if(!groups[key].values[col]) groups[key].values[col]={sum:0,count:0};
@@ -7654,20 +7946,20 @@ const I18N = {
       });
     });
 
-    const total=data.length;
-    const validCoords=data.filter(d=>Number.isFinite(d.lat)&&Number.isFinite(d.lon)).length;
+    /* Même règle que l'en-tête : total = points avec X/Y ; 2e indicateur = X/Y + P2O5. */
+    const total=allRows.filter(isCoordinateValid).length;
+    const validCoords=allRows.filter(isSamplePoint).length;
     const groupCount=labels.length;
 
-    const areaCol = numericColumns.find(c=>/superficie|area|surface|مساحة/i.test(c)) || null;
-    const areaVals = areaCol ? data.map(d=>parseFloat(String(d.row?.[areaCol] ?? '').replace(/\s/g,'').replace(',','.'))).filter(Number.isFinite) : [];
+    const areaVals = areaCol ? data.filter(d=>areaFirst.has(d)).map(parseAreaVal).filter(Number.isFinite) : [];
     const areaTotal = areaVals.reduce((a,b)=>a+b,0);
     const areaAvg = areaVals.length ? areaTotal/areaVals.length : 0;
 
     const kpiLabels = currentLang==='ar'
-      ? {points:'النقاط',coords:'الإحداثيات الصالحة',area:'المساحة الإجمالية',groups:'المجموعات',groupsSub:'تصنيفات مميزة'}
+      ? {points:'العينات المحددة جغرافياً',coords:'النقاط المحددة جغرافياً / قيم P2O5',area:'المساحة الإجمالية',groups:'المجموعات',groupsSub:'تصنيفات مميزة'}
       : currentLang==='en'
-      ? {points:'Points',coords:'Valid coordinates',area:'Total area',groups:'Groups',groupsSub:'Distinct categories'}
-      : {points:'Points',coords:'Coordonnées valides',area:'Superficie totale',groups:'Groupes / délégations',groupsSub:'Catégories distinctes'};
+      ? {points:'Geolocated samples',coords:'Geolocated points / P2O5 values',area:'Total area',groups:'Groups',groupsSub:'Distinct categories'}
+      : {points:'Échantillons géolocalisés',coords:'Points géolocalisés / Valeurs P2O5',area:'Superficie totale',groups:'Groupes / délégations',groupsSub:'Catégories distinctes'};
     const kpiAverageLabel = t().kpiAverage;
 
     document.getElementById('kpiRow').innerHTML=
@@ -8121,7 +8413,7 @@ const I18N = {
             mergedGroupTitle, labels,
             {name:metricNames.points, axisTitle:metricNames.points, values:counts, decimals:0, showPct:true},
             {name:fieldLabel(areaCol), axisTitle:fieldLabel(areaCol), values:groupAreas, decimals:2, showPct:true},
-            labels.map((_,i)=>[ avgLbl+' : '+fmtNum(counts[i]?(groupAreas[i]/counts[i]):0,2) ]),
+            labels.map((k,i)=>{ const ac=(groups[k].values[areaCol]||{}).count||0; return [ avgLbl+' : '+fmtNum(ac?(groupAreas[i]/ac):0,2) ]; }),
             'a'
           );
         }
@@ -8171,8 +8463,8 @@ const I18N = {
         const {key,label}=translateCultureType(rawCulture);
         if(!cultureMap[key]) cultureMap[key]={label,count:0,area:0,areaCount:0};
         cultureMap[key].count++;
-        if(areaCol){
-          const a=parseFloat(String(d.row?.[areaCol] ?? '').replace(/\s/g,'').replace(',','.'));
+        if(areaCol && areaFirst.has(d)){
+          const a=parseAreaVal(d);
           if(Number.isFinite(a)){ cultureMap[key].area+=a; cultureMap[key].areaCount++; }
         }
       });
@@ -8239,10 +8531,11 @@ const I18N = {
     const qCard=document.getElementById('qualityDashboardCard');
     const qBox=document.getElementById('qualityDashboardRows');
     if(qCard && qBox){
-      const headers=data[0]?.headers || Object.keys(data[0]?.row || {});
+      const headers=allRows[0]?.headers || Object.keys(allRows[0]?.row || {});
+      const qTotal=allRows.length;
       const qRows=headers.map(col=>{
-        const filled=data.filter(d=>d.row?.[col]!==null && d.row?.[col]!==undefined && String(d.row[col]).trim()!=='').length;
-        return {col,pct:total?Math.round(filled/total*100):0};
+        const filled=allRows.filter(d=>d.row?.[col]!==null && d.row?.[col]!==undefined && String(d.row[col]).trim()!=='').length;
+        return {col,pct:qTotal?Math.round(filled/qTotal*100):0};
       }).sort((a,b)=>a.pct-b.pct);
       qBox.innerHTML=qRows.map(q=>'<div class="quality-row"><div>'+escapeHtml(fieldLabel(q.col))+'</div><div class="quality-bar"><span style="width:'+q.pct+'%"></span></div><strong>'+q.pct+'%</strong></div>').join('');
     }
@@ -8418,8 +8711,8 @@ const I18N = {
     fr: {
       tabP2O5: 'Carte P2O5',
       govLabel: 'Gouvernorat :',
-      kpiTitle: '📊 Répartition des parcelles selon le P2O5 Olsen',
-      kpiSubtitle: 'Nombre de parcelles et superficie totale par classe de teneur.',
+      kpiTitle: '📊 Répartition des échantillons selon le P2O5 Olsen',
+      kpiSubtitle: 'Nombre d’échantillons et superficie totale par classe de teneur.',
       powerLabel: 'Puissance IDW (p) :',
       opacityLabel: 'Transparence :',
       basemapLabel: 'Fond de carte :',
@@ -8471,8 +8764,8 @@ const I18N = {
     en: {
       tabP2O5: 'P2O5 Map',
       govLabel: 'Governorate:',
-      kpiTitle: '📊 Parcel distribution by Olsen P2O5',
-      kpiSubtitle: 'Number of parcels and total area by content class.',
+      kpiTitle: '📊 Sample distribution by Olsen P2O5',
+      kpiSubtitle: 'Number of samples and total area by content class.',
       powerLabel: 'IDW power (p):',
       opacityLabel: 'Opacity:',
       basemapLabel: 'Basemap:',
@@ -8524,8 +8817,8 @@ const I18N = {
     ar: {
       tabP2O5: 'خريطة الفسفور',
       govLabel: 'الولاية:',
-      kpiTitle: '📊 توزيع القطع حسب الفسفور (طريقة Olsen)',
-      kpiSubtitle: 'عدد القطع والمساحة الإجمالية حسب فئة التركيز.',
+      kpiTitle: '📊 توزيع العينات حسب الفسفور (طريقة Olsen)',
+      kpiSubtitle: 'عدد العينات والمساحة الإجمالية حسب فئة التركيز.',
       powerLabel: 'قوة IDW (p):',
       opacityLabel: 'الشفافية:',
       basemapLabel: 'الخريطة الأساسية:',
@@ -9325,11 +9618,11 @@ const I18N = {
   /* Liste des gouvernorats disposant d'au moins un point avec une valeur P2O5
      exploitable (colonne "P2O5" du fichier importé). */
   function getGovernoratesWithP2O5(){
+    /* Même règle que la liste « Sélectionner un groupe » : uniquement les points
+       ayant des coordonnées X/Y valides ET une valeur P2O5 (feuille P2O5_Interpolation). */
     const counts={};
     (currentData||[]).forEach(d=>{
-      if(!isCoordinateValid(d)) return;
-      const v=getP2O5Value(d);
-      if(!Number.isFinite(v)) return;
+      if(!isSamplePoint(d)) return;
       const gov=d.declaredGovernorate;
       if(!gov) return;
       counts[gov]=(counts[gov]||0)+1;
@@ -9894,7 +10187,11 @@ const I18N = {
       if(!parcelData || !parcelData.maskGeometry || !parcelData.bbox){
         setP2O5StatusKind('parcelFileMissing');
         renderP2O5Quality(null);
-        showToast('Fichier parcellaire P2O5 introuvable ou invalide pour '+localizeGovernorateName(govName)+'. La carte n\'est pas générée.', 'error', 7000);
+        showToast(currentLang==='ar'
+          ? 'ملف قطع P2O5 غير موجود أو غير صالح لولاية '+localizeGovernorateName(govName)+'. لم يتم إنشاء الخريطة.'
+          : currentLang==='en'
+          ? 'P2O5 parcel file missing or invalid for '+localizeGovernorateName(govName)+'. The map was not generated.'
+          : 'Fichier parcellaire P2O5 introuvable ou invalide pour '+localizeGovernorateName(govName)+'. La carte n\'est pas générée.', 'error', 7000);
         return;
       }
 
@@ -10046,7 +10343,7 @@ const I18N = {
       try{
         const parcelData=await loadP2O5ParcelsForGovernorate(govName);
         if(!parcelData || !parcelData.maskGeometry || !parcelData.bbox){
-          throw new Error('Fichier parcellaire P2O5 introuvable ou invalide pour '+govName);
+          throw new Error(currentLang==='ar' ? 'ملف قطع P2O5 غير موجود أو غير صالح لولاية '+localizeGovernorateName(govName) : currentLang==='en' ? 'P2O5 parcel file missing or invalid for '+localizeGovernorateName(govName) : 'Fichier parcellaire P2O5 introuvable ou invalide pour '+govName);
         }
         /* L'export doit utiliser exactement la même emprise parcellaire que
            les deux cartes, jamais la limite administrative du gouvernorat. */
@@ -10311,6 +10608,7 @@ const I18N = {
       d.flagOutsideTunisia=false;
       d.flagWrongGov=false;
       d.isDuplicateCoord=false;
+      d.dupKeep=false;
       d.duplicateGroupKey=null;
       d.duplicateGroupSize=0;
 
@@ -10359,6 +10657,10 @@ const I18N = {
       }
     });
     dupGroups.forEach((arr,key)=>{
+      /* Mode « Nettoyage » : un seul point conservé par jeu de coordonnées
+         (le premier qui est en Tunisie et dans son gouvernorat déclaré). */
+      const keep=arr.find(x=>!x.flagOutsideTunisia && !x.flagWrongGov);
+      if(keep) keep.dupKeep=true;
       if(arr.length>1){
         arr.forEach(d=>{
           d.isDuplicateCoord=true;
@@ -10369,6 +10671,25 @@ const I18N = {
         });
       }
     });
+
+    /* Mode « Nettoyage » (même logique que le résumé Stats_Gouvs.xlsx) :
+       1) coordonnées XY uniques : on garde la 1re ligne de chaque couple XY ;
+       2) valeur P2O5 non vide ;
+       3) dans la Tunisie (pas « Hors-TUN ») et dans le gouvernorat déclaré (pas « Hors_Gouv »). */
+    {
+      const seenXY=new Set();
+      (data||[]).forEach(d=>{
+        d.cleanKeep=false;
+        if(!isCoordinateValid(d)) return;
+        /* Clé d'unicité = texte de la colonne « XY » de la feuille (repli : lat/lon). */
+        const xyTxt=(d.row && d.row['XY']!=null) ? String(d.row['XY']).trim() : '';
+        const k=xyTxt || (d.lat.toFixed(6)+'_'+d.lon.toFixed(6));
+        if(seenXY.has(k)) return;
+        seenXY.add(k);
+        let hasP2O5=false; try{ hasP2O5=Number.isFinite(getP2O5Value(d)); }catch(e){}
+        d.cleanKeep = hasP2O5 && !d.flagOutsideTunisia && !d.flagWrongGov;
+      });
+    }
 
     /* Catégorie de surbrillance retenue pour chaque ligne (une seule,
        par ordre de priorité) : sans coordonnées > hors pays > hors
@@ -10604,13 +10925,13 @@ const I18N = {
     const zip=new JSZip(), root=zip.folder('P2O5_Data_Anomalies'), byGov=root.folder('Par_gouvernorat');
     root.file('Anomalies_Toutes.xlsx',toXlsx(buildVerifyWorkbook(rows)));
     const groups=new Map();
-    rows.forEach(d=>{const g=String(d.declaredGovernorate||'').trim()||'Non renseigné'; if(!groups.has(g)) groups.set(g,[]); groups.get(g).push(d);});
-    const summary=[['Gouvernorat','Nombre de points à vérifier']];
+    rows.forEach(d=>{const g=String(d.declaredGovernorate||'').trim()||(currentLang==='ar'?'غير مصرّح':currentLang==='en'?'Not provided':'Non renseigné'); if(!groups.has(g)) groups.set(g,[]); groups.get(g).push(d);});
+    const summary=[currentLang==='ar'?['الولاية','عدد النقاط المطلوب التحقق منها']:currentLang==='en'?['Governorate','Number of points to verify']:['Gouvernorat','Nombre de points à vérifier']];
     [...groups.keys()].sort((a,b)=>a.localeCompare(b,'fr')).forEach(g=>{
       byGov.file('Anomalies_'+safeName(g)+'.xlsx',toXlsx(buildVerifyWorkbook(groups.get(g))));
       summary.push([g,groups.get(g).length]);
     });
-    summary.push(['TOTAL',rows.length]);
+    summary.push([currentLang==='ar'?'المجموع':currentLang==='en'?'TOTAL':'TOTAL',rows.length]);
     const wsS=XS.utils.aoa_to_sheet(summary), wbS=XS.utils.book_new(); wsS['!cols']=[{wch:28},{wch:28}];
     XS.utils.book_append_sheet(wbS,wsS,'Synthese');
     root.file('Synthese_par_gouvernorat.xlsx',toXlsx(wbS));
@@ -10704,7 +11025,7 @@ const I18N = {
     currentConfig.showAnomalies=document.getElementById('popupAnomaliesToggle')?.checked!==false;
     currentConfig.titleColumn=cols.find(h=>/nom de l.?agriculteur|farmer name|اسم الفلاح/i.test(h))||cols[0];
     closeExcelConfig();
-    allMarkers.forEach(m=>{ const open=m.isPopupOpen&&m.isPopupOpen(); m.bindPopup(buildPopup(m._meta)); if(open) m.openPopup(); });
+    allMarkers.forEach(m=>{ const open=m.isPopupOpen&&m.isPopupOpen(); m.bindPopup(()=>buildPopup(m._meta)); if(open) m.openPopup(); });
     try{ renderCharts(currentData); }catch(e){ console.warn('charts',e); }
     try{ renderDynamicKPI(currentData); }catch(e){}
     try{ applyFilters(false); }catch(e){}
@@ -10802,7 +11123,9 @@ const I18N = {
     const REDIRECT_TOAST_DURATION = 5000;
     try{
       showToast(
-        '⚠️ Copie corrompue ou piratée — rechargement depuis le lien officiel...',
+        currentLang==='ar' ? '⚠️ نسخة تالفة أو مقرصنة — إعادة التحميل من الرابط الرسمي...'
+        : currentLang==='en' ? '⚠️ Corrupted or pirated copy — reloading from the official link...'
+        : '⚠️ Copie corrompue ou piratée — rechargement depuis le lien officiel...',
         'error',
         REDIRECT_TOAST_DURATION
       );
@@ -10836,6 +11159,8 @@ const I18N = {
     if(!currentPendingImport) return;
     const {parsed,isInitial}=currentPendingImport;
     currentP2O5Data = Array.isArray(parsed.p2o5Data) ? parsed.p2o5Data : [];
+    currentGraphsData = Array.isArray(parsed.graphsData) ? parsed.graphsData : [];
+    currentGeoData = Array.isArray(parsed.geoData) ? parsed.geoData : [];
     const popupColumns=Array.from(document.querySelectorAll('.popup-col:checked')).map(x=>x.value);
     const chartNumericColumns=Array.from(document.querySelectorAll('.chart-num:checked')).map(x=>x.value);
     const chartCategory=document.getElementById('chartCategorySelect').value;
@@ -10915,10 +11240,86 @@ const I18N = {
     bar.addEventListener('pointercancel', stopDrag);
   })();
 
+  /* =======================================================
+     CHARGEMENT AUTOMATIQUE DEPUIS LA BASE PARTAGÉE
+     Le serveur ne renvoie que les lignes des gouvernorats
+     autorisés pour l'utilisateur connecté (tous pour l'admin).
+     Les données passent ensuite par le même traitement que
+     l'ancien fichier Excel (parseWorkbook).
+     ======================================================= */
+  const UFM_TXT = {
+    fr:{loading:'Chargement de vos données…',retry:'Réessayer',
+      empty:'Aucune donnée n’est disponible pour vos gouvernorats pour le moment.',
+      net:'Impossible de joindre le serveur. Vérifiez la connexion Internet.',
+      cfg:'L’adresse du script serveur n’est pas configurée dans la page.',
+      dataerr:'La feuille de données est inaccessible côté serveur (elle doit être au format Google Sheets).',
+      srv:'Erreur du serveur lors de la lecture des données.'},
+    en:{loading:'Loading your data…',retry:'Try again',
+      empty:'No data is currently available for your governorates.',
+      net:'Unable to reach the server. Check your Internet connection.',
+      cfg:'The server script address is not configured in the page.',
+      dataerr:'The data sheet is unreachable on the server side (it must be a Google Sheets file).',
+      srv:'Server error while reading the data.'},
+    ar:{loading:'جارٍ تحميل بياناتك…',retry:'إعادة المحاولة',
+      empty:'لا تتوفر حاليًا أي بيانات للولايات المسموح لك بها.',
+      net:'تعذّر الاتصال بالخادم. تحقق من اتصال الإنترنت.',
+      cfg:'عنوان نص الخادم غير مضبوط في الصفحة.',
+      dataerr:'ورقة البيانات غير متاحة من جهة الخادم (يجب أن تكون بصيغة Google Sheets).',
+      srv:'خطأ في الخادم أثناء قراءة البيانات.'}
+  };
+  let remoteBusy = false;
+  async function remoteLoad(isInitial){
+    if(remoteBusy) return;
+    remoteBusy = true;
+    const X = () => UFM_TXT[currentLang] || UFM_TXT.fr;
+    const st = document.getElementById('startStatus'), rb = document.getElementById('startRetryBtn');
+    const show = (msg, err) => {
+      if(!isInitial){ if(msg && err) showToast('⚠️ '+msg,'error'); return; }
+      if(st){ st.textContent = msg || ''; st.style.color = err ? '#b3261e' : ''; }
+      if(rb){ rb.style.display = err ? '' : 'none'; rb.textContent = X().retry; }
+    };
+    try{
+      show(X().loading,false);
+      if(isInitial){
+        await (window.__ufmLogoPromise || Promise.resolve());
+        if(!logoReady) return;
+      }
+      const res = await window.UFM_API.call('data');
+      if(!res.rows.length){ show(X().empty,true); return; }
+      const ws = XLSX.utils.aoa_to_sheet([res.headers].concat(res.rows));
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'P2O5_Data');
+      const parsed = parseWorkbook(wb,'P2O5_Data');
+      window._smpWB = wb; window._smpSheet = parsed.sheet; window._ufmRawHeaders = res.headers.slice();
+      parsed.p2o5Data = parsed.data; parsed.graphsData = null; parsed.geoData = null;
+      window.__ufmLoadedOnce = true;
+      const ov = document.getElementById('startOverlay');
+      if(!isInitial && ov && ov.classList.contains('hidden')){
+        /* Actualisation silencieuse : la configuration d'affichage déjà choisie est conservée. */
+        currentP2O5Data = parsed.data; currentGraphsData = null; currentGeoData = null;
+        const valid = await loadData(parsed.data);
+        showToast(t().toastUpdated(parsed.data.length,valid),null);
+      }else{
+        show('',false);
+        openExcelConfig(parsed,true,null);
+      }
+    }catch(err){
+      const code = err && err.code;
+      console.warn('remoteLoad',err);
+      if(code==='auth' || code==='noaccess') return;   /* l'écran de connexion est déjà affiché */
+      const msg = code==='cfg' ? X().cfg : code==='net' ? X().net : code==='data_unavailable' ? X().dataerr
+        : (err && err.message && !code) ? err.message : X().srv;
+      show(msg,true);
+    }finally{
+      remoteBusy = false;
+    }
+  }
+  document.getElementById('startRetryBtn')?.addEventListener('click',()=>remoteLoad(true));
+  document.getElementById('refreshDataBtn')?.addEventListener('click',()=>remoteLoad(false));
+
   function handleFile(file,isInitial){
     if(isInitial && !logoReady) return;
     const reader=new FileReader();
-    reader.onload=function(e){try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});const parsed=parseWorkbook(wb,'P2O5_Carto_Stats');if(parsed.sheet!=='P2O5_Carto_Stats'){showToast('⚠️ Feuille « P2O5_Carto_Stats » introuvable : le contrôle des points à vérifier est fait sur la feuille « '+parsed.sheet+' ».','error');}const parsedInterpolation=parseWorkbook(wb,'P2O5-Interpolation');parsed.p2o5Data=parsedInterpolation.data;openExcelConfig(parsed,isInitial,file);}catch(err){if(isInitial) document.getElementById('startError').textContent='⚠️ '+err.message;else showToast('⚠️ '+err.message,'error');}};
+    reader.onload=function(e){try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:false});const dataName=['P2O5_Data'].find(n=>wb.Sheets[n])||null;const parsed=parseWorkbook(wb,dataName||'P2O5_Data');window._smpWB=wb;window._smpSheet=parsed.sheet;if(!dataName){showToast('⚠️ Feuille « P2O5_Data » introuvable : les chiffres sont calculés sur la feuille « '+parsed.sheet+' ».','error');}/* Source unique : feuille « P2O5_Data » (plus de feuilles Geo / Geo_P2O5 / P2O5_Interpolation). */parsed.p2o5Data=parsed.data;parsed.graphsData=null;parsed.geoData=null;openExcelConfig(parsed,isInitial,file);}catch(err){if(isInitial) document.getElementById('startError').textContent='⚠️ '+err.message;else showToast('⚠️ '+err.message,'error');}};
     reader.onerror=function(){const msg=t().errCannotRead;if(isInitial) document.getElementById('startError').textContent='⚠️ '+msg;else showToast('⚠️ '+msg,'error');};
     reader.readAsArrayBuffer(file);
   }
@@ -11157,6 +11558,24 @@ const I18N = {
 
     __f.guard();
 
+    /* =====================================================
+       LIBELLÉS D'ACCESSIBILITÉ / INFOBULLES STATIQUES
+       (boutons « Fermer », crédits, cadres intégrés…)
+       ===================================================== */
+    try{
+      const A11Y = {
+        fr:{close:'Fermer', credits:'Crédits', move:'Déplacer la fenêtre', excel:"Générateur de graphiques à partir d'un fichier Excel", pdf:'Document PDF'},
+        en:{close:'Close',  credits:'Credits', move:'Move window',         excel:'Chart generator from an Excel file',                 pdf:'PDF document'},
+        ar:{close:'إغلاق',  credits:'الاعتمادات', move:'تحريك النافذة',      excel:'مولّد الرسوم البيانية من ملف Excel',                  pdf:'مستند PDF'}
+      }[T.code] || null;
+      if(A11Y){
+        ['verifyCoordsClose','pdfViewerClose','p2o5QualityClose','dualScreenClose'].forEach(id=>{
+          const e=document.getElementById(id); if(e) e.setAttribute('aria-label',A11Y.close);
+        });
+        document.querySelectorAll('.tab-bar-credit').forEach(e=>e.setAttribute('aria-label',A11Y.credits));
+        const ef=document.getElementById('excelGenFrame'); if(ef) ef.setAttribute('title',A11Y.excel);
+      }
+    }catch(e){}
 
     renderLanguageButtons();
 
@@ -11214,7 +11633,7 @@ const I18N = {
         updateGroupFilter(getMapData(), true);
 
         allMarkers.forEach(m =>
-          m.bindPopup(buildPopup(m._meta))
+          m.bindPopup(()=>buildPopup(m._meta))
         );
 
         renderCharts(currentData);
@@ -11309,7 +11728,7 @@ const I18N = {
     .getElementById(
       'fileInput'
     )
-    .addEventListener(
+    ?.addEventListener(
       'change',
       function(e){
 
@@ -11338,7 +11757,7 @@ const I18N = {
     .getElementById(
       'startFileInput'
     )
-    .addEventListener(
+    ?.addEventListener(
       'change',
       function(e){
 
@@ -11507,172 +11926,536 @@ const I18N = {
      bloquer le reste de l'application.
   */
 
-  (function initVisitorCounters(){
+//   (function initVisitorCounters(){
+// 
+//     const AB_BASE   = 'https://abacus.jasoncameron.dev';
+//     const AB_NS     = 'unified-farmer-coords-map-tn';
+//     const KEY_JOIN  = 'total-visits';
+//     const KEY_LEAVE = 'total-leaves';
+// 
+//     /* Clés de secours locales : utilisées uniquement si le service
+//        distant est injoignable (bloqué par le réseau, un bloqueur de
+//        pub/tracking, hors-ligne...), pour ne jamais laisser les
+//        pastilles bloquées sur "—". */
+//     const LS_TOTAL     = 'ufcm_local_total_visits';
+//     const LS_HAS_TAKEN = 'ufcm_local_has_hit_this_session';
+// 
+//     const elOnline = document.getElementById('statOnlineValue');
+//     const elTotal  = document.getElementById('statTotalVisitsValue');
+// 
+//     let joinCount     = null;   // dernier total connu (distant ou local)
+//     let leaveCount    = 0;
+//     let usingFallback = false;  // true si on est passé en mode secours local
+// 
+//     /* Requête réseau avec délai d'expiration : sans ça, une requête
+//        qui ne répond jamais (au lieu d'échouer franchement) laisse
+//        les pastilles bloquées sur "—" indéfiniment. */
+//     function fetchWithTimeout(url, ms){
+//       const ctrl = new AbortController();
+//       const timer = setTimeout(() => ctrl.abort(), ms || 6000);
+//       return fetch(url, {signal: ctrl.signal})
+//         .finally(() => clearTimeout(timer));
+//     }
+// 
+//     function readLocalTotal(){
+//       const v = parseInt(localStorage.getItem(LS_TOTAL), 10);
+//       return isNaN(v) ? 0 : v;
+//     }
+// 
+//     function writeLocalTotal(v){
+//       try{ localStorage.setItem(LS_TOTAL, String(v)); }catch(e){}
+//     }
+// 
+//     /* En mode secours (pas de service partagé joignable), on affiche
+//        au moins le visiteur actuel : "En ligne" = 1, jamais "—". */
+//     function renderOnline(){
+//       if(!elOnline) return;
+//       if(usingFallback){
+//         elOnline.textContent = '1';
+//         return;
+//       }
+//       if(joinCount === null){
+//         elOnline.textContent = '—';
+//         return;
+//       }
+//       elOnline.textContent = Math.max(1, joinCount - leaveCount).toLocaleString();
+//     }
+// 
+//     function setTotal(v){
+//       if(elTotal){
+//         elTotal.textContent =
+//           (typeof v === 'number' && !isNaN(v)) ? v.toLocaleString() : '—';
+//       }
+//     }
+// 
+//     function activateFallback(){
+//       usingFallback = true;
+//       let total = readLocalTotal();
+//       /* On ne compte qu'une seule fois par session pour ne pas
+//          gonfler le total local à chaque re-rendu/rafraîchissement. */
+//       if(!sessionStorage.getItem(LS_HAS_TAKEN)){
+//         total += 1;
+//         writeLocalTotal(total);
+//         try{ sessionStorage.setItem(LS_HAS_TAKEN, '1'); }catch(e){}
+//       }
+//       joinCount = total;
+//       setTotal(total);
+//       renderOnline();
+//     }
+// 
+//     /* Arrivée : +1 définitif (sert aussi de "visites totales").
+//        On retente plusieurs fois avant de basculer en mode secours,
+//        pour absorber une simple lenteur ou un échec ponctuel. */
+//     function hitJoinWithRetry(attemptsLeft, delayMs){
+//       fetchWithTimeout(AB_BASE + '/hit/' + AB_NS + '/' + KEY_JOIN, 6000)
+//         .then(r => r.json())
+//         .then(d => {
+//           if(d && typeof d.value === 'number'){
+//             joinCount = d.value;
+//             usingFallback = false;
+//             writeLocalTotal(joinCount); // garde une trace locale à jour
+//             setTotal(joinCount);
+//             renderOnline();
+//           }else{
+//             throw new Error('bad payload');
+//           }
+//         })
+//         .catch(() => {
+//           if(attemptsLeft > 0){
+//             setTimeout(() => hitJoinWithRetry(attemptsLeft - 1, delayMs * 2), delayMs);
+//           }else{
+//             activateFallback();
+//           }
+//         });
+//     }
+//     hitJoinWithRetry(2, 1500);
+// 
+//     function refreshLeaves(){
+//       if(usingFallback) return; // pas de service partagé dispo
+//       fetchWithTimeout(AB_BASE + '/get/' + AB_NS + '/' + KEY_LEAVE, 6000)
+//         .then(r => r.json())
+//         .then(d => {
+//           leaveCount = (d && typeof d.value === 'number') ? d.value : 0;
+//           renderOnline();
+//         })
+//         .catch(() => {});
+//     }
+//     refreshLeaves();
+// 
+//     /* Rafraîchissement périodique (arrivées + départs des autres
+//        visiteurs). Si on est en mode secours, on retente
+//        périodiquement de revenir au service partagé. */
+//     const pollTimer = setInterval(function(){
+//       if(usingFallback){
+//         fetchWithTimeout(AB_BASE + '/healthcheck', 4000)
+//           .then(r => { if(r.ok){ usingFallback = false; hitJoinWithRetry(1, 1000); } })
+//           .catch(() => {});
+//         return;
+//       }
+//       fetchWithTimeout(AB_BASE + '/get/' + AB_NS + '/' + KEY_JOIN, 6000)
+//         .then(r => r.json())
+//         .then(d => {
+//           if(d && typeof d.value === 'number'){
+//             joinCount = d.value;
+//             writeLocalTotal(joinCount);
+//             setTotal(joinCount);
+//             renderOnline();
+//           }
+//         })
+//         .catch(() => {});
+//       refreshLeaves();
+//     }, 15000);
+// 
+//     /* Départ : +1 sur le compteur de départs (une seule fois par
+//        session). Sans effet en mode secours (pas de service partagé). */
+//     let leftAlready = false;
+//     function leaveNow(){
+//       if(leftAlready || usingFallback) return;
+//       leftAlready = true;
+//       clearInterval(pollTimer);
+// 
+//       /*
+//          Une requête "image" est utilisée car elle reste fiable même
+//          pendant la fermeture de la page (contrairement à un simple
+//          fetch, qui peut être annulé par le navigateur à ce moment-là).
+//       */
+//       try{
+//         const beacon = new Image();
+//         beacon.src =
+//           AB_BASE + '/hit/' + AB_NS + '/' + KEY_LEAVE + '?_=' + Date.now();
+//       }catch(e){}
+//     }
+// 
+//     window.addEventListener('pagehide', leaveNow);
+//     window.addEventListener('beforeunload', leaveNow);
+//     document.addEventListener('visibilitychange', function(){
+//       if(document.visibilityState === 'hidden') leaveNow();
+//     });
+// 
+//   })();
 
-    const AB_BASE   = 'https://abacus.jasoncameron.dev';
-    const AB_NS     = 'unified-farmer-coords-map-tn';
-    const KEY_JOIN  = 'total-visits';
-    const KEY_LEAVE = 'total-leaves';
+  /* =======================================================
+     GESTION DES ÉCHANTILLONS : ajout / modification / suppression
+     - même structure que la feuille Excel chargée (colonnes d'origine)
+     - pas de doublon de coordonnées X/Y, pas de coordonnées vides
+     - gouvernorat (liste) -> délégations du gouvernorat (liste)
+     - repérage du point sur une mini-carte -> degrés décimaux
+     - contrôle : le point doit se trouver dans le gouvernorat choisi
+     - enregistrement dans P2O5_Data_Grandes_Cultures_AR.xlsx
+     ======================================================= */
+  (function initSamplesManager(){
+    const FILE_NAME = 'P2O5_Data_Grandes_Cultures_AR.xlsx';
+    const SMP = {
+      fr:{smpBtn:'Ajout / Modification / Suppression des échantillons',smpSearch:'Rechercher…',smpNew:'+ Nouveau',smpSave:'Enregistrer dans le fichier Excel',smpCancel:'Annuler',smpDelete:'🗑️ Supprimer cet échantillon',smpErrTitle:'Enregistrement refusé',
+        smpMapHint:'Cliquez sur la carte (ou déplacez le repère) pour renseigner la latitude et la longitude.',
+        add:'Nouvel échantillon',edit:'Modifier l’échantillon n° ',gov:'Gouvernorat',deleg:'Délégation',other:'Autre (saisie libre)…',choose:'— Choisir —',lat:'Latitude (degrés décimaux)',lon:'Longitude (degrés décimaux)',
+        count:(n,m)=>n+' échantillon(s)'+(m>n?' — '+n+' affichés sur '+m:''),noData:'Chargez d’abord le fichier Excel.',
+        errCoord:'Les coordonnées X/Y sont obligatoires : saisissez une latitude et une longitude valides en degrés décimaux.',
+        errNoGov:'Sélectionnez d’abord le gouvernorat.',errNoGeo:'Limites des gouvernorats indisponibles : le contrôle de position est impossible, enregistrement refusé.',
+        errGov:(a,b)=>'Les coordonnées se trouvent hors du gouvernorat déclaré. Gouvernorat sélectionné : '+a+' — position réelle : '+b+'.',outside:'hors des gouvernorats',
+        errDup:id=>'Doublon de coordonnées X/Y : un échantillon (n° '+id+') existe déjà à cette position.',errLast:'Impossible de supprimer le dernier échantillon du fichier.',
+        okFile:'✅ Enregistré dans le fichier Excel.',okDl:'✅ Fichier généré et téléchargé : remplacez-le dans le dossier Files/.',okMem:'Enregistrement annulé : fichier non modifié.',
+        pickFile:'Sélectionnez le fichier « Files/'+FILE_NAME+' » dans la fenêtre qui s’ouvre.',wrongName:n=>'Le fichier choisi est « '+n+' » et non « '+FILE_NAME+' ». L’écraser quand même ?',
+        del:n=>'Supprimer l’échantillon n° '+n+' du fichier Excel ?',noWB:'Classeur Excel introuvable : rechargez le fichier.'},
+      en:{smpBtn:'Add / Edit / Delete samples',smpSearch:'Search…',smpNew:'+ New',smpSave:'Save to Excel file',smpCancel:'Cancel',smpDelete:'🗑️ Delete this sample',smpErrTitle:'Save refused',
+        smpMapHint:'Click on the map (or drag the marker) to fill in latitude and longitude.',
+        add:'New sample',edit:'Edit sample no. ',gov:'Governorate',deleg:'Delegation',other:'Other (free text)…',choose:'— Select —',lat:'Latitude (decimal degrees)',lon:'Longitude (decimal degrees)',
+        count:(n,m)=>n+' sample(s)'+(m>n?' — showing '+n+' of '+m:''),noData:'Load the Excel file first.',
+        errCoord:'X/Y coordinates are mandatory: enter a valid latitude and longitude in decimal degrees.',
+        errNoGov:'Select the governorate first.',errNoGeo:'Governorate boundaries unavailable: position check impossible, save refused.',
+        errGov:(a,b)=>'The coordinates are outside the declared governorate. Selected governorate: '+a+' — actual position: '+b+'.',outside:'outside all governorates',
+        errDup:id=>'Duplicate X/Y coordinates: a sample (no. '+id+') already exists at this position.',errLast:'The last sample of the file cannot be deleted.',
+        okFile:'✅ Saved to the Excel file.',okDl:'✅ File generated and downloaded: replace it in the Files/ folder.',okMem:'Save cancelled: file not modified.',
+        pickFile:'Select the file “Files/'+FILE_NAME+'” in the window that opens.',wrongName:n=>'The selected file is “'+n+'”, not “'+FILE_NAME+'”. Overwrite anyway?',
+        del:n=>'Delete sample no. '+n+' from the Excel file?',noWB:'Excel workbook not found: reload the file.'},
+      ar:{smpBtn:'إضافة / تعديل / حذف العينات',smpSearch:'بحث…',smpNew:'+ جديد',smpSave:'حفظ في ملف Excel',smpCancel:'إلغاء',smpDelete:'🗑️ حذف هذه العينة',smpErrTitle:'تم رفض الحفظ',
+        smpMapHint:'انقر على الخريطة (أو حرّك العلامة) لتعبئة خط العرض وخط الطول.',
+        add:'عينة جديدة',edit:'تعديل العينة رقم ',gov:'الولاية',deleg:'المعتمدية',other:'أخرى (إدخال حر)…',choose:'— اختر —',lat:'خط العرض (درجات عشرية)',lon:'خط الطول (درجات عشرية)',
+        count:(n,m)=>n+' عينة'+(m>n?' — عرض '+n+' من '+m:''),noData:'قم بتحميل ملف Excel أولاً.',
+        errCoord:'الإحداثيات X/Y إجبارية: أدخل خط عرض وخط طول صالحين بالدرجات العشرية.',
+        errNoGov:'اختر الولاية أولاً.',errNoGeo:'حدود الولايات غير متاحة: يستحيل التحقق من الموقع، تم رفض الحفظ.',
+        errGov:(a,b)=>'الإحداثيات خارج الولاية المصرَّح بها. الولاية المختارة: '+a+' — الموقع الفعلي: '+b+'.',outside:'خارج الولايات',
+        errDup:id=>'تكرار في الإحداثيات X/Y: توجد عينة (رقم '+id+') في نفس الموقع.',errLast:'لا يمكن حذف آخر عينة في الملف.',
+        okFile:'✅ تم الحفظ في ملف Excel.',okDl:'✅ تم إنشاء الملف وتنزيله: استبدله في مجلد Files/.',okMem:'تم إلغاء الحفظ: لم يتم تعديل الملف.',
+        pickFile:'اختر الملف «Files/'+FILE_NAME+'» في النافذة التي ستفتح.',wrongName:n=>'الملف المختار هو «'+n+'» وليس «'+FILE_NAME+'». هل تريد الكتابة فوقه؟',
+        del:n=>'حذف العينة رقم '+n+' من ملف Excel؟',noWB:'ملف Excel غير موجود: أعد تحميله.'}
+    };
+    const SMP2 = {
+      fr:{smpSave:'Valider (mettre en attente)',pendTitle:n=>n+' modification(s) en attente',saveAll:n=>'💾 Enregistrer tout ('+n+')',undoAll:'↩ Tout annuler',undo:'↩ Annuler',
+        opAdd:'➕ Ajout',opEdit:'✏️ Modification',opDel:'🗑️ Suppression',staged:'Modification mise en attente : cliquez sur « Enregistrer tout » pour écrire le fichier.',
+        confirmClose:'Des modifications ne sont pas enregistrées dans la base partagée. Fermer quand même (elles restent en attente) ?',confirmUndoAll:'Annuler toutes les modifications en attente ?',unsaved:'Modifications non enregistrées'},
+      en:{smpSave:'Apply (keep pending)',pendTitle:n=>n+' pending change(s)',saveAll:n=>'💾 Save all ('+n+')',undoAll:'↩ Undo all',undo:'↩ Undo',
+        opAdd:'➕ Add',opEdit:'✏️ Edit',opDel:'🗑️ Delete',staged:'Change kept pending: click “Save all” to write the file.',
+        confirmClose:'Some changes are not saved to the shared database. Close anyway (they stay pending)?',confirmUndoAll:'Undo all pending changes?',unsaved:'Unsaved changes'},
+      ar:{smpSave:'اعتماد (وضع في الانتظار)',pendTitle:n=>n+' تعديل(ات) في الانتظار',saveAll:n=>'💾 حفظ الكل ('+n+')',undoAll:'↩ إلغاء الكل',undo:'↩ تراجع',
+        opAdd:'➕ إضافة',opEdit:'✏️ تعديل',opDel:'🗑️ حذف',staged:'التعديل في الانتظار: انقر «حفظ الكل» لكتابة الملف.',
+        confirmClose:'توجد تعديلات غير محفوظة في قاعدة البيانات المشتركة. هل تريد الإغلاق (تبقى في الانتظار)؟',confirmUndoAll:'إلغاء كل التعديلات المنتظرة؟',unsaved:'تعديلات غير محفوظة'}
+    };
+    const SMP3 = {
+      fr:{saving:'Enregistrement en cours…',okSrv:'✅ Enregistré dans la base partagée.',
+        errForbidden:'Opération refusée : ce gouvernorat ne fait pas partie de vos autorisations.',
+        errDupSrv:'Doublon de coordonnées X/Y : un échantillon existe déjà à cette position.',
+        errGovUnknown:'Le gouvernorat de cet échantillon n’a pas pu être déterminé : la feuille doit contenir une colonne « Gouvernorat ».',
+        errBusy:'Le serveur est occupé : réessayez dans quelques secondes.',
+        errNotFound:'Échantillon introuvable : il a peut-être été modifié ou supprimé par un autre utilisateur. Actualisez les données.',
+        errNet:'Impossible de joindre le serveur. Vérifiez la connexion Internet : aucune modification n’a été enregistrée.',
+        errDataSrv:'La feuille de données est inaccessible côté serveur.',
+        errSrv:'Erreur du serveur : aucune modification n’a été enregistrée.'},
+      en:{saving:'Saving…',okSrv:'✅ Saved to the shared database.',
+        errForbidden:'Operation refused: this governorate is not part of your permissions.',
+        errDupSrv:'Duplicate X/Y coordinates: a sample already exists at this position.',
+        errGovUnknown:'The governorate of this sample could not be determined: the sheet must contain a “Governorate” column.',
+        errBusy:'The server is busy: try again in a few seconds.',
+        errNotFound:'Sample not found: it may have been modified or deleted by another user. Refresh the data.',
+        errNet:'Unable to reach the server. Check your Internet connection: no change was saved.',
+        errDataSrv:'The data sheet is unreachable on the server side.',
+        errSrv:'Server error: no change was saved.'},
+      ar:{saving:'جارٍ الحفظ…',okSrv:'✅ تم الحفظ في قاعدة البيانات المشتركة.',
+        errForbidden:'تم رفض العملية: هذه الولاية ليست ضمن صلاحياتك.',
+        errDupSrv:'تكرار في الإحداثيات X/Y: توجد عينة في نفس الموقع.',
+        errGovUnknown:'تعذّر تحديد ولاية هذه العينة: يجب أن تحتوي الورقة على عمود «الولاية».',
+        errBusy:'الخادم مشغول: أعد المحاولة بعد ثوانٍ.',
+        errNotFound:'العينة غير موجودة: ربما تم تعديلها أو حذفها من مستخدم آخر. حدّث البيانات.',
+        errNet:'تعذّر الاتصال بالخادم. تحقق من اتصال الإنترنت: لم يتم حفظ أي تعديل.',
+        errDataSrv:'ورقة البيانات غير متاحة من جهة الخادم.',
+        errSrv:'خطأ في الخادم: لم يتم حفظ أي تعديل.'}
+    };
+    ['fr','en','ar'].forEach(l=>{ Object.assign(SMP[l],SMP2[l],SMP3[l]); Object.assign(I18N[l],SMP[l]); });
+    const $ = id => document.getElementById(id);
+    const T = k => (I18N[currentLang] && I18N[currentLang][k] !== undefined) ? I18N[currentLang][k] : SMP.fr[k];
+    let ops = [], ed = null, fileHandle = null, mm = null, mk = null, govLayer = null, busy = false;
+    const key6 = (a,b) => Number(a).toFixed(6)+','+Number(b).toFixed(6);
 
-    /* Clés de secours locales : utilisées uniquement si le service
-       distant est injoignable (bloqué par le réseau, un bloqueur de
-       pub/tracking, hors-ligne...), pour ne jamais laisser les
-       pastilles bloquées sur "—". */
-    const LS_TOTAL     = 'ufcm_local_total_visits';
-    const LS_HAS_TAKEN = 'ufcm_local_has_hit_this_session';
+    function ctx(){
+      const data = (Array.isArray(currentP2O5Data) && currentP2O5Data.length) ? currentP2O5Data : currentData;
+      if(!data || !data.length || !data[0].headers) return null;
+      const headers = data[0].headers, lang = data[0].schemaLang || currentConfig.schemaLang || 'fr';
+      return {data, headers, lang, req:I18N[lang].requiredHeader.map(h=>h.trim()), govCol:findGovernorateColumn(headers)};
+    }
+    function showAlert(msg){ $('smpAlertMsg').textContent = msg; $('smpAlert').classList.add('show'); }
+    $('smpAlertOk').addEventListener('click', ()=>$('smpAlert').classList.remove('show'));
+    function setStatus(m){ $('smpStatus').textContent = m || ''; }
 
-    const elOnline = document.getElementById('statOnlineValue');
-    const elTotal  = document.getElementById('statTotalVisitsValue');
-
-    let joinCount     = null;   // dernier total connu (distant ou local)
-    let leaveCount    = 0;
-    let usingFallback = false;  // true si on est passé en mode secours local
-
-    /* Requête réseau avec délai d'expiration : sans ça, une requête
-       qui ne répond jamais (au lieu d'échouer franchement) laisse
-       les pastilles bloquées sur "—" indéfiniment. */
-    function fetchWithTimeout(url, ms){
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), ms || 6000);
-      return fetch(url, {signal: ctrl.signal})
-        .finally(() => clearTimeout(timer));
+    /* ---- gouvernorats / délégations ---- */
+    function govList(){
+      /* Administrateur : tous les gouvernorats (null). Autres : uniquement ceux marqués 1. Sans session : aucun. */
+      const allowed = (window.UFM_API && window.UFM_API.allowedGovs) ? window.UFM_API.allowedGovs() : [];
+      const base = Object.values(LOCAL_GOUV_NAME_MAP).filter(g => allowed === null || allowed.indexOf(g) >= 0);
+      return base.sort((a,b)=>localizeGovernorateName(a).localeCompare(localizeGovernorateName(b),currentLang)); }
+    function delegList(c, gov){
+      const s = new Set();
+      try{ const J = JSON.parse($('smp-delegations').textContent); (J[gov]||[]).forEach(x=>s.add(x)); }catch(e){ console.warn(e); }
+      c.data.forEach(d=>{ const g=String(d.group??'').trim(); if(g && !normalizeGovName(g) && declaredGovernorate(d)===gov) s.add(g); });
+      Object.entries(TUNISIA_DELEGATION_TO_GOVERNORATE).forEach(([k,v])=>{ if(v===gov) s.add(k); });
+      return [...s].sort((a,b)=>a.localeCompare(b,currentLang));
+    }
+    function govFeature(gov){
+      return (governorateGeoJSON?.features||[]).find(f=>{
+        const p=f.properties||{}, code=p.GOUV||p.gouv||p.Gouv;
+        const n = (code && LOCAL_GOUV_NAME_MAP[String(code).trim().toUpperCase()]) || p.gouv_fr || p.name;
+        return n === gov;
+      });
+    }
+    function govCell(c, gov){
+      const ex = c.data.find(d=>{ const v=d.row[c.govCol]; return v!=null && String(v).trim() && normalizeGovName(v)===gov; });
+      if(ex) return ex.row[c.govCol];
+      return c.lang==='ar' ? (GOVERNORATE_NAME_AR[gov]||gov) : c.lang==='en' ? (GOVERNORATE_NAME_EN[gov]||gov) : gov;
+    }
+    function checkPoint(lat, lon, gov){
+      if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180) return T('errCoord');
+      if(!gov) return T('errNoGov');
+      if(!governorateGeoJSON) return T('errNoGeo');
+      const a = governorateAtPoint(lat, lon);
+      if(a !== gov) return T('errGov')(localizeGovernorateName(gov), a ? localizeGovernorateName(a) : T('outside'));
+      return null;
     }
 
-    function readLocalTotal(){
-      const v = parseInt(localStorage.getItem(LS_TOTAL), 10);
-      return isNaN(v) ? 0 : v;
+    /* ---- formulaire ---- */
+    function buildForm(){
+      const c = ctx(); if(!c) return;
+      const R = c.req, f = $('smpForm');
+      let h = '<label class="full">'+T('gov')+'<select id="smpGov"><option value="">'+T('choose')+'</option>'+
+        govList().map(g=>'<option value="'+escapeHtml(g)+'">'+escapeHtml(localizeGovernorateName(g))+'</option>').join('')+'</select></label>';
+      c.headers.forEach((col,i)=>{
+        if(col === c.govCol) return;
+        const lab = escapeHtml(col);
+        if(col === R[7]) h += '<label>'+T('lat')+'<input id="smpLat" data-col="'+lab+'" inputmode="decimal" autocomplete="off"></label>';
+        else if(col === R[8]) h += '<label>'+T('lon')+'<input id="smpLon" data-col="'+lab+'" inputmode="decimal" autocomplete="off"></label>';
+        else if(col === R[2]) h += '<label>'+lab+' ('+T('deleg')+')<select id="smpDeleg" data-col="'+lab+'"></select><input id="smpDelegOther" style="display:none" placeholder="'+T('other')+'"></label>';
+        else h += '<label>'+lab+'<input class="smp-f" data-col="'+lab+'"'+(col===R[0]?' readonly':'')+'></label>';
+      });
+      f.innerHTML = h;
+      $('smpGov').addEventListener('change', onGovChange);
+      $('smpDeleg').addEventListener('change', ()=>{ $('smpDelegOther').style.display = $('smpDeleg').value==='__other__' ? '' : 'none'; });
+      ['smpLat','smpLon'].forEach(id=>$(id).addEventListener('change', onCoordTyped));
     }
-
-    function writeLocalTotal(v){
-      try{ localStorage.setItem(LS_TOTAL, String(v)); }catch(e){}
+    function fillDeleg(gov, value){
+      const c = ctx(), sel = $('smpDeleg'); if(!c||!sel) return;
+      const list = delegList(c, gov);
+      if(value && !list.includes(String(value))) list.unshift(String(value));
+      sel.innerHTML = '<option value="">'+T('choose')+'</option>'+list.map(x=>'<option>'+escapeHtml(x)+'</option>').join('')+'<option value="__other__">'+T('other')+'</option>';
+      sel.value = value ? String(value) : '';
+      $('smpDelegOther').style.display = 'none'; $('smpDelegOther').value = '';
     }
-
-    /* En mode secours (pas de service partagé joignable), on affiche
-       au moins le visiteur actuel : "En ligne" = 1, jamais "—". */
-    function renderOnline(){
-      if(!elOnline) return;
-      if(usingFallback){
-        elOnline.textContent = '1';
+    function drawGov(gov){
+      if(!mm) return;
+      if(govLayer){ mm.removeLayer(govLayer); govLayer = null; }
+      const ft = govFeature(gov); if(!ft) return;
+      govLayer = L.geoJSON(ft,{style:{color:'#ff3b30',weight:3,fillOpacity:.05},interactive:false}).addTo(mm);
+      mm.fitBounds(govLayer.getBounds(),{padding:[10,10]});
+    }
+    function onGovChange(){ const g=$('smpGov').value; fillDeleg(g,''); drawGov(g); onCoordTyped(true); }
+    function setPoint(lat, lon){
+      $('smpLat').value = Number(lat).toFixed(6); $('smpLon').value = Number(lon).toFixed(6);
+      $('smpLat').classList.remove('bad'); $('smpLon').classList.remove('bad');
+      if(!mm) return;
+      if(!mk){ mk = L.marker([lat,lon],{draggable:true,icon:L.divIcon({className:'',html:'<div style="font-size:30px;line-height:30px;filter:drop-shadow(0 1px 2px #000)">📍</div>',iconSize:[30,30],iconAnchor:[15,28]})}).addTo(mm); mk.on('dragend',()=>{ const p=mk.getLatLng(); tryPlace(p.lat,p.lng); }); }
+      else mk.setLatLng([lat,lon]);
+    }
+    function tryPlace(lat, lon){
+      const err = checkPoint(lat, lon, $('smpGov').value);
+      if(err){ showAlert(err); if(mk){ const a=parseStrictCoordinate($('smpLat').value), b=parseStrictCoordinate($('smpLon').value); if(Number.isFinite(a)&&Number.isFinite(b)) mk.setLatLng([a,b]); else { mm.removeLayer(mk); mk=null; } } return; }
+      setPoint(lat, lon);
+    }
+    function onCoordTyped(quiet){
+      const lat = parseStrictCoordinate($('smpLat').value), lon = parseStrictCoordinate($('smpLon').value);
+      if(!$('smpLat').value.trim() && !$('smpLon').value.trim()) return;
+      if(!Number.isFinite(lat)||!Number.isFinite(lon)) return;
+      const err = checkPoint(lat, lon, $('smpGov').value);
+      ['smpLat','smpLon'].forEach(i=>$(i).classList.toggle('bad', !!err));
+      if(err){ if(quiet!==true || $('smpGov').value) showAlert(err); return; }
+      setPoint(lat, lon); if(mm) mm.setView([lat,lon], Math.max(mm.getZoom(),12));
+    }
+    function initMap(){
+      if(mm){ setTimeout(()=>mm.invalidateSize(),50); return; }
+      mm = L.map('smpMap').setView([34,9.5],6);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri'}).addTo(mm);
+      mm.on('click', e=>{
+        if(!$('smpGov').value){ showAlert(T('errNoGov')); return; }
+        tryPlace(e.latlng.lat, e.latlng.lng);
+      });
+      setTimeout(()=>mm.invalidateSize(),50);
+    }
+    function resetForm(d){
+      const c = ctx(); if(!c) return; ed = d || null;
+      buildForm(); setStatus('');
+      if(mk && mm){ mm.removeLayer(mk); mk = null; }
+      if(govLayer && mm){ mm.removeLayer(govLayer); govLayer = null; }
+      $('smpFormTitle').textContent = d ? T('edit')+(d.id??'') : T('add');
+      $('smpDelete').style.display = d ? '' : 'none';
+      if(!d){
+        const ids = c.data.map(x=>Number(x.id)).filter(Number.isFinite);
+        const idIn = document.querySelector('.smp-f[data-col="'+escapeHtml(c.req[0])+'"]');
+        if(idIn) idIn.value = (ids.length ? Math.max(...ids) : 0) + 1;
+        fillDeleg('',''); renderList();
+        /* Un seul gouvernorat autorisé : présélectionné d'office. */
+        try{ const gl = govList(); if(gl.length === 1){ $('smpGov').value = gl[0]; onGovChange(); } }catch(e){ console.warn(e); }
         return;
       }
-      if(joinCount === null){
-        elOnline.textContent = '—';
-        return;
-      }
-      elOnline.textContent = Math.max(1, joinCount - leaveCount).toLocaleString();
+      let gov = ''; try{ gov = declaredGovernorate(d) || (Number.isFinite(d.lat)&&Number.isFinite(d.lon) ? governorateAtPoint(d.lat,d.lon) : '') || ''; }catch(e){ console.warn(e); }
+      $('smpGov').value = gov;
+      fillDeleg(gov, d.group);
+      document.querySelectorAll('.smp-f').forEach(i=>{ const v=d.row[i.dataset.col]; i.value = v==null ? '' : v; });
+      if(Number.isFinite(d.lat)&&Number.isFinite(d.lon)){ drawGov(gov); setPoint(d.lat,d.lon); mm.invalidateSize(); mm.setView([d.lat,d.lon],15); setTimeout(()=>{ mm.invalidateSize(); mm.setView([d.lat,d.lon],15); },200); }
+      renderList();
+      const sr = document.querySelector('#smpTbody tr.sel'); if(sr) sr.scrollIntoView({block:'nearest'});
     }
 
-    function setTotal(v){
-      if(elTotal){
-        elTotal.textContent =
-          (typeof v === 'number' && !isNaN(v)) ? v.toLocaleString() : '—';
-      }
+    /* ---- liste ---- */
+    function renderList(){
+      const c = ctx(); if(!c) return;
+      const R = c.req, q = $('smpSearch').value.trim().toLowerCase();
+      const cols = [R[0],R[4],R[2]];
+      $('smpThead').innerHTML = '<tr><th style="width:64px"></th>'+cols.map(x=>'<th>'+escapeHtml(x)+'</th>').join('')+'</tr>';
+      const rows = c.data.filter(d=>!q || [d.id,d.group,d.farmer,d.place,d.code,d.ref].some(v=>String(v??'').toLowerCase().includes(q)));
+      const shown = rows;
+      $('smpCount').textContent = T('count')(shown.length, rows.length); renderPending();
+      $('smpTbody').innerHTML = shown.map(d=>'<tr style="cursor:pointer" class="'+(d===ed?'sel ':'')+(opOf(d)?'pnd-'+opOf(d).type:'')+'" data-i="'+c.data.indexOf(d)+'">'+
+        '<td><button type="button" data-act="e" title="'+escapeHtml(currentLang==='ar'?'تعديل':currentLang==='en'?'Edit':'Modifier')+'">✏️</button><button type="button" data-act="d" title="'+escapeHtml(currentLang==='ar'?'حذف':currentLang==='en'?'Delete':'Supprimer')+'">🗑️</button></td>'+
+        cols.map(x=>'<td title="'+escapeHtml(d.row[x]??'')+'">'+escapeHtml(d.row[x]??'')+'</td>').join('')+'</tr>').join('');
     }
-
-    function activateFallback(){
-      usingFallback = true;
-      let total = readLocalTotal();
-      /* On ne compte qu'une seule fois par session pour ne pas
-         gonfler le total local à chaque re-rendu/rafraîchissement. */
-      if(!sessionStorage.getItem(LS_HAS_TAKEN)){
-        total += 1;
-        writeLocalTotal(total);
-        try{ sessionStorage.setItem(LS_HAS_TAKEN, '1'); }catch(e){}
-      }
-      joinCount = total;
-      setTotal(total);
-      renderOnline();
+    const opOf = d => ops.find(o=>o.after===d);
+    function stageDelete(d){
+      const c = ctx(); if(!c || !d) return;
+      if(c.data.length <= 1){ showAlert(T('errLast')); return; }
+      const idx = c.data.indexOf(d); c.data.splice(idx,1);
+      const o = opOf(d);
+      if(o){ if(o.type==='add') ops.splice(ops.indexOf(o),1); else { o.type='delete'; o.after=null; o.idx=idx; } }
+      else ops.push({type:'delete',before:d,after:null,idx});
+      if(ed === d) resetForm(null); else renderList();
+      setStatus(T('staged'));
     }
-
-    /* Arrivée : +1 définitif (sert aussi de "visites totales").
-       On retente plusieurs fois avant de basculer en mode secours,
-       pour absorber une simple lenteur ou un échec ponctuel. */
-    function hitJoinWithRetry(attemptsLeft, delayMs){
-      fetchWithTimeout(AB_BASE + '/hit/' + AB_NS + '/' + KEY_JOIN, 6000)
-        .then(r => r.json())
-        .then(d => {
-          if(d && typeof d.value === 'number'){
-            joinCount = d.value;
-            usingFallback = false;
-            writeLocalTotal(joinCount); // garde une trace locale à jour
-            setTotal(joinCount);
-            renderOnline();
-          }else{
-            throw new Error('bad payload');
-          }
-        })
-        .catch(() => {
-          if(attemptsLeft > 0){
-            setTimeout(() => hitJoinWithRetry(attemptsLeft - 1, delayMs * 2), delayMs);
-          }else{
-            activateFallback();
-          }
-        });
+    function undoOp(o){
+      const c = ctx(); if(!c) return;
+      if(o.type==='add') c.data.splice(c.data.indexOf(o.after),1);
+      else if(o.type==='edit') c.data[c.data.indexOf(o.after)] = o.before;
+      else c.data.splice(Math.min(o.idx,c.data.length),0,o.before);
+      ops.splice(ops.indexOf(o),1);
     }
-    hitJoinWithRetry(2, 1500);
-
-    function refreshLeaves(){
-      if(usingFallback) return; // pas de service partagé dispo
-      fetchWithTimeout(AB_BASE + '/get/' + AB_NS + '/' + KEY_LEAVE, 6000)
-        .then(r => r.json())
-        .then(d => {
-          leaveCount = (d && typeof d.value === 'number') ? d.value : 0;
-          renderOnline();
-        })
-        .catch(() => {});
+    function afterUndo(){ if(ed && ctx().data.indexOf(ed)<0) resetForm(null); else { renderList(); } setStatus(''); }
+    function renderPending(){
+      const box = $('smpPending'); box.style.display = ops.length ? '' : 'none'; if(!ops.length) return;
+      $('smpPendTitle').textContent = '⚠️ '+T('pendTitle')(ops.length);
+      $('smpSaveAll').textContent = T('saveAll')(ops.length); $('smpUndoAll').textContent = T('undoAll');
+      $('smpPendList').innerHTML = ops.map((o,i)=>{ const d=o.after||o.before, lab=o.type==='add'?'opAdd':o.type==='edit'?'opEdit':'opDel';
+        return '<li><span>'+T(lab)+' — n° '+escapeHtml(d.id??'')+' '+escapeHtml(d.farmer??'')+'</span><button type="button" data-u="'+i+'">'+T('undo')+'</button></li>'; }).join('');
     }
-    refreshLeaves();
-
-    /* Rafraîchissement périodique (arrivées + départs des autres
-       visiteurs). Si on est en mode secours, on retente
-       périodiquement de revenir au service partagé. */
-    const pollTimer = setInterval(function(){
-      if(usingFallback){
-        fetchWithTimeout(AB_BASE + '/healthcheck', 4000)
-          .then(r => { if(r.ok){ usingFallback = false; hitJoinWithRetry(1, 1000); } })
-          .catch(() => {});
-        return;
-      }
-      fetchWithTimeout(AB_BASE + '/get/' + AB_NS + '/' + KEY_JOIN, 6000)
-        .then(r => r.json())
-        .then(d => {
-          if(d && typeof d.value === 'number'){
-            joinCount = d.value;
-            writeLocalTotal(joinCount);
-            setTotal(joinCount);
-            renderOnline();
-          }
-        })
-        .catch(() => {});
-      refreshLeaves();
-    }, 15000);
-
-    /* Départ : +1 sur le compteur de départs (une seule fois par
-       session). Sans effet en mode secours (pas de service partagé). */
-    let leftAlready = false;
-    function leaveNow(){
-      if(leftAlready || usingFallback) return;
-      leftAlready = true;
-      clearInterval(pollTimer);
-
-      /*
-         Une requête "image" est utilisée car elle reste fiable même
-         pendant la fermeture de la page (contrairement à un simple
-         fetch, qui peut être annulé par le navigateur à ce moment-là).
-      */
+    $('smpPendList').addEventListener('click', e=>{ const b=e.target.closest('button[data-u]'); if(!b) return; undoOp(ops[Number(b.dataset.u)]); afterUndo(); });
+    $('smpUndoAll').addEventListener('click', ()=>{ if(!confirm(T('confirmUndoAll'))) return; [...ops].reverse().forEach(undoOp); afterUndo(); });
+    $('smpSaveAll').addEventListener('click', commitAll);
+    window.addEventListener('beforeunload', e=>{ if(ops.length){ e.preventDefault(); e.returnValue=''; } });
+    $('smpTbody').addEventListener('click', e=>{
       try{
-        const beacon = new Image();
-        beacon.src =
-          AB_BASE + '/hit/' + AB_NS + '/' + KEY_LEAVE + '?_=' + Date.now();
-      }catch(e){}
-    }
-
-    window.addEventListener('pagehide', leaveNow);
-    window.addEventListener('beforeunload', leaveNow);
-    document.addEventListener('visibilitychange', function(){
-      if(document.visibilityState === 'hidden') leaveNow();
+        const tr = e.target.closest('tr'); if(!tr) return;
+        const c = ctx(), d = c.data[Number(tr.dataset.i)]; if(!d) return;
+        const b = e.target.closest('button');
+        if(b && b.dataset.act === 'd') stageDelete(d); else resetForm(d);
+      }catch(err){ console.error(err); showAlert(String(err && err.message || err)); }
     });
 
+    /* ---- enregistrement dans la base partagée (feuille Google, via le serveur) ---- */
+    const ERR_KEY = {forbidden:'errForbidden',duplicate:'errDupSrv',gov_unknown:'errGovUnknown',busy:'errBusy',not_found:'errNotFound',
+      ambiguous_id:'errNotFound',coords:'errCoord',net:'errNet',data_unavailable:'errDataSrv',no_id_column:'errSrv'};
+    /* envoie d'un seul coup toutes les modifications en attente ; le serveur contrôle tout avant d'écrire */
+    async function commitAll(){
+      const c = ctx(); if(!c || !ops.length || busy) return; busy = true;
+      try{
+        setStatus(T('saving'));
+        const raw = window._ufmRawHeaders || c.headers;
+        const vals = d => raw.map(h=>{ const v=d.row[normalizeHeader(h)]; return v===undefined ? null : v; });
+        const payload = ops.map(o => o.type==='add' ? {type:'add', values:vals(o.after)}
+          : o.type==='edit' ? {type:'edit', id:o.before.id, values:vals(o.after)}
+          : {type:'delete', id:o.before.id});
+        await window.UFM_API.call('save',{ops:payload});
+        ops = [];
+        await remoteLoad(false);
+        resetForm(null); setStatus(T('okSrv'));
+      }catch(err){
+        console.error(err);
+        const code = err && err.code;
+        if(code==='auth' || code==='noaccess'){ setStatus(''); }
+        else if(code==='duplicate' && err.detail){ showAlert(T('errDup')(err.detail)); setStatus(''); }
+        else{ showAlert(ERR_KEY[code] ? T(ERR_KEY[code]) : (err && err.message && !code ? err.message : T('errSrv'))); setStatus(''); }
+      }finally{ busy = false; }
+    }
+
+    /* ---- enregistrement (ajout / modification) ---- */
+    $('smpSave').addEventListener('click', ()=>{
+      const c = ctx(); if(!c) return;
+      const R = c.req, gov = $('smpGov').value;
+      const lat = parseStrictCoordinate($('smpLat').value), lon = parseStrictCoordinate($('smpLon').value);
+      if(!Number.isFinite(lat)||!Number.isFinite(lon)){ ['smpLat','smpLon'].forEach(i=>$(i).classList.add('bad')); showAlert(T('errCoord')); return; }
+      const err = checkPoint(lat, lon, gov);
+      if(err){ ['smpLat','smpLon'].forEach(i=>$(i).classList.add('bad')); showAlert(err); return; }
+      const dup = c.data.find(d=>d!==ed && Number.isFinite(d.lat) && Number.isFinite(d.lon) && key6(d.lat,d.lon)===key6(lat,lon));
+      if(dup){ showAlert(T('errDup')(dup.id)); return; }
+      const row = {}; c.headers.forEach(h=>{ row[h] = ed ? (ed.row[h] ?? null) : null; });
+      document.querySelectorAll('.smp-f').forEach(i=>{
+        const v = i.value.trim();
+        row[i.dataset.col] = v==='' ? null : (/^-?\d+([.,]\d+)?$/.test(v) && !/^0\d/.test(v) ? Number(v.replace(',','.')) : v);
+      });
+      let dl = $('smpDeleg').value; if(dl === '__other__') dl = $('smpDelegOther').value.trim();
+      row[R[2]] = dl || null;
+      row[R[7]] = lat; row[R[8]] = lon;
+      if(c.govCol) row[c.govCol] = govCell(c, gov);
+      if(R[9] in row && row[R[9]] == null) row[R[9]] = 'WGS84';
+      if(R[10] in row && row[R[10]] == null) row[R[10]] = lat.toFixed(6)+', '+lon.toFixed(6);
+      const nd = {id:row[R[0]],source:row[R[1]],group:row[R[2]],ref:row[R[3]],farmer:row[R[4]],place:row[R[5]],code:row[R[6]],lat,lon,
+        orig_system:row[R[9]],orig_coords:row[R[10]],area:row[R[11]],crop:row[R[12]],phone:row[R[13]],notes:row[R[14]],row,headers:c.headers,schemaLang:c.lang};
+      if(ed){
+        const idx = c.data.indexOf(ed), o = opOf(ed); c.data[idx] = nd;
+        if(o) o.after = nd; else ops.push({type:'edit',before:ed,after:nd});
+      }else{ c.data.push(nd); ops.push({type:'add',before:null,after:nd}); }
+      resetForm(null); setStatus(T('staged'));
+    });
+
+    /* barre de séparation glissable + redimensionnement de la carte */
+    (function(){
+      const sp = $('smpSplit'), body = sp.parentElement; let on = false;
+      sp.addEventListener('pointerdown', e=>{ on = true; sp.classList.add('drag'); sp.setPointerCapture(e.pointerId); e.preventDefault(); });
+      sp.addEventListener('pointermove', e=>{
+        if(!on) return;
+        const r = body.getBoundingClientRect(), rtl = getComputedStyle(body).direction === 'rtl';
+        let w = rtl ? r.right - e.clientX : e.clientX - r.left;
+        w = Math.max(220, Math.min(r.width - 330, w));
+        body.style.setProperty('--smp-left', w+'px');
+        if(mm) mm.invalidateSize();
+      });
+      const end = e=>{ on = false; sp.classList.remove('drag'); try{ sp.releasePointerCapture(e.pointerId); }catch(_){} if(mm) mm.invalidateSize(); };
+      sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
+      if(window.ResizeObserver) new ResizeObserver(()=>{ if(mm) mm.invalidateSize(); }).observe($('smpMap'));
+    })();
+    $('smpNew').addEventListener('click', ()=>resetForm(null));
+    $('smpDelete').addEventListener('click', ()=>{ if(ed) stageDelete(ed); });
+    $('smpReset').addEventListener('click', ()=>resetForm(null));
+    $('smpSearch').addEventListener('input', renderList);
+    $('smpClose').addEventListener('click', ()=>{ if(ops.length && !confirm(T('confirmClose'))) return; $('smpOverlay').classList.remove('show'); });
+    $('samplesManageBtn').addEventListener('click', async ()=>{
+      if(!ctx()){ showToast('⚠️ '+T('noData'),'error'); return; }
+      await ensureGovernorateBoundaries();
+      $('smpOverlay').classList.add('show');
+      initMap(); resetForm(null);
+    });
   })();
 
 
@@ -11682,7 +12465,7 @@ const I18N = {
 
   initMap();
   applyOverlayBackground();
-  runStartupLogoCheck();
+  window.__ufmLogoPromise = runStartupLogoCheck();
 
   /* Plein écran : uniquement juste après l'appui sur « Afficher les
      données » (le navigateur exige une action de l'utilisateur). */
@@ -11707,6 +12490,10 @@ const I18N = {
     get currentData(){ return currentData; },
     get currentP2O5Data(){ return currentP2O5Data; },
     set currentP2O5Data(v){ currentP2O5Data = v; },
+    get currentGraphsData(){ return currentGraphsData; },
+    set currentGraphsData(v){ currentGraphsData = v; },
+    get currentGeoData(){ return currentGeoData; },
+    set currentGeoData(v){ currentGeoData = v; },
     get currentConfig(){ return currentConfig; },
     set currentConfig(v){ currentConfig = v; },
     get currentLang(){ return currentLang; },
@@ -11755,6 +12542,7 @@ const I18N = {
       try{ renderLanguageButtons(); }catch(e){}
     },
     loadData: loadData,
+    remoteLoad: remoteLoad,
     setLanguage: setLanguage,
     initP2O5Tab: initP2O5Tab,
     loadExcelGenTab: loadExcelGenTab,
@@ -12087,6 +12875,8 @@ document.addEventListener('keydown', function(e){
         lang:currentLang,
         data:Array.isArray(currentData)?currentData:null,
         p2o5Data:Array.isArray(currentP2O5Data)?currentP2O5Data:null,
+        graphsData:Array.isArray(currentGraphsData)?currentGraphsData:null,
+        geoData:Array.isArray(currentGeoData)?currentGeoData:null,
         config:currentConfig||null,
         screen:screen?{left:screen.left,top:screen.top,width:screen.width,height:screen.height}:null
       };
@@ -12198,6 +12988,8 @@ document.addEventListener('keydown', function(e){
           if(Array.isArray(d.data)){
             if(d.config) currentConfig=d.config;
             if(Array.isArray(d.p2o5Data)) currentP2O5Data=d.p2o5Data;
+            if(Array.isArray(d.graphsData)) currentGraphsData=d.graphsData;
+            if(Array.isArray(d.geoData)) currentGeoData=d.geoData;
             const ov=document.getElementById('startOverlay'); if(ov) ov.classList.add('hidden');
             await loadData(d.data);
           }
@@ -12451,9 +13243,11 @@ document.addEventListener('keydown', function(e){
       try{data=getData();}catch(e){}
       const U=window.__UFM||{};
       try{p2o5Data=Array.isArray(U.currentP2O5Data)?U.currentP2O5Data:null;}catch(e){}
+      let graphsData=null; try{graphsData=Array.isArray(U.currentGraphsData)?U.currentGraphsData:null;}catch(e){}
+      let geoData=null; try{geoData=Array.isArray(U.currentGeoData)?U.currentGeoData:null;}catch(e){}
       try{config=U.currentConfig||null;}catch(e){}
       try{current=U.currentLang||'fr';}catch(e){}
-      const payload={source:'unifiedFarmerMap',type:'dualStateStandalone',view:view,lang:current,data:data,p2o5Data:p2o5Data,config:config,screen:screen};
+      const payload={source:'unifiedFarmerMap',type:'dualStateStandalone',view:view,lang:current,data:data,p2o5Data:p2o5Data,graphsData:graphsData,geoData:geoData,config:config,screen:screen};
       try{win.postMessage(payload,'*');}catch(e){console.error(e);}
     }
 
@@ -12681,6 +13475,8 @@ document.addEventListener('keydown', function(e){
             if(d.lang && d.lang!==U.currentLang) U.setLanguage(d.lang,{notify:false});
             if(d.config) U.currentConfig=d.config;
             if(Array.isArray(d.p2o5Data)) U.currentP2O5Data=d.p2o5Data;
+            if(Array.isArray(d.graphsData)) U.currentGraphsData=d.graphsData;
+            if(Array.isArray(d.geoData)) U.currentGeoData=d.geoData;
             const ov=document.getElementById('startOverlay'); if(ov) ov.classList.add('hidden');
             await U.loadData(d.data);
           }
@@ -12871,6 +13667,256 @@ document.addEventListener('keydown', function(e){
   }else{
     init();
   }
+})();
+</script>
+
+<script>
+/* =========================================================
+   ACCÈS SÉCURISÉ — identifiants lus dans la feuille Google
+   (colonnes : Profil, email, password, nom, role, Actif, Date_Debut, Date_Fin)
+   - Le mot de passe de la feuille peut être en clair OU sous forme d'empreinte
+     SHA-256 hexadécimale (64 caractères) : dans ce cas rien de lisible n'y figure.
+   - Session : sessionStorage (8 h), revérifiée périodiquement dans la feuille.
+   - Langues : suit la langue de l'application (FR / EN / AR).
+   ========================================================= */
+(function(){
+  'use strict';
+  /* Adresse de l'application Web Google Apps Script (Déployer > Nouveau déploiement > Application Web).
+     Elle se termine par /exec. C'est la SEULE valeur à renseigner dans cette page. */
+  var API_URL = 'https://script.google.com/macros/s/AKfycbzRaA9iydx72xyHWhBEJgc7YxK0iHml5o82KdsGJJXApE_au5Xa4m6e67Ybi__zWgGR/exec';
+  var SESSION_KEY = 'ufm_auth_v1';
+  var SESSION_MS = 8*3600*1000;
+  var RECHECK_MS = 10*60*1000;
+  var MAX_TRIES = 5, LOCK_MS = 30000;
+
+  var TXT = {
+    fr:{title:'Accès sécurisé',sub:'Connectez-vous pour accéder à la carte unifiée.',email:'Adresse e-mail',pwd:'Mot de passe',
+        login:'Se connecter',quit:'Quitter',logout:'Se déconnecter',quitBtn:'Quitter',checking:'Vérification…',
+        empty:'Saisissez votre e-mail et votre mot de passe.',bad:'E-mail ou mot de passe incorrect.',
+        inactive:'Ce compte est désactivé.',notyet:'Ce compte n’est pas encore valide.',expired:'La validité de ce compte a expiré.',
+        net:'Impossible de joindre le serveur. Vérifiez la connexion Internet puis réessayez.',
+        noaccess:'Aucun gouvernorat n’est autorisé pour ce compte.',cfg:'L’adresse du script serveur n’est pas configurée dans la page.',srv:'Erreur du serveur. Réessayez dans un instant.',
+        locked:function(n){return 'Trop de tentatives. Réessayez dans '+n+' s.';},
+        revoked:'Votre accès n’est plus valide. Veuillez vous reconnecter.',
+        confirmLogout:'Voulez-vous vous déconnecter ?',confirmQuit:'Voulez-vous quitter l’application ? Les modifications non enregistrées seront perdues.',
+        byeTitle:'Session fermée',byeText:'Vous êtes déconnecté. Vous pouvez fermer cet onglet.',relogin:'Se reconnecter',show:'Afficher le mot de passe',
+        user:function(n,r){return '👤 '+n+(r?' ('+r+')':'');}},
+    en:{title:'Secure access',sub:'Sign in to access the unified map.',email:'E-mail address',pwd:'Password',
+        login:'Sign in',quit:'Quit',logout:'Log out',quitBtn:'Quit',checking:'Checking…',
+        empty:'Enter your e-mail and password.',bad:'Incorrect e-mail or password.',
+        inactive:'This account is disabled.',notyet:'This account is not valid yet.',expired:'This account has expired.',
+        net:'Unable to reach the server. Check your Internet connection and try again.',
+        noaccess:'No governorate is authorized for this account.',cfg:'The server script address is not configured in the page.',srv:'Server error. Try again in a moment.',
+        locked:function(n){return 'Too many attempts. Try again in '+n+' s.';},
+        revoked:'Your access is no longer valid. Please sign in again.',
+        confirmLogout:'Do you want to log out?',confirmQuit:'Do you want to quit the application? Unsaved changes will be lost.',
+        byeTitle:'Session closed',byeText:'You are logged out. You can close this tab.',relogin:'Sign in again',show:'Show password',
+        user:function(n,r){return '👤 '+n+(r?' ('+r+')':'');}},
+    ar:{title:'دخول آمن',sub:'سجّل الدخول للوصول إلى الخريطة الموحدة.',email:'البريد الإلكتروني',pwd:'كلمة المرور',
+        login:'تسجيل الدخول',quit:'خروج',logout:'تسجيل الخروج',quitBtn:'إنهاء',checking:'جارٍ التحقق…',
+        empty:'أدخل بريدك الإلكتروني وكلمة المرور.',bad:'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+        inactive:'هذا الحساب معطّل.',notyet:'هذا الحساب غير صالح بعد.',expired:'انتهت صلاحية هذا الحساب.',
+        net:'تعذّر الاتصال بالخادم. تحقق من اتصال الإنترنت ثم أعد المحاولة.',
+        noaccess:'لا توجد أي ولاية مسموح بها لهذا الحساب.',cfg:'عنوان نص الخادم غير مضبوط في الصفحة.',srv:'خطأ في الخادم. أعد المحاولة بعد لحظة.',
+        locked:function(n){return 'محاولات كثيرة. أعد المحاولة بعد '+n+' ث.';},
+        revoked:'لم يعد وصولك صالحًا. يرجى تسجيل الدخول من جديد.',
+        confirmLogout:'هل تريد تسجيل الخروج؟',confirmQuit:'هل تريد إنهاء التطبيق؟ ستفقد التعديلات غير المحفوظة.',
+        byeTitle:'تم إغلاق الجلسة',byeText:'تم تسجيل خروجك. يمكنك إغلاق هذا التبويب.',relogin:'تسجيل الدخول من جديد',show:'إظهار كلمة المرور',
+        user:function(n,r){return '👤 '+n+(r?' ('+r+')':'');}}
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var gate = $('authGate');
+  var failN = 0, lockUntil = 0, lockTimer = null, busy = false;
+  var curMsg = null; /* {key, arg} pour retraduire le message affiché */
+
+  function lang(){ var l = document.documentElement.getAttribute('data-current-lang') || document.documentElement.lang; return TXT[l] ? l : 'fr'; }
+  function tx(){ return TXT[lang()]; }
+
+  /* ---------- session ---------- */
+  function getSession(){
+    try{ var r = JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null'); return (r && r.exp>Date.now() && r.email) ? r : null; }catch(e){ return null; }
+  }
+  function setSession(r){ try{ sessionStorage.setItem(SESSION_KEY, JSON.stringify(r)); }catch(e){} }
+  function clearSession(){ try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){} }
+
+  /* ---------- verrouillage de l'interface ---------- */
+  function lockUI(on){
+    document.documentElement.classList.toggle('auth-locked', on);
+    Array.prototype.forEach.call(document.body.children, function(el){
+      if(el===gate || el.tagName==='SCRIPT' || el.tagName==='STYLE') return;
+      if(on) el.setAttribute('inert',''); else el.removeAttribute('inert');
+    });
+    var ha = $('headAuth'); if(ha) ha.hidden = on;
+    if(!on){ try{ window.dispatchEvent(new Event('resize')); }catch(e){} }
+  }
+
+  /* ---------- textes ---------- */
+  function setMsg(key,arg,ok){
+    curMsg = key ? {key:key,arg:arg,ok:!!ok} : null;
+    var m = $('authMsg'); if(!m) return;
+    var v = key ? tx()[key] : '';
+    if(typeof v === 'function') v = v(arg);
+    m.textContent = v || ''; m.classList.toggle('ok', !!ok);
+  }
+  function applyText(){
+    var T = tx(), L = lang();
+    gate.setAttribute('dir', L==='ar' ? 'rtl' : 'ltr');
+    $('authTitle').textContent = T.title; $('authSub').textContent = T.sub;
+    $('authEmailL').textContent = T.email; $('authPwdL').textContent = T.pwd;
+    $('authSubmit').textContent = busy ? T.checking : T.login; $('authQuit').textContent = T.quit;
+    $('authEye').title = T.show; $('authEye').setAttribute('aria-label', T.show);
+    $('authByeTitle').textContent = T.byeTitle; $('authByeText').textContent = T.byeText; $('authRelogin').textContent = T.relogin;
+    $('authLogoutBtn').textContent = '⎋ ' + T.logout; $('authQuitBtn').textContent = '⏻ ' + T.quitBtn;
+    $('authLogoutBtn').title = T.logout; $('authQuitBtn').title = T.quitBtn;
+    if($('startLogoutBtn')){ $('startLogoutBtn').textContent = '⎋ ' + T.logout; $('startQuitBtn').textContent = '⏻ ' + T.quitBtn; }
+    Array.prototype.forEach.call(document.querySelectorAll('#authLang button'), function(b){ b.classList.toggle('on', b.getAttribute('data-auth-lang')===L); });
+    var s = getSession(); if(s) $('authUserChip').textContent = T.user(s.nom || s.email, s.role);
+    if(curMsg) setMsg(curMsg.key, curMsg.arg, curMsg.ok);
+  }
+  try{ new MutationObserver(applyText).observe(document.documentElement,{attributes:true,attributeFilter:['lang','data-current-lang']}); }catch(e){}
+
+  /* Boutons de langue de l'écran de connexion : pilotent la langue de toute l'application. */
+  Array.prototype.forEach.call(document.querySelectorAll('#authLang button'), function(b){
+    b.addEventListener('click', function(){
+      var l = b.getAttribute('data-auth-lang');
+      var all = document.querySelectorAll('.lang-btn[data-lang="'+l+'"]');
+      if(all.length) all[all.length-1].click();
+      document.documentElement.setAttribute('data-current-lang', l);
+      applyText();
+    });
+  });
+
+  /* ---------- API (Google Apps Script) ---------- */
+  function apiConfigured(){ return /^https:\/\/script\.google\.com\/(a\/macros\/[^\/]+\/|macros\/)s\/[^\/]+\/exec$/.test(API_URL); }
+
+  function rawCall(action, body){
+    if(!apiConfigured()) return Promise.reject({code:'cfg'});
+    var payload = Object.assign({action:action}, body||{});
+    return fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload), redirect:'follow', cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw {code:'net'}; return r.json(); })
+      .catch(function(e){ if(e && e.code) throw e; throw {code:'net'}; })
+      .then(function(j){
+        if(!j || !j.ok) throw {code:(j && j.error) || 'server', detail:j && j.detail, wait:j && j.wait};
+        return j;
+      });
+  }
+  /* Appel authentifié : si le serveur refuse le jeton (compte désactivé, expiré, droits retirés…), retour à l'écran de connexion. */
+  function call(action, body){
+    var s = getSession(); if(!s) return Promise.reject({code:'auth'});
+    return rawCall(action, Object.assign({token:s.t}, body||{})).catch(function(e){
+      if(e && (e.code==='auth' || e.code==='noaccess')) revoke(true);
+      throw e;
+    });
+  }
+  /* Utilisé par la page : droits de l'utilisateur (null = administrateur = tout) et appels serveur. */
+  window.UFM_API = {
+    call: call,
+    allowedGovs: function(){ var s = getSession(); if(!s) return []; return s.admin ? null : (s.g || []).slice(); }
+  };
+
+  function startData(){
+    if(new URLSearchParams(location.search).get('dualWindow')==='1') return;   /* fenêtres secondaires : données reçues de la fenêtre principale */
+    if(window.__UFM && window.__UFM.remoteLoad) window.__UFM.remoteLoad(true);
+  }
+
+  /* ---------- connexion ---------- */
+  function startLock(){
+    clearInterval(lockTimer);
+    function tick(){
+      var left = Math.ceil((lockUntil-Date.now())/1000);
+      if(left<=0){ clearInterval(lockTimer); failN = 0; setMsg(null); $('authSubmit').disabled = false; return; }
+      setMsg('locked', left); $('authSubmit').disabled = true;
+    }
+    tick(); lockTimer = setInterval(tick, 500);
+  }
+  function setBusy(b){ busy = b; $('authSubmit').disabled = b; $('authSubmit').textContent = b ? tx().checking : tx().login; }
+
+  function onSubmit(ev){
+    ev.preventDefault();
+    if(busy || Date.now()<lockUntil) return;
+    var email = $('authEmail').value.trim().toLowerCase(), pwd = $('authPwd').value;
+    if(!email || !pwd){ setMsg('empty'); return; }
+    setMsg(null); setBusy(true);
+    rawCall('login', {email:email, password:pwd}).then(function(res){
+      setBusy(false);
+      setSession({email:res.user.email, nom:res.user.nom, role:res.user.role, profil:res.user.profil,
+                  admin:!!res.user.admin, g:res.user.govs||[], t:res.token, exp:res.exp});
+      $('authPwd').value = ''; setMsg(null);
+      /* Nouvelle connexion après une première charge de données : page rechargée pour repartir d'un état propre. */
+      if(window.__ufmLoadedOnce){ location.reload(); return; }
+      enter();
+    }).catch(function(e){
+      setBusy(false); $('authPwd').value = '';
+      var c = e && e.code;
+      if(c==='locked'){ lockUntil = Date.now() + (e.wait||LOCK_MS/1000)*1000; startLock(); return; }
+      if(['bad','inactive','notyet','expired','empty','noaccess','cfg'].indexOf(c)>=0) setMsg(c);
+      else if(c==='net') setMsg('net');
+      else setMsg('srv');
+    });
+  }
+
+  function enter(){
+    lockUI(false);
+    gate.classList.remove('auth-show','auth-bye-mode');
+    applyText();
+    var ha = $('headAuth'); if(ha) ha.hidden = false;
+    scheduleChecks();
+    startData();
+  }
+
+  /* ---------- déconnexion / sortie ---------- */
+  function logout(){ clearSession(); location.reload(); }
+  function quit(){
+    clearSession();
+    lockUI(true);
+    gate.classList.add('auth-show','auth-bye-mode');
+    try{ window.open('','_self'); window.close(); }catch(e){}
+    /* Si le navigateur refuse de fermer l'onglet, l'écran « Session fermée » reste affiché. */
+  }
+
+  /* ---------- revérification périodique (compte désactivé, expiré, mot de passe changé) ---------- */
+  var checkTimer = null;
+  function recheck(){
+    var s = getSession();
+    if(!s){ revoke(false); return; }
+    call('ping').then(function(res){
+      var g1 = (res.user.govs||[]).slice().sort().join('|'), g0 = (s.g||[]).slice().sort().join('|');
+      if(!!res.user.admin !== !!s.admin || g1 !== g0) revoke(true);   /* droits modifiés : nouvelle connexion requise */
+    }).catch(function(){ /* réseau indisponible : on garde la session ; refus du serveur déjà traité par call() */ });
+  }
+  function revoke(showMsg){
+    clearSession(); clearInterval(checkTimer);
+    lockUI(true); gate.classList.remove('auth-bye-mode'); gate.classList.add('auth-show');
+    if(showMsg) setMsg('revoked');
+    applyText();
+  }
+  function scheduleChecks(){
+    clearInterval(checkTimer);
+    checkTimer = setInterval(function(){ if(!getSession()) revoke(true); else recheck(); }, RECHECK_MS);
+  }
+
+  /* ---------- branchements ---------- */
+  $('authForm').addEventListener('submit', onSubmit);
+  $('authEye').addEventListener('click', function(){ var i = $('authPwd'); i.type = i.type==='password' ? 'text' : 'password'; });
+  $('authQuit').addEventListener('click', quit);
+  $('authRelogin').addEventListener('click', function(){ location.reload(); });
+  $('authLogoutBtn').addEventListener('click', function(){ if(confirm(tx().confirmLogout)) logout(); });
+  $('authQuitBtn').addEventListener('click', function(){ if(confirm(tx().confirmQuit)) quit(); });
+
+  /* Mêmes boutons sur l'écran de démarrage (avant le choix du fichier Excel). */
+  var startCard = document.querySelector('#startOverlay .start-card');
+  if(startCard){
+    var sa = document.createElement('div'); sa.className = 'start-auth'; sa.id = 'startAuth';
+    sa.innerHTML = '<button type="button" class="btn btn-auth btn-logout" id="startLogoutBtn"></button><button type="button" class="btn btn-auth btn-quit" id="startQuitBtn"></button>';
+    startCard.appendChild(sa);
+    $('startLogoutBtn').addEventListener('click', function(){ if(confirm(tx().confirmLogout)) logout(); });
+    $('startQuitBtn').addEventListener('click', function(){ if(confirm(tx().confirmQuit)) quit(); });
+  }
+
+  var s0 = getSession();
+  if(s0){ lockUI(false); applyText(); var ha0=$('headAuth'); if(ha0) ha0.hidden=false; scheduleChecks(); recheck(); startData(); }
+  else{ lockUI(true); applyText(); setTimeout(function(){ try{ $('authEmail').focus(); }catch(e){} }, 150); }
 })();
 </script>
 </body>
