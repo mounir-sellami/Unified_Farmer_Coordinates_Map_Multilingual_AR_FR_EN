@@ -12136,6 +12136,7 @@ const I18N = {
     const SMP = {
       fr:{smpBtn:'Ajout / Modification / Suppression des échantillons',smpSearch:'Rechercher…',smpNew:'+ Nouveau',smpSave:'Enregistrer dans le fichier Excel',smpCancel:'Annuler',smpDelete:'🗑️ Supprimer cet échantillon',smpErrTitle:'Enregistrement refusé',
         smpMapHint:'Cliquez sur la carte (ou déplacez le repère) pour renseigner la latitude et la longitude.',
+        gpsSearching:'📡 Recherche de la position GPS…',gpsAsk:'Pour centrer automatiquement le nouvel échantillon sur votre position, activez le GPS (localisation) du téléphone et autorisez l’accès à la position pour cette application. Vous pouvez quand même placer le point manuellement sur la carte.',gpsOutside:'📍 Position GPS hors du gouvernorat choisi : la carte est centrée sur vous, placez le point manuellement.',gpsOutsideAny:'📍 Votre position GPS n’est dans aucun gouvernorat autorisé : placez le point manuellement.',gpsOk:'📍 Point placé sur votre position GPS (vous pouvez le déplacer).',
         add:'Nouvel échantillon',edit:'Modifier l’échantillon n° ',gov:'Gouvernorat',deleg:'Délégation',other:'Autre (saisie libre)…',choose:'— Choisir —',lat:'Latitude (degrés décimaux)',lon:'Longitude (degrés décimaux)',
         count:(n,m)=>n+' échantillon(s)'+(m>n?' — '+n+' affichés sur '+m:''),noData:'Chargez d’abord le fichier Excel.',
         errCoord:'Les coordonnées X/Y sont obligatoires : saisissez une latitude et une longitude valides en degrés décimaux.',
@@ -12147,6 +12148,7 @@ const I18N = {
         del:n=>'Supprimer l’échantillon n° '+n+' du fichier Excel ?',noWB:'Classeur Excel introuvable : rechargez le fichier.'},
       en:{smpBtn:'Add / Edit / Delete samples',smpSearch:'Search…',smpNew:'+ New',smpSave:'Save to Excel file',smpCancel:'Cancel',smpDelete:'🗑️ Delete this sample',smpErrTitle:'Save refused',
         smpMapHint:'Click on the map (or drag the marker) to fill in latitude and longitude.',
+        gpsSearching:'📡 Getting GPS position…',gpsAsk:'To center the new sample on your location automatically, turn on the phone’s GPS (location) and allow location access for this app. You can still place the point manually on the map.',gpsOutside:'📍 GPS position is outside the selected governorate: the map is centered on you, please place the point manually.',gpsOutsideAny:'📍 Your GPS position is not inside any permitted governorate: please place the point manually.',gpsOk:'📍 Point placed on your GPS position (you can move it).',
         add:'New sample',edit:'Edit sample no. ',gov:'Governorate',deleg:'Delegation',other:'Other (free text)…',choose:'— Select —',lat:'Latitude (decimal degrees)',lon:'Longitude (decimal degrees)',
         count:(n,m)=>n+' sample(s)'+(m>n?' — showing '+n+' of '+m:''),noData:'Load the Excel file first.',
         errCoord:'X/Y coordinates are mandatory: enter a valid latitude and longitude in decimal degrees.',
@@ -12158,6 +12160,7 @@ const I18N = {
         del:n=>'Delete sample no. '+n+' from the Excel file?',noWB:'Excel workbook not found: reload the file.'},
       ar:{smpBtn:'إضافة / تعديل / حذف العينات',smpSearch:'بحث…',smpNew:'+ جديد',smpSave:'حفظ في ملف Excel',smpCancel:'إلغاء',smpDelete:'🗑️ حذف هذه العينة',smpErrTitle:'تم رفض الحفظ',
         smpMapHint:'انقر على الخريطة (أو حرّك العلامة) لتعبئة خط العرض وخط الطول.',
+        gpsSearching:'📡 جارٍ تحديد موقع GPS…',gpsAsk:'لتحديد موقع العيّنة الجديدة تلقائيًا على موقعك، فعّل GPS (الموقع) في الهاتف وصرّح للتطبيق بالوصول إلى الموقع. يمكنك مع ذلك وضع النقطة يدويًا على الخريطة.',gpsOutside:'📍 موقع GPS خارج الولاية المختارة: تم توسيط الخريطة عليك، ضع النقطة يدويًا.',gpsOutsideAny:'📍 موقعك لا يقع داخل أي ولاية مسموح بها: ضع النقطة يدويًا.',gpsOk:'📍 تم وضع النقطة على موقعك (يمكنك تحريكها).',
         add:'عينة جديدة',edit:'تعديل العينة رقم ',gov:'الولاية',deleg:'المعتمدية',other:'أخرى (إدخال حر)…',choose:'— اختر —',lat:'خط العرض (درجات عشرية)',lon:'خط الطول (درجات عشرية)',
         count:(n,m)=>n+' عينة'+(m>n?' — عرض '+n+' من '+m:''),noData:'قم بتحميل ملف Excel أولاً.',
         errCoord:'الإحداثيات X/Y إجبارية: أدخل خط عرض وخط طول صالحين بالدرجات العشرية.',
@@ -12324,6 +12327,48 @@ const I18N = {
       });
       setTimeout(()=>mm.invalidateSize(),50);
     }
+    /* ---- GPS (smartphone) : centre le nouvel échantillon sur la position du téléphone, sans rien verrouiller ---- */
+    let gpsWarned = false, gpsReq = 0;
+    function isSmartphone(){
+      try{
+        const touch = window.matchMedia('(pointer:coarse)').matches || (navigator.maxTouchPoints||0) > 0;
+        const ua = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent||'');
+        return ua || (touch && window.matchMedia('(max-width:900px)').matches);
+      }catch(e){ return false; }
+    }
+    function gpsAskOnce(){ if(gpsWarned) return; gpsWarned = true; showAlert(T('gpsAsk')); }
+    function clearGpsStatus(){ if($('smpStatus').textContent === T('gpsSearching')) setStatus(''); }
+    function gpsCenter(){
+      if(!isSmartphone()) return;
+      if(!navigator.geolocation){ gpsAskOnce(); return; }
+      const token = ++gpsReq;
+      setStatus(T('gpsSearching'));
+      navigator.geolocation.getCurrentPosition(pos=>{
+        /* abandon si le formulaire a changé entre-temps ou si l'utilisateur a déjà placé un point */
+        if(token !== gpsReq || ed || !mm) { clearGpsStatus(); return; }
+        if(mk || ($('smpLat').value.trim() && $('smpLon').value.trim())){ clearGpsStatus(); return; }
+        const lat = pos.coords.latitude, lon = pos.coords.longitude;
+        let gov = $('smpGov').value;
+        if(!gov){
+          let at = null; try{ at = governorateAtPoint(lat, lon); }catch(e){}
+          if(at && govList().indexOf(at) >= 0){ $('smpGov').value = at; onGovChange(); gov = at; }
+        }
+        mm.invalidateSize();
+        let err = null; try{ err = checkPoint(lat, lon, gov); }catch(e){ err = String(e); }
+        if(err){
+          mm.setView([lat, lon], Math.max(mm.getZoom(), 12));
+          setStatus(gov ? T('gpsOutside') : T('gpsOutsideAny'));
+          return;
+        }
+        setPoint(lat, lon);
+        mm.setView([lat, lon], 16);
+        setStatus(T('gpsOk'));
+      }, e=>{
+        if(token !== gpsReq) return;
+        clearGpsStatus();
+        gpsAskOnce();   /* GPS désactivé ou permission refusée : on le demande, sans bloquer la saisie manuelle */
+      }, {enableHighAccuracy:true, timeout:20000, maximumAge:30000});
+    }
     function resetForm(d){
       const c = ctx(); if(!c) return; ed = d || null;
       buildForm(); setStatus('');
@@ -12338,6 +12383,7 @@ const I18N = {
         fillDeleg('',''); renderList();
         /* Un seul gouvernorat autorisé : présélectionné d'office. */
         try{ const gl = govList(); if(gl.length === 1){ $('smpGov').value = gl[0]; onGovChange(); } }catch(e){ console.warn(e); }
+        gpsCenter();
         return;
       }
       let gov = ''; try{ gov = declaredGovernorate(d) || (Number.isFinite(d.lat)&&Number.isFinite(d.lon) ? governorateAtPoint(d.lat,d.lon) : '') || ''; }catch(e){ console.warn(e); }
@@ -12482,6 +12528,7 @@ const I18N = {
       if(!ctx()){ showToast('⚠️ '+T('noData'),'error'); return; }
       await ensureGovernorateBoundaries();
       $('smpOverlay').classList.add('show');
+      gpsWarned = false;
       initMap(); resetForm(null);
     });
   })();
